@@ -1,3 +1,21 @@
+# Dependencies
 node_modules/
+
+# Build
 dist/
+
+# Environment
 .env
+.env.*
+
+# Generated Prisma Client
+src/generated/
+
+# Uploaded files
+uploads/
+
+# AI/editor generated files
+.claude/
+.cursor/
+.agents/
+.devin/
