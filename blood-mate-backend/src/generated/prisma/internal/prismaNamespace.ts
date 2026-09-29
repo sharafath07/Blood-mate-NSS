@@ -770,15 +770,20 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 
 export const StudentScalarFieldEnum = {
   id: 'id',
-  studentId: 'studentId',
   name: 'name',
-  phone: 'phone',
-  email: 'email',
   department: 'department',
-  batch: 'batch',
+  age: 'age',
   bloodGroup: 'bloodGroup',
+  phone: 'phone',
+  whatsapp: 'whatsapp',
+  address: 'address',
+  weightCategory: 'weightCategory',
+  gender: 'gender',
+  academicYear: 'academicYear',
+  willingToDonate: 'willingToDonate',
   isDonor: 'isDonor',
   donorStatus: 'donorStatus',
+  registeredAt: 'registeredAt',
   lastDonationAt: 'lastDonationAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -890,6 +895,20 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'Int'
+ */
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+/**
+ * Reference to a field of type 'Int[]'
+ */
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
  * Reference to a field of type 'BloodGroup'
  */
 export type EnumBloodGroupFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BloodGroup'>
@@ -900,6 +919,34 @@ export type EnumBloodGroupFieldRefInput<$PrismaModel> = FieldRefInputType<$Prism
  * Reference to a field of type 'BloodGroup[]'
  */
 export type ListEnumBloodGroupFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BloodGroup[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WeightCategory'
+ */
+export type EnumWeightCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WeightCategory'>
+    
+
+
+/**
+ * Reference to a field of type 'WeightCategory[]'
+ */
+export type ListEnumWeightCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WeightCategory[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Gender'
+ */
+export type EnumGenderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Gender'>
+    
+
+
+/**
+ * Reference to a field of type 'Gender[]'
+ */
+export type ListEnumGenderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Gender[]'>
     
 
 
@@ -921,20 +968,6 @@ export type EnumDonorStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'DonorStatus[]'
  */
 export type ListEnumDonorStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DonorStatus[]'>
-    
-
-
-/**
- * Reference to a field of type 'Int'
- */
-export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-/**
- * Reference to a field of type 'Int[]'
- */
-export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 

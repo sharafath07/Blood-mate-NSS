@@ -20,21 +20,36 @@ export type StudentModel = runtime.Types.Result.DefaultSelection<Prisma.$Student
 
 export type AggregateStudent = {
   _count: StudentCountAggregateOutputType | null
+  _avg: StudentAvgAggregateOutputType | null
+  _sum: StudentSumAggregateOutputType | null
   _min: StudentMinAggregateOutputType | null
   _max: StudentMaxAggregateOutputType | null
 }
 
+export type StudentAvgAggregateOutputType = {
+  age: number | null
+}
+
+export type StudentSumAggregateOutputType = {
+  age: number | null
+}
+
 export type StudentMinAggregateOutputType = {
   id: string | null
-  studentId: string | null
   name: string | null
-  phone: string | null
-  email: string | null
   department: string | null
-  batch: string | null
+  age: number | null
   bloodGroup: $Enums.BloodGroup | null
+  phone: string | null
+  whatsapp: string | null
+  address: string | null
+  weightCategory: $Enums.WeightCategory | null
+  gender: $Enums.Gender | null
+  academicYear: string | null
+  willingToDonate: boolean | null
   isDonor: boolean | null
   donorStatus: $Enums.DonorStatus | null
+  registeredAt: Date | null
   lastDonationAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -42,15 +57,20 @@ export type StudentMinAggregateOutputType = {
 
 export type StudentMaxAggregateOutputType = {
   id: string | null
-  studentId: string | null
   name: string | null
-  phone: string | null
-  email: string | null
   department: string | null
-  batch: string | null
+  age: number | null
   bloodGroup: $Enums.BloodGroup | null
+  phone: string | null
+  whatsapp: string | null
+  address: string | null
+  weightCategory: $Enums.WeightCategory | null
+  gender: $Enums.Gender | null
+  academicYear: string | null
+  willingToDonate: boolean | null
   isDonor: boolean | null
   donorStatus: $Enums.DonorStatus | null
+  registeredAt: Date | null
   lastDonationAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -58,15 +78,20 @@ export type StudentMaxAggregateOutputType = {
 
 export type StudentCountAggregateOutputType = {
   id: number
-  studentId: number
   name: number
-  phone: number
-  email: number
   department: number
-  batch: number
+  age: number
   bloodGroup: number
+  phone: number
+  whatsapp: number
+  address: number
+  weightCategory: number
+  gender: number
+  academicYear: number
+  willingToDonate: number
   isDonor: number
   donorStatus: number
+  registeredAt: number
   lastDonationAt: number
   createdAt: number
   updatedAt: number
@@ -74,17 +99,30 @@ export type StudentCountAggregateOutputType = {
 }
 
 
+export type StudentAvgAggregateInputType = {
+  age?: true
+}
+
+export type StudentSumAggregateInputType = {
+  age?: true
+}
+
 export type StudentMinAggregateInputType = {
   id?: true
-  studentId?: true
   name?: true
-  phone?: true
-  email?: true
   department?: true
-  batch?: true
+  age?: true
   bloodGroup?: true
+  phone?: true
+  whatsapp?: true
+  address?: true
+  weightCategory?: true
+  gender?: true
+  academicYear?: true
+  willingToDonate?: true
   isDonor?: true
   donorStatus?: true
+  registeredAt?: true
   lastDonationAt?: true
   createdAt?: true
   updatedAt?: true
@@ -92,15 +130,20 @@ export type StudentMinAggregateInputType = {
 
 export type StudentMaxAggregateInputType = {
   id?: true
-  studentId?: true
   name?: true
-  phone?: true
-  email?: true
   department?: true
-  batch?: true
+  age?: true
   bloodGroup?: true
+  phone?: true
+  whatsapp?: true
+  address?: true
+  weightCategory?: true
+  gender?: true
+  academicYear?: true
+  willingToDonate?: true
   isDonor?: true
   donorStatus?: true
+  registeredAt?: true
   lastDonationAt?: true
   createdAt?: true
   updatedAt?: true
@@ -108,15 +151,20 @@ export type StudentMaxAggregateInputType = {
 
 export type StudentCountAggregateInputType = {
   id?: true
-  studentId?: true
   name?: true
-  phone?: true
-  email?: true
   department?: true
-  batch?: true
+  age?: true
   bloodGroup?: true
+  phone?: true
+  whatsapp?: true
+  address?: true
+  weightCategory?: true
+  gender?: true
+  academicYear?: true
+  willingToDonate?: true
   isDonor?: true
   donorStatus?: true
+  registeredAt?: true
   lastDonationAt?: true
   createdAt?: true
   updatedAt?: true
@@ -161,6 +209,18 @@ export type StudentAggregateArgs<ExtArgs extends runtime.Types.Extensions.Intern
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: StudentAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: StudentSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: StudentMinAggregateInputType
@@ -191,25 +251,34 @@ export type StudentGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   _count?: StudentCountAggregateInputType | true
+  _avg?: StudentAvgAggregateInputType
+  _sum?: StudentSumAggregateInputType
   _min?: StudentMinAggregateInputType
   _max?: StudentMaxAggregateInputType
 }
 
 export type StudentGroupByOutputType = {
   id: string
-  studentId: string | null
   name: string
-  phone: string | null
-  email: string | null
   department: string | null
-  batch: string | null
+  age: number | null
   bloodGroup: $Enums.BloodGroup | null
+  phone: string | null
+  whatsapp: string | null
+  address: string | null
+  weightCategory: $Enums.WeightCategory | null
+  gender: $Enums.Gender | null
+  academicYear: string | null
+  willingToDonate: boolean
   isDonor: boolean
   donorStatus: $Enums.DonorStatus
+  registeredAt: Date | null
   lastDonationAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: StudentCountAggregateOutputType | null
+  _avg: StudentAvgAggregateOutputType | null
+  _sum: StudentSumAggregateOutputType | null
   _min: StudentMinAggregateOutputType | null
   _max: StudentMaxAggregateOutputType | null
 }
@@ -234,15 +303,20 @@ export type StudentWhereInput = {
   OR?: Prisma.StudentWhereInput[]
   NOT?: Prisma.StudentWhereInput | Prisma.StudentWhereInput[]
   id?: Prisma.StringFilter<"Student"> | string
-  studentId?: Prisma.StringNullableFilter<"Student"> | string | null
   name?: Prisma.StringFilter<"Student"> | string
-  phone?: Prisma.StringNullableFilter<"Student"> | string | null
-  email?: Prisma.StringNullableFilter<"Student"> | string | null
   department?: Prisma.StringNullableFilter<"Student"> | string | null
-  batch?: Prisma.StringNullableFilter<"Student"> | string | null
+  age?: Prisma.IntNullableFilter<"Student"> | number | null
   bloodGroup?: Prisma.EnumBloodGroupNullableFilter<"Student"> | $Enums.BloodGroup | null
+  phone?: Prisma.StringNullableFilter<"Student"> | string | null
+  whatsapp?: Prisma.StringNullableFilter<"Student"> | string | null
+  address?: Prisma.StringNullableFilter<"Student"> | string | null
+  weightCategory?: Prisma.EnumWeightCategoryNullableFilter<"Student"> | $Enums.WeightCategory | null
+  gender?: Prisma.EnumGenderNullableFilter<"Student"> | $Enums.Gender | null
+  academicYear?: Prisma.StringNullableFilter<"Student"> | string | null
+  willingToDonate?: Prisma.BoolFilter<"Student"> | boolean
   isDonor?: Prisma.BoolFilter<"Student"> | boolean
   donorStatus?: Prisma.EnumDonorStatusFilter<"Student"> | $Enums.DonorStatus
+  registeredAt?: Prisma.DateTimeNullableFilter<"Student"> | Date | string | null
   lastDonationAt?: Prisma.DateTimeNullableFilter<"Student"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Student"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Student"> | Date | string
@@ -252,15 +326,20 @@ export type StudentWhereInput = {
 
 export type StudentOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  studentId?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrder
-  phone?: Prisma.SortOrderInput | Prisma.SortOrder
-  email?: Prisma.SortOrderInput | Prisma.SortOrder
   department?: Prisma.SortOrderInput | Prisma.SortOrder
-  batch?: Prisma.SortOrderInput | Prisma.SortOrder
+  age?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodGroup?: Prisma.SortOrderInput | Prisma.SortOrder
+  phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  whatsapp?: Prisma.SortOrderInput | Prisma.SortOrder
+  address?: Prisma.SortOrderInput | Prisma.SortOrder
+  weightCategory?: Prisma.SortOrderInput | Prisma.SortOrder
+  gender?: Prisma.SortOrderInput | Prisma.SortOrder
+  academicYear?: Prisma.SortOrderInput | Prisma.SortOrder
+  willingToDonate?: Prisma.SortOrder
   isDonor?: Prisma.SortOrder
   donorStatus?: Prisma.SortOrder
+  registeredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastDonationAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -270,42 +349,54 @@ export type StudentOrderByWithRelationInput = {
 
 export type StudentWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  studentId?: string
   AND?: Prisma.StudentWhereInput | Prisma.StudentWhereInput[]
   OR?: Prisma.StudentWhereInput[]
   NOT?: Prisma.StudentWhereInput | Prisma.StudentWhereInput[]
   name?: Prisma.StringFilter<"Student"> | string
-  phone?: Prisma.StringNullableFilter<"Student"> | string | null
-  email?: Prisma.StringNullableFilter<"Student"> | string | null
   department?: Prisma.StringNullableFilter<"Student"> | string | null
-  batch?: Prisma.StringNullableFilter<"Student"> | string | null
+  age?: Prisma.IntNullableFilter<"Student"> | number | null
   bloodGroup?: Prisma.EnumBloodGroupNullableFilter<"Student"> | $Enums.BloodGroup | null
+  phone?: Prisma.StringNullableFilter<"Student"> | string | null
+  whatsapp?: Prisma.StringNullableFilter<"Student"> | string | null
+  address?: Prisma.StringNullableFilter<"Student"> | string | null
+  weightCategory?: Prisma.EnumWeightCategoryNullableFilter<"Student"> | $Enums.WeightCategory | null
+  gender?: Prisma.EnumGenderNullableFilter<"Student"> | $Enums.Gender | null
+  academicYear?: Prisma.StringNullableFilter<"Student"> | string | null
+  willingToDonate?: Prisma.BoolFilter<"Student"> | boolean
   isDonor?: Prisma.BoolFilter<"Student"> | boolean
   donorStatus?: Prisma.EnumDonorStatusFilter<"Student"> | $Enums.DonorStatus
+  registeredAt?: Prisma.DateTimeNullableFilter<"Student"> | Date | string | null
   lastDonationAt?: Prisma.DateTimeNullableFilter<"Student"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Student"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Student"> | Date | string
   bloodRequests?: Prisma.BloodRequestListRelationFilter
   donorResponses?: Prisma.DonorResponseListRelationFilter
-}, "id" | "studentId">
+}, "id">
 
 export type StudentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  studentId?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrder
-  phone?: Prisma.SortOrderInput | Prisma.SortOrder
-  email?: Prisma.SortOrderInput | Prisma.SortOrder
   department?: Prisma.SortOrderInput | Prisma.SortOrder
-  batch?: Prisma.SortOrderInput | Prisma.SortOrder
+  age?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodGroup?: Prisma.SortOrderInput | Prisma.SortOrder
+  phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  whatsapp?: Prisma.SortOrderInput | Prisma.SortOrder
+  address?: Prisma.SortOrderInput | Prisma.SortOrder
+  weightCategory?: Prisma.SortOrderInput | Prisma.SortOrder
+  gender?: Prisma.SortOrderInput | Prisma.SortOrder
+  academicYear?: Prisma.SortOrderInput | Prisma.SortOrder
+  willingToDonate?: Prisma.SortOrder
   isDonor?: Prisma.SortOrder
   donorStatus?: Prisma.SortOrder
+  registeredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastDonationAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.StudentCountOrderByAggregateInput
+  _avg?: Prisma.StudentAvgOrderByAggregateInput
   _max?: Prisma.StudentMaxOrderByAggregateInput
   _min?: Prisma.StudentMinOrderByAggregateInput
+  _sum?: Prisma.StudentSumOrderByAggregateInput
 }
 
 export type StudentScalarWhereWithAggregatesInput = {
@@ -313,15 +404,20 @@ export type StudentScalarWhereWithAggregatesInput = {
   OR?: Prisma.StudentScalarWhereWithAggregatesInput[]
   NOT?: Prisma.StudentScalarWhereWithAggregatesInput | Prisma.StudentScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Student"> | string
-  studentId?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
   name?: Prisma.StringWithAggregatesFilter<"Student"> | string
-  phone?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
-  email?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
   department?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
-  batch?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
+  age?: Prisma.IntNullableWithAggregatesFilter<"Student"> | number | null
   bloodGroup?: Prisma.EnumBloodGroupNullableWithAggregatesFilter<"Student"> | $Enums.BloodGroup | null
+  phone?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
+  whatsapp?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
+  address?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
+  weightCategory?: Prisma.EnumWeightCategoryNullableWithAggregatesFilter<"Student"> | $Enums.WeightCategory | null
+  gender?: Prisma.EnumGenderNullableWithAggregatesFilter<"Student"> | $Enums.Gender | null
+  academicYear?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
+  willingToDonate?: Prisma.BoolWithAggregatesFilter<"Student"> | boolean
   isDonor?: Prisma.BoolWithAggregatesFilter<"Student"> | boolean
   donorStatus?: Prisma.EnumDonorStatusWithAggregatesFilter<"Student"> | $Enums.DonorStatus
+  registeredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Student"> | Date | string | null
   lastDonationAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Student"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Student"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Student"> | Date | string
@@ -329,15 +425,20 @@ export type StudentScalarWhereWithAggregatesInput = {
 
 export type StudentCreateInput = {
   id?: string
-  studentId?: string | null
   name: string
-  phone?: string | null
-  email?: string | null
   department?: string | null
-  batch?: string | null
+  age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
+  phone?: string | null
+  whatsapp?: string | null
+  address?: string | null
+  weightCategory?: $Enums.WeightCategory | null
+  gender?: $Enums.Gender | null
+  academicYear?: string | null
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: $Enums.DonorStatus
+  registeredAt?: Date | string | null
   lastDonationAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -347,15 +448,20 @@ export type StudentCreateInput = {
 
 export type StudentUncheckedCreateInput = {
   id?: string
-  studentId?: string | null
   name: string
-  phone?: string | null
-  email?: string | null
   department?: string | null
-  batch?: string | null
+  age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
+  phone?: string | null
+  whatsapp?: string | null
+  address?: string | null
+  weightCategory?: $Enums.WeightCategory | null
+  gender?: $Enums.Gender | null
+  academicYear?: string | null
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: $Enums.DonorStatus
+  registeredAt?: Date | string | null
   lastDonationAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -365,15 +471,20 @@ export type StudentUncheckedCreateInput = {
 
 export type StudentUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  batch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
+  gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  academicYear?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  willingToDonate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDonor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   donorStatus?: Prisma.EnumDonorStatusFieldUpdateOperationsInput | $Enums.DonorStatus
+  registeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastDonationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -383,15 +494,20 @@ export type StudentUpdateInput = {
 
 export type StudentUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  batch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
+  gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  academicYear?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  willingToDonate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDonor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   donorStatus?: Prisma.EnumDonorStatusFieldUpdateOperationsInput | $Enums.DonorStatus
+  registeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastDonationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -401,15 +517,20 @@ export type StudentUncheckedUpdateInput = {
 
 export type StudentCreateManyInput = {
   id?: string
-  studentId?: string | null
   name: string
-  phone?: string | null
-  email?: string | null
   department?: string | null
-  batch?: string | null
+  age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
+  phone?: string | null
+  whatsapp?: string | null
+  address?: string | null
+  weightCategory?: $Enums.WeightCategory | null
+  gender?: $Enums.Gender | null
+  academicYear?: string | null
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: $Enums.DonorStatus
+  registeredAt?: Date | string | null
   lastDonationAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -417,15 +538,20 @@ export type StudentCreateManyInput = {
 
 export type StudentUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  batch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
+  gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  academicYear?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  willingToDonate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDonor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   donorStatus?: Prisma.EnumDonorStatusFieldUpdateOperationsInput | $Enums.DonorStatus
+  registeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastDonationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -433,15 +559,20 @@ export type StudentUpdateManyMutationInput = {
 
 export type StudentUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  batch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
+  gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  academicYear?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  willingToDonate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDonor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   donorStatus?: Prisma.EnumDonorStatusFieldUpdateOperationsInput | $Enums.DonorStatus
+  registeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastDonationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -449,31 +580,45 @@ export type StudentUncheckedUpdateManyInput = {
 
 export type StudentCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  studentId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  phone?: Prisma.SortOrder
-  email?: Prisma.SortOrder
   department?: Prisma.SortOrder
-  batch?: Prisma.SortOrder
+  age?: Prisma.SortOrder
   bloodGroup?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
+  whatsapp?: Prisma.SortOrder
+  address?: Prisma.SortOrder
+  weightCategory?: Prisma.SortOrder
+  gender?: Prisma.SortOrder
+  academicYear?: Prisma.SortOrder
+  willingToDonate?: Prisma.SortOrder
   isDonor?: Prisma.SortOrder
   donorStatus?: Prisma.SortOrder
+  registeredAt?: Prisma.SortOrder
   lastDonationAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
+export type StudentAvgOrderByAggregateInput = {
+  age?: Prisma.SortOrder
+}
+
 export type StudentMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  studentId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  phone?: Prisma.SortOrder
-  email?: Prisma.SortOrder
   department?: Prisma.SortOrder
-  batch?: Prisma.SortOrder
+  age?: Prisma.SortOrder
   bloodGroup?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
+  whatsapp?: Prisma.SortOrder
+  address?: Prisma.SortOrder
+  weightCategory?: Prisma.SortOrder
+  gender?: Prisma.SortOrder
+  academicYear?: Prisma.SortOrder
+  willingToDonate?: Prisma.SortOrder
   isDonor?: Prisma.SortOrder
   donorStatus?: Prisma.SortOrder
+  registeredAt?: Prisma.SortOrder
   lastDonationAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -481,18 +626,27 @@ export type StudentMaxOrderByAggregateInput = {
 
 export type StudentMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  studentId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  phone?: Prisma.SortOrder
-  email?: Prisma.SortOrder
   department?: Prisma.SortOrder
-  batch?: Prisma.SortOrder
+  age?: Prisma.SortOrder
   bloodGroup?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
+  whatsapp?: Prisma.SortOrder
+  address?: Prisma.SortOrder
+  weightCategory?: Prisma.SortOrder
+  gender?: Prisma.SortOrder
+  academicYear?: Prisma.SortOrder
+  willingToDonate?: Prisma.SortOrder
   isDonor?: Prisma.SortOrder
   donorStatus?: Prisma.SortOrder
+  registeredAt?: Prisma.SortOrder
   lastDonationAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type StudentSumOrderByAggregateInput = {
+  age?: Prisma.SortOrder
 }
 
 export type StudentScalarRelationFilter = {
@@ -504,8 +658,24 @@ export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type NullableEnumBloodGroupFieldUpdateOperationsInput = {
   set?: $Enums.BloodGroup | null
+}
+
+export type NullableEnumWeightCategoryFieldUpdateOperationsInput = {
+  set?: $Enums.WeightCategory | null
+}
+
+export type NullableEnumGenderFieldUpdateOperationsInput = {
+  set?: $Enums.Gender | null
 }
 
 export type BoolFieldUpdateOperationsInput = {
@@ -550,15 +720,20 @@ export type StudentUpdateOneRequiredWithoutDonorResponsesNestedInput = {
 
 export type StudentCreateWithoutBloodRequestsInput = {
   id?: string
-  studentId?: string | null
   name: string
-  phone?: string | null
-  email?: string | null
   department?: string | null
-  batch?: string | null
+  age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
+  phone?: string | null
+  whatsapp?: string | null
+  address?: string | null
+  weightCategory?: $Enums.WeightCategory | null
+  gender?: $Enums.Gender | null
+  academicYear?: string | null
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: $Enums.DonorStatus
+  registeredAt?: Date | string | null
   lastDonationAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -567,15 +742,20 @@ export type StudentCreateWithoutBloodRequestsInput = {
 
 export type StudentUncheckedCreateWithoutBloodRequestsInput = {
   id?: string
-  studentId?: string | null
   name: string
-  phone?: string | null
-  email?: string | null
   department?: string | null
-  batch?: string | null
+  age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
+  phone?: string | null
+  whatsapp?: string | null
+  address?: string | null
+  weightCategory?: $Enums.WeightCategory | null
+  gender?: $Enums.Gender | null
+  academicYear?: string | null
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: $Enums.DonorStatus
+  registeredAt?: Date | string | null
   lastDonationAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -600,15 +780,20 @@ export type StudentUpdateToOneWithWhereWithoutBloodRequestsInput = {
 
 export type StudentUpdateWithoutBloodRequestsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  batch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
+  gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  academicYear?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  willingToDonate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDonor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   donorStatus?: Prisma.EnumDonorStatusFieldUpdateOperationsInput | $Enums.DonorStatus
+  registeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastDonationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -617,15 +802,20 @@ export type StudentUpdateWithoutBloodRequestsInput = {
 
 export type StudentUncheckedUpdateWithoutBloodRequestsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  batch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
+  gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  academicYear?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  willingToDonate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDonor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   donorStatus?: Prisma.EnumDonorStatusFieldUpdateOperationsInput | $Enums.DonorStatus
+  registeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastDonationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -634,15 +824,20 @@ export type StudentUncheckedUpdateWithoutBloodRequestsInput = {
 
 export type StudentCreateWithoutDonorResponsesInput = {
   id?: string
-  studentId?: string | null
   name: string
-  phone?: string | null
-  email?: string | null
   department?: string | null
-  batch?: string | null
+  age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
+  phone?: string | null
+  whatsapp?: string | null
+  address?: string | null
+  weightCategory?: $Enums.WeightCategory | null
+  gender?: $Enums.Gender | null
+  academicYear?: string | null
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: $Enums.DonorStatus
+  registeredAt?: Date | string | null
   lastDonationAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -651,15 +846,20 @@ export type StudentCreateWithoutDonorResponsesInput = {
 
 export type StudentUncheckedCreateWithoutDonorResponsesInput = {
   id?: string
-  studentId?: string | null
   name: string
-  phone?: string | null
-  email?: string | null
   department?: string | null
-  batch?: string | null
+  age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
+  phone?: string | null
+  whatsapp?: string | null
+  address?: string | null
+  weightCategory?: $Enums.WeightCategory | null
+  gender?: $Enums.Gender | null
+  academicYear?: string | null
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: $Enums.DonorStatus
+  registeredAt?: Date | string | null
   lastDonationAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -684,15 +884,20 @@ export type StudentUpdateToOneWithWhereWithoutDonorResponsesInput = {
 
 export type StudentUpdateWithoutDonorResponsesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  batch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
+  gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  academicYear?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  willingToDonate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDonor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   donorStatus?: Prisma.EnumDonorStatusFieldUpdateOperationsInput | $Enums.DonorStatus
+  registeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastDonationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -701,15 +906,20 @@ export type StudentUpdateWithoutDonorResponsesInput = {
 
 export type StudentUncheckedUpdateWithoutDonorResponsesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  batch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
+  gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  academicYear?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  willingToDonate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isDonor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   donorStatus?: Prisma.EnumDonorStatusFieldUpdateOperationsInput | $Enums.DonorStatus
+  registeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastDonationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -758,15 +968,20 @@ export type StudentCountOutputTypeCountDonorResponsesArgs<ExtArgs extends runtim
 
 export type StudentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  studentId?: boolean
   name?: boolean
-  phone?: boolean
-  email?: boolean
   department?: boolean
-  batch?: boolean
+  age?: boolean
   bloodGroup?: boolean
+  phone?: boolean
+  whatsapp?: boolean
+  address?: boolean
+  weightCategory?: boolean
+  gender?: boolean
+  academicYear?: boolean
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: boolean
+  registeredAt?: boolean
   lastDonationAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -777,15 +992,20 @@ export type StudentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
 
 export type StudentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  studentId?: boolean
   name?: boolean
-  phone?: boolean
-  email?: boolean
   department?: boolean
-  batch?: boolean
+  age?: boolean
   bloodGroup?: boolean
+  phone?: boolean
+  whatsapp?: boolean
+  address?: boolean
+  weightCategory?: boolean
+  gender?: boolean
+  academicYear?: boolean
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: boolean
+  registeredAt?: boolean
   lastDonationAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -793,15 +1013,20 @@ export type StudentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
 
 export type StudentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  studentId?: boolean
   name?: boolean
-  phone?: boolean
-  email?: boolean
   department?: boolean
-  batch?: boolean
+  age?: boolean
   bloodGroup?: boolean
+  phone?: boolean
+  whatsapp?: boolean
+  address?: boolean
+  weightCategory?: boolean
+  gender?: boolean
+  academicYear?: boolean
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: boolean
+  registeredAt?: boolean
   lastDonationAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -809,21 +1034,26 @@ export type StudentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
 
 export type StudentSelectScalar = {
   id?: boolean
-  studentId?: boolean
   name?: boolean
-  phone?: boolean
-  email?: boolean
   department?: boolean
-  batch?: boolean
+  age?: boolean
   bloodGroup?: boolean
+  phone?: boolean
+  whatsapp?: boolean
+  address?: boolean
+  weightCategory?: boolean
+  gender?: boolean
+  academicYear?: boolean
+  willingToDonate?: boolean
   isDonor?: boolean
   donorStatus?: boolean
+  registeredAt?: boolean
   lastDonationAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type StudentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentId" | "name" | "phone" | "email" | "department" | "batch" | "bloodGroup" | "isDonor" | "donorStatus" | "lastDonationAt" | "createdAt" | "updatedAt", ExtArgs["result"]["student"]>
+export type StudentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "department" | "age" | "bloodGroup" | "phone" | "whatsapp" | "address" | "weightCategory" | "gender" | "academicYear" | "willingToDonate" | "isDonor" | "donorStatus" | "registeredAt" | "lastDonationAt" | "createdAt" | "updatedAt", ExtArgs["result"]["student"]>
 export type StudentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   bloodRequests?: boolean | Prisma.Student$bloodRequestsArgs<ExtArgs>
   donorResponses?: boolean | Prisma.Student$donorResponsesArgs<ExtArgs>
@@ -840,15 +1070,20 @@ export type $StudentPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    studentId: string | null
     name: string
-    phone: string | null
-    email: string | null
     department: string | null
-    batch: string | null
+    age: number | null
     bloodGroup: $Enums.BloodGroup | null
+    phone: string | null
+    whatsapp: string | null
+    address: string | null
+    weightCategory: $Enums.WeightCategory | null
+    gender: $Enums.Gender | null
+    academicYear: string | null
+    willingToDonate: boolean
     isDonor: boolean
     donorStatus: $Enums.DonorStatus
+    registeredAt: Date | null
     lastDonationAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -1278,15 +1513,20 @@ export interface Prisma__StudentClient<T, Null = never, ExtArgs extends runtime.
  */
 export interface StudentFieldRefs {
   readonly id: Prisma.FieldRef<"Student", 'String'>
-  readonly studentId: Prisma.FieldRef<"Student", 'String'>
   readonly name: Prisma.FieldRef<"Student", 'String'>
-  readonly phone: Prisma.FieldRef<"Student", 'String'>
-  readonly email: Prisma.FieldRef<"Student", 'String'>
   readonly department: Prisma.FieldRef<"Student", 'String'>
-  readonly batch: Prisma.FieldRef<"Student", 'String'>
+  readonly age: Prisma.FieldRef<"Student", 'Int'>
   readonly bloodGroup: Prisma.FieldRef<"Student", 'BloodGroup'>
+  readonly phone: Prisma.FieldRef<"Student", 'String'>
+  readonly whatsapp: Prisma.FieldRef<"Student", 'String'>
+  readonly address: Prisma.FieldRef<"Student", 'String'>
+  readonly weightCategory: Prisma.FieldRef<"Student", 'WeightCategory'>
+  readonly gender: Prisma.FieldRef<"Student", 'Gender'>
+  readonly academicYear: Prisma.FieldRef<"Student", 'String'>
+  readonly willingToDonate: Prisma.FieldRef<"Student", 'Boolean'>
   readonly isDonor: Prisma.FieldRef<"Student", 'Boolean'>
   readonly donorStatus: Prisma.FieldRef<"Student", 'DonorStatus'>
+  readonly registeredAt: Prisma.FieldRef<"Student", 'DateTime'>
   readonly lastDonationAt: Prisma.FieldRef<"Student", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Student", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Student", 'DateTime'>

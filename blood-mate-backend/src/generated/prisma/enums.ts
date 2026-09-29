@@ -58,3 +58,20 @@ export const ResponseStatus = {
 } as const
 
 export type ResponseStatus = (typeof ResponseStatus)[keyof typeof ResponseStatus]
+
+
+export const WeightCategory = {
+  ABOVE_45_KG: 'ABOVE_45_KG',
+  BELOW_45_KG: 'BELOW_45_KG'
+} as const
+
+export type WeightCategory = (typeof WeightCategory)[keyof typeof WeightCategory]
+
+
+export const Gender = {
+  MALE: 'MALE',
+  FEMALE: 'FEMALE',
+  OTHER: 'OTHER'
+} as const
+
+export type Gender = (typeof Gender)[keyof typeof Gender]

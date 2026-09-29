@@ -45,6 +45,17 @@ enum ResponseStatus {
   NO_RESPONSE
 }
 
+enum WeightCategory {
+  ABOVE_45_KG
+  BELOW_45_KG
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -59,30 +70,39 @@ model User {
 model Student {
   id String @id @default(cuid())
 
-  studentId String? @unique
-  name      String
-
-  phone     String?
-  email     String?
+  name       String
   department String?
-  batch      String?
+  age        Int?
 
   bloodGroup BloodGroup?
 
-  isDonor    Boolean      @default(false)
+  phone    String?
+  whatsapp String?
+  address  String?
+
+  weightCategory WeightCategory?
+  gender         Gender?
+  academicYear   String?
+
+  willingToDonate Boolean @default(false)
+  isDonor         Boolean @default(false)
+
   donorStatus DonorStatus @default(INACTIVE)
 
+  registeredAt   DateTime?
   lastDonationAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  bloodRequests BloodRequest[]
+  bloodRequests  BloodRequest[]
   donorResponses DonorResponse[]
 
   @@index([bloodGroup])
   @@index([donorStatus])
   @@index([phone])
+  @@index([whatsapp])
+  @@index([department])
 }
 
 model BloodRequest {
@@ -93,7 +113,7 @@ model BloodRequest {
   location    String?
 
   bloodGroup BloodGroup
-  units      Int @default(1)
+  units      Int        @default(1)
 
   requiredAt DateTime?
 

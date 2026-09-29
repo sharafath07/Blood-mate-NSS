@@ -3,18 +3,22 @@ import { BloodGroup } from "../generated/prisma/client";
 export function normalizeBloodGroup(
     value: unknown
 ): BloodGroup | null {
-    if (value === null || value === undefined) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
         return null;
     }
 
     const normalized = String(value)
         .trim()
         .toUpperCase()
-        .replace(/\s+/g, "")
-        .replace("POSITIVE", "+")
-        .replace("NEGATIVE", "-");
+        .replace(/\s+/g, "");
 
-    const bloodGroups: Record<string, BloodGroup> = {
+    const bloodGroups: Record<
+        string,
+        BloodGroup
+    > = {
         "A+": BloodGroup.A_POSITIVE,
         "A-": BloodGroup.A_NEGATIVE,
         "B+": BloodGroup.B_POSITIVE,
