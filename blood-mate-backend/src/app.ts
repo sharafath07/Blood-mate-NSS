@@ -5,6 +5,7 @@ import healthRoutes from "./routes/health.routes.js";
 import studentRoutes from "./routes/student.routes.js";
 import importRoutes from "./routes/import.routes.js";
 import bloodRequestRoutes from "./routes/blood-request.routes.js";
+import donorResponseRoutes from "./routes/donor-response.routes.js";
 
 const app = express();
 
@@ -20,5 +21,6 @@ app.use("/api/health", healthRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/import", importRoutes);
 app.use("/api/blood-requests", bloodRequestRoutes);
+app.use("/api/donor-responses", donorResponseRoutes);
 
 export default app;
