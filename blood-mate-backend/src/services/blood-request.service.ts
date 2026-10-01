@@ -50,3 +50,84 @@ export async function createBloodRequest(
         donors,
     };
 }
+
+export async function getAllBloodRequests() {
+    return prisma.bloodRequest.findMany({
+        orderBy: {
+            createdAt: "desc",
+        },
+        include: {
+            requester: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                },
+            },
+            responses: {
+                select: {
+                    id: true,
+                    donorId: true,
+                    status: true,
+                    respondedAt: true,
+                },
+            },
+        },
+    });
+}
+
+export async function getBloodRequestById(id: string) {
+    return prisma.bloodRequest.findUnique({
+        where: {
+            id,
+        },
+        include: {
+            requester: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                },
+            },
+            responses: {
+                include: {
+                    donor: {
+                        select: {
+                            id: true,
+                            name: true,
+                            bloodGroup: true,
+                            phone: true,
+                            whatsapp: true,
+                            department: true,
+                            donorStatus: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+}
+
+export async function updateBloodRequestStatus(
+    id: string,
+    status: RequestStatus
+) {
+    return prisma.bloodRequest.update({
+        where: {
+            id,
+        },
+        data: {
+            status,
+        },
+    });
+}
+
+export async function deleteBloodRequest(id: string) {
+    return prisma.bloodRequest.delete({
+        where: {
+            id,
+        },
+    });
+}
