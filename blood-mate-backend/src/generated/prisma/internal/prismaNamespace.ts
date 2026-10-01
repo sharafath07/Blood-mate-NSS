@@ -797,6 +797,8 @@ export const BloodRequestScalarFieldEnum = {
   patientName: 'patientName',
   hospital: 'hospital',
   location: 'location',
+  bystanderName: 'bystanderName',
+  bystanderPhone: 'bystanderPhone',
   bloodGroup: 'bloodGroup',
   units: 'units',
   requiredAt: 'requiredAt',

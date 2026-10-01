@@ -1,23 +1,13 @@
-import {
-    Request,
-    Response,
-} from "express";
+import { Request, Response } from "express";
+import { BloodGroup } from "../generated/prisma/client.js";
+import { createBloodRequest } from "../services/blood-request.service.js";
 
-import {
-    BloodGroup,
-} from "../generated/prisma/client.js";
-
-import {
-    createBloodRequest,
-} from "../services/blood-request.service.js";
-
-export async function createRequest(
-    req: Request,
-    res: Response
-) {
+export async function createRequest(req: Request, res: Response) {
     try {
         const {
             patientName,
+            bystanderName,
+            bystanderPhone,
             hospital,
             location,
             bloodGroup,
@@ -28,57 +18,46 @@ export async function createRequest(
 
         if (
             !patientName ||
+            !bystanderName ||
+            !bystanderPhone ||
             !bloodGroup ||
             !requesterId
         ) {
             res.status(400).json({
                 success: false,
                 message:
-                    "patientName, bloodGroup and requesterId are required",
+                    "patientName, bystanderName, bystanderPhone, bloodGroup and requesterId are required",
             });
-
             return;
         }
 
-        if (
-            !Object.values(BloodGroup).includes(
-                bloodGroup
-            )
-        ) {
+        if (!Object.values(BloodGroup).includes(bloodGroup)) {
             res.status(400).json({
                 success: false,
-                message:
-                    "Invalid blood group",
+                message: "Invalid blood group",
             });
-
             return;
         }
 
-        const request =
-            await createBloodRequest({
-                patientName,
-                hospital,
-                location,
-                bloodGroup,
-                units,
-                requiredAt:
-                    requiredAt
-                        ? new Date(requiredAt)
-                        : undefined,
-                requesterId,
-            });
+        const request = await createBloodRequest({
+            patientName,
+            bystanderName,
+            bystanderPhone,
+            hospital,
+            location,
+            bloodGroup,
+            units,
+            requiredAt: requiredAt ? new Date(requiredAt) : undefined,
+            requesterId,
+        });
 
         res.status(201).json({
             success: true,
-            message:
-                "Blood request created successfully",
+            message: "Blood request created successfully",
             data: request,
         });
     } catch (error) {
-        console.error(
-            "Blood request creation error:",
-            error
-        );
+        console.error("Blood request creation error:", error);
 
         res.status(500).json({
             success: false,
