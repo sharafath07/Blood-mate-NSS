@@ -6,6 +6,7 @@ import studentRoutes from "./routes/student.routes.js";
 import importRoutes from "./routes/import.routes.js";
 import bloodRequestRoutes from "./routes/blood-request.routes.js";
 import donorResponseRoutes from "./routes/donor-response.routes.js";
+import donorMatchingRoutes from "./routes/donor-matching.routes.js";
 
 const app = express();
 
@@ -22,5 +23,6 @@ app.use("/api/students", studentRoutes);
 app.use("/api/import", importRoutes);
 app.use("/api/blood-requests", bloodRequestRoutes);
 app.use("/api/donor-responses", donorResponseRoutes);
+app.use("/api/donor-matching", donorMatchingRoutes);
 
 export default app;

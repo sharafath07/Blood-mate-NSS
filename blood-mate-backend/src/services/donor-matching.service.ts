@@ -1,9 +1,8 @@
 import prisma from "../config/database.js";
-
 import {
     BloodGroup,
     DonorStatus,
-} from "../generated/prisma/client";
+} from "../generated/prisma/client.js";
 
 export async function findDonorsByBloodGroup(
     bloodGroup: BloodGroup
@@ -15,7 +14,17 @@ export async function findDonorsByBloodGroup(
             isDonor: true,
             donorStatus: DonorStatus.AVAILABLE,
         },
-
+        select: {
+            id: true,
+            name: true,
+            department: true,
+            bloodGroup: true,
+            phone: true,
+            whatsapp: true,
+            gender: true,
+            academicYear: true,
+            donorStatus: true,
+        },
         orderBy: {
             createdAt: "asc",
         },
