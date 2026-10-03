@@ -12,48 +12,18 @@ import {
     TrendingUp,
     Users,
 } from 'lucide-react'
-
-const stats = [
-    {
-        label: 'Registered Students',
-        value: '1,248',
-        change: '+8.2%',
-        description: 'from last month',
-        icon: Users,
-    },
-    {
-        label: 'Active Donors',
-        value: '386',
-        change: '+12.4%',
-        description: 'from last month',
-        icon: HeartPulse,
-    },
-    {
-        label: 'Active Requests',
-        value: '24',
-        change: '6 urgent',
-        description: 'need attention',
-        icon: Droplets,
-        urgent: true,
-    },
-    {
-        label: 'Requests Fulfilled',
-        value: '91.7%',
-        change: '+4.6%',
-        description: 'this month',
-        icon: ShieldCheck,
-    },
-]
+import { useEffect, useState } from 'react'
+import { api } from '../services/api'
 
 const bloodGroups = [
     { group: 'O+', count: 96, percentage: 82 },
     { group: 'A+', count: 78, percentage: 68 },
     { group: 'B+', count: 64, percentage: 56 },
     { group: 'AB+', count: 38, percentage: 34 },
-    { group: 'O−', count: 31, percentage: 28 },
-    { group: 'A−', count: 28, percentage: 24 },
-    { group: 'B−', count: 26, percentage: 22 },
-    { group: 'AB−', count: 12, percentage: 11 },
+    { group: 'O-', count: 31, percentage: 28 },
+    { group: 'A-', count: 28, percentage: 24 },
+    { group: 'B-', count: 26, percentage: 22 },
+    { group: 'AB-', count: 12, percentage: 11 },
 ]
 
 const requests = [
@@ -102,7 +72,14 @@ function StatCard({
     description,
     icon: Icon,
     urgent,
-}: (typeof stats)[number]) {
+}: {
+    label: string
+    value: string | number
+    change: string
+    description: string
+    icon: typeof Users
+    urgent?: boolean
+}) {
     return (
         <div className="group relative overflow-hidden rounded-2xl border border-neutral-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)]">
             <div className="flex items-start justify-between">
@@ -201,6 +178,69 @@ function UrgencyBadge({ urgency }: { urgency: string }) {
 }
 
 export default function Dashboard() {
+    const [dashboardStats, setDashboardStats] = useState({
+        registeredStudents: 0,
+        activeDonors: 0,
+        activeRequests: 0,
+        requestsFulfilled: 0,
+        urgentRequests: 0,
+    })
+
+    const [loading, setLoading] = useState(true)
+    const [apiError, setApiError] = useState<string | null>(null)
+    const stats = [
+        {
+            label: 'Registered Students',
+            value: dashboardStats.registeredStudents,
+            change: '+8.2%',
+            description: 'from last month',
+            icon: Users,
+        },
+        {
+            label: 'Active Donors',
+            value: dashboardStats.activeDonors,
+            change: '+12.4%',
+            description: 'from last month',
+            icon: HeartPulse,
+        },
+        {
+            label: 'Active Requests',
+            value: dashboardStats.activeRequests,
+            change: `${dashboardStats.urgentRequests} urgent`,
+            description: 'need attention',
+            icon: Droplets,
+            urgent: true,
+        },
+        {
+            label: 'Requests Fulfilled',
+            value: `${dashboardStats.requestsFulfilled}%`,
+            change: '+4.6%',
+            description: 'this month',
+            icon: ShieldCheck,
+        },
+    ]
+
+    useEffect(() => {
+        const loadStats = async () => {
+            try {
+                setLoading(true)
+                setApiError(null)
+
+                const data = await api.dashboard.getStats()
+
+                setDashboardStats(data)
+            } catch (error) {
+                console.error('Failed to load dashboard stats:', error)
+                setApiError('Unable to load dashboard statistics.')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        loadStats()
+    }, [])
+
+
     return (
         <div className="mx-auto max-w-[1500px]">
 
@@ -235,6 +275,18 @@ export default function Dashboard() {
                     </button>
                 </div>
             </div>
+
+            {apiError && (
+                <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {apiError}
+                </div>
+            )}
+
+            {loading && (
+                <div className="mb-5 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-500">
+                    Loading dashboard statistics...
+                </div>
+            )}
 
             {/* Stats */}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

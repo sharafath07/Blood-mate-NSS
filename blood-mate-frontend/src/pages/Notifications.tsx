@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import {
     Bell,
@@ -86,6 +86,28 @@ export default function Notifications() {
     const [sent, setSent] = useState(false)
     const [apiError, setApiError] = useState<string | null>(null)
     const navigate = useNavigate()
+    const [loadingHistory, setLoadingHistory] = useState(true)
+    const [historyError, setHistoryError] = useState<string | null>(null)
+
+    useEffect(() => {
+        const loadNotifications = async () => {
+            try {
+                setLoadingHistory(true)
+                setHistoryError(null)
+
+                const data = await api.notifications.getAll()
+
+                setRecords(data)
+            } catch (error) {
+                console.error('Failed to load notification history:', error)
+                setHistoryError('Unable to load notification history from the server.')
+            } finally {
+                setLoadingHistory(false)
+            }
+        }
+
+        loadNotifications()
+    }, [])
 
     const filteredRecords = useMemo(() => {
         const query = search.toLowerCase().trim()
@@ -482,6 +504,18 @@ export default function Notifications() {
                         />
                     </div>
                 </div>
+
+                {historyError && (
+                    <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {historyError}
+                    </div>
+                )}
+
+                {loadingHistory && (
+                    <div className="mb-5 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-500">
+                        Loading notification history...
+                    </div>
+                )}
 
                 {/* Desktop table */}
                 <div className="hidden overflow-x-auto md:block">

@@ -1,6 +1,7 @@
 import type { BloodRequest } from '../data/bloodRequests'
 import type { Donor } from '../data/donors'
-
+import type { NotificationRecord } from '../data/notifications'
+import type { DashboardStats } from '../types/api'
 
 const API_BASE_URL =
     import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -84,11 +85,11 @@ export const api = {
                 body: JSON.stringify(data),
             }),
 
-        getAll: () => request('/notifications'),
+        getAll: () => request<NotificationRecord[]>('/notifications'),
     },
 
     dashboard: {
         getStats: () =>
-            request('/dashboard/stats'),
+            request<DashboardStats>('/dashboard/stats'),
     },
 }
