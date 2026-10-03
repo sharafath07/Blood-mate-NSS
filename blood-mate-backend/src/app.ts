@@ -10,6 +10,7 @@ import donorMatchingRoutes from "./routes/donor-matching.routes.js";
 import donorRoutes from "./routes/donor.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import whatsappRoutes from "./routes/whatsapp.routes.js";
 
 const app = express();
 
@@ -30,5 +31,6 @@ app.use("/api/donor-matching", donorMatchingRoutes);
 app.use("/api/donors", donorRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/whatsapp", whatsappRoutes);
 
 export default app;
