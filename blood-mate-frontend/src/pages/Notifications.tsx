@@ -21,6 +21,7 @@ import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import Avatar from '../components/ui/Avatar'
+import { api } from '../services/api'
 
 import type { Donor } from '../data/donors'
 
@@ -83,6 +84,7 @@ export default function Notifications() {
     const [message, setMessage] = useState(defaultMessage)
     const [sending, setSending] = useState(false)
     const [sent, setSent] = useState(false)
+    const [apiError, setApiError] = useState<string | null>(null)
     const navigate = useNavigate()
 
     const filteredRecords = useMemo(() => {
@@ -133,37 +135,68 @@ export default function Notifications() {
 
         setSending(true)
 
-        await new Promise((resolve) => setTimeout(resolve, 800))
+        try {
+            setApiError(null)
 
-        const newNotifications = selectedDonors.map((donor) => ({
-            id: crypto.randomUUID(),
-            requestId: notificationState?.requestId ?? '',
-            donorId: donor.id,
-            donorName: donor.name,
-            phone: donor.phone,
-            bloodGroup: donor.bloodGroup,
-            hospital: notificationState?.hospital ?? '',
-            message: message
-                .replace('[Name]', donor.name)
-                .replace(
-                    '[Blood Group]',
+            const notifications = selectedDonors.map((donor) => ({
+                requestId: notificationState?.requestId ?? '',
+                donorId: donor.id,
+                donorName: donor.name,
+                phone: donor.phone,
+                bloodGroup:
                     notificationState?.bloodGroup ?? donor.bloodGroup,
-                )
-                .replace(
-                    '[Hospital]',
-                    notificationState?.hospital ?? '',
-                ),
-            status: 'Sent' as const,
-            sentAt: 'Just now',
-        }))
+                hospital: notificationState?.hospital ?? '',
+                message: message
+                    .replace('[Name]', donor.name)
+                    .replace(
+                        '[Blood Group]',
+                        notificationState?.bloodGroup ?? donor.bloodGroup,
+                    )
+                    .replace(
+                        '[Hospital]',
+                        notificationState?.hospital ?? '',
+                    ),
+            }))
 
-        setRecords((current) => [
-            ...newNotifications,
-            ...current,
-        ])
+            await api.notifications.send({
+                notifications,
+            })
 
-        setSending(false)
-        setSent(true)
+            const newNotifications = selectedDonors.map((donor) => ({
+                id: crypto.randomUUID(),
+                requestId: notificationState?.requestId ?? '',
+                donorId: donor.id,
+                donorName: donor.name,
+                phone: donor.phone,
+                bloodGroup:
+                    notificationState?.bloodGroup ?? donor.bloodGroup,
+                hospital: notificationState?.hospital ?? '',
+                message: message
+                    .replace('[Name]', donor.name)
+                    .replace(
+                        '[Blood Group]',
+                        notificationState?.bloodGroup ?? donor.bloodGroup,
+                    )
+                    .replace(
+                        '[Hospital]',
+                        notificationState?.hospital ?? '',
+                    ),
+                status: 'Sent' as const,
+                sentAt: 'Just now',
+            }))
+
+            setRecords((current) => [
+                ...newNotifications,
+                ...current,
+            ])
+
+            setSent(true)
+        } catch (error) {
+            console.error('Failed to send notifications:', error)
+            setApiError('Unable to send notifications. Please try again.')
+        } finally {
+            setSending(false)
+        }
     }
 
     return (
@@ -541,6 +574,12 @@ export default function Notifications() {
                         <p className="mt-1 text-xs text-neutral-400">
                             Try a different search term.
                         </p>
+                    </div>
+                )}
+
+                {apiError && (
+                    <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {apiError}
                     </div>
                 )}
             </Card>

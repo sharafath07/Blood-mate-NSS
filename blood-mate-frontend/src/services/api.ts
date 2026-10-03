@@ -1,6 +1,7 @@
 import type { BloodRequest } from '../data/bloodRequests'
 import type { Donor } from '../data/donors'
 
+
 const API_BASE_URL =
     import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -83,8 +84,7 @@ export const api = {
                 body: JSON.stringify(data),
             }),
 
-        getAll: () =>
-            request('/notifications'),
+        getAll: () => request('/notifications'),
     },
 
     dashboard: {
