@@ -17,8 +17,13 @@ import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
+import StudentForm from '../components/students/StudentForm'
 
-import { students, type DonorStatus, type Student } from '../data/students'
+import {
+    students as initialStudents,
+    type DonorStatus,
+    type Student,
+} from '../data/students'
 
 const departments = [
     'All departments',
@@ -188,9 +193,11 @@ function StudentCard({
 function StudentDetails({
     student,
     onClose,
+    onEdit
 }: {
     student: Student
     onClose: () => void
+    onEdit: (student: Student) => void
 }) {
     return (
         <>
@@ -294,7 +301,10 @@ function StudentDetails({
                     </div>
 
                     <div className="mt-6 flex gap-2">
-                        <Button className="flex-1">
+                        <Button
+                            className="flex-1"
+                            onClick={() => onEdit(student)}
+                        >
                             Edit student
                         </Button>
 
@@ -313,16 +323,41 @@ function StudentDetails({
 }
 
 export default function Students() {
+    const [studentList, setStudentList] = useState<Student[]>(
+        initialStudents,
+    )
     const [search, setSearch] = useState('')
     const [department, setDepartment] = useState('All departments')
     const [bloodGroup, setBloodGroup] = useState('All blood groups')
     const [status, setStatus] = useState('All statuses')
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+    const [formOpen, setFormOpen] = useState(false)
+    const [editingStudent, setEditingStudent] =
+        useState<Student | null>(null)
+
+    function handleSaveStudent(student: Student) {
+        setStudentList((current) => {
+            const exists = current.some(
+                (item) => item.id === student.id,
+            )
+
+            if (exists) {
+                return current.map((item) =>
+                    item.id === student.id ? student : item,
+                )
+            }
+
+            return [student, ...current]
+        })
+
+        setFormOpen(false)
+        setEditingStudent(null)
+    }
 
     const filteredStudents = useMemo(() => {
         const query = search.toLowerCase().trim()
 
-        return students.filter((student) => {
+        return studentList.filter((student) => {
             const matchesSearch =
                 !query ||
                 student.name.toLowerCase().includes(query) ||
@@ -386,7 +421,13 @@ export default function Students() {
                     </p>
                 </div>
 
-                <Button icon={<Plus className="h-3.5 w-3.5" />}>
+                <Button
+                    icon={<Plus className="h-3.5 w-3.5" />}
+                    onClick={() => {
+                        setEditingStudent(null)
+                        setFormOpen(true)
+                    }}
+                >
                     Add student
                 </Button>
             </div>
@@ -502,7 +543,7 @@ export default function Students() {
                         </h2>
 
                         <p className="mt-1 text-[9px] text-neutral-400">
-                            Showing {filteredStudents.length} of {students.length} records
+                            Showing {filteredStudents.length} of {studentList.length} records
                         </p>
                     </div>
 
@@ -589,7 +630,7 @@ export default function Students() {
                 {filteredStudents.length > 0 && (
                     <div className="flex items-center justify-between border-t border-neutral-100 px-5 py-3.5">
                         <p className="text-[9px] text-neutral-400">
-                            1–{filteredStudents.length} of {students.length}
+                            1–{filteredStudents.length} of {studentList.length}
                         </p>
 
                         <div className="flex items-center gap-1">
@@ -614,6 +655,22 @@ export default function Students() {
                 <StudentDetails
                     student={selectedStudent}
                     onClose={() => setSelectedStudent(null)}
+                    onEdit={(student) => {
+                        setSelectedStudent(null)
+                        setEditingStudent(student)
+                        setFormOpen(true)
+                    }}
+                />
+            )}
+
+            {formOpen && (
+                <StudentForm
+                    student={editingStudent}
+                    onClose={() => {
+                        setFormOpen(false)
+                        setEditingStudent(null)
+                    }}
+                    onSave={handleSaveStudent}
                 />
             )}
         </div>
