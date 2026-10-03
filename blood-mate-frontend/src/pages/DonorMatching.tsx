@@ -15,7 +15,7 @@ import {
     Users,
     X,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 import Avatar from '../components/ui/Avatar'
@@ -23,6 +23,7 @@ import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
+import { api } from '../services/api'
 
 import {
     donors,
@@ -92,16 +93,44 @@ export default function DonorMatching() {
     const [selectedDonor, setSelectedDonor] =
         useState<Donor | null>(null)
 
+    const [loading, setLoading] = useState(true)
+    const [apiError, setApiError] = useState<string | null>(null)
+
     const navigate = useNavigate()
     const location = useLocation()
-
+    const [donorList, setDonorList] = useState<Donor[]>(donors)
     const requestFromState = location.state?.request as BloodRequest | undefined
     const selectedRequest = requestFromState ?? bloodRequests[0]
+
+    useEffect(() => {
+        const loadDonors = async () => {
+            if (!selectedRequest?.id) {
+                setLoading(false)
+                return
+            }
+
+            try {
+                setLoading(true)
+                setApiError(null)
+
+                const data = await api.donors.getMatches(selectedRequest.id)
+
+                setDonorList(data)
+            } catch (error) {
+                console.error('Failed to load donor matches:', error)
+                setApiError('Unable to load donor matches from the server.')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        loadDonors()
+    }, [selectedRequest?.id])
 
     const filteredDonors = useMemo(() => {
         const query = search.toLowerCase().trim()
 
-        return donors.filter((donor) => {
+        return donorList.filter((donor) => {
             const matchesSearch =
                 !query ||
                 donor.name.toLowerCase().includes(query) ||
@@ -122,15 +151,15 @@ export default function DonorMatching() {
                 matchesBlood
             )
         })
-    }, [search, availability, bloodGroup])
+    }, [donorList, search, availability, bloodGroup])
 
-    const availableCount = donors.filter(
+    const availableCount = donorList.filter(
         (donor) =>
             donor.availability === 'Available now' ||
             donor.availability === 'Available today',
     ).length
 
-    const excellentMatches = donors.filter(
+    const excellentMatches = donorList.filter(
         (donor) => donor.matchLevel === 'Excellent match',
     ).length
 
@@ -160,7 +189,7 @@ export default function DonorMatching() {
     const handleNotifySelected = () => {
         if (selected.length === 0) return
 
-        const donorsToNotify = donors.filter((donor) =>
+        const donorsToNotify = donorList.filter((donor) =>
             selected.includes(donor.id),
         )
 
@@ -218,32 +247,33 @@ export default function DonorMatching() {
                         <div>
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-['Manrope'] text-[23px] font-extrabold tracking-tight">
-                                    O+
+                                    {selectedRequest.bloodGroup}
                                 </span>
 
                                 <span className="rounded-full bg-red-500/20 px-2 py-1 text-[9px] font-bold text-red-300">
-                                    Critical
+                                    {selectedRequest.urgency}
                                 </span>
                             </div>
 
                             <p className="mt-1 text-[11px] text-white/50">
-                                Request #BM-1024 • Muhammed Riyas
+                                Request #{selectedRequest.id} • {selectedRequest.patientName}
                             </p>
 
                             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[9px] text-white/45">
                                 <span className="flex items-center gap-1.5">
                                     <Droplets className="h-3 w-3" />
-                                    2 units required
+                                    {selectedRequest.unitsRequired} unit
+                                    {selectedRequest.unitsRequired !== 1 ? 's' : ''} required
                                 </span>
 
                                 <span className="flex items-center gap-1.5">
                                     <MapPin className="h-3 w-3" />
-                                    Baby Memorial Hospital
+                                    {selectedRequest.hospital}
                                 </span>
 
                                 <span className="flex items-center gap-1.5">
                                     <Clock3 className="h-3 w-3" />
-                                    Required today
+                                    Required {selectedRequest.requiredDate}
                                 </span>
                             </div>
                         </div>
@@ -282,7 +312,7 @@ export default function DonorMatching() {
                 <MatchStat
                     icon={<Users />}
                     label="Matched donors"
-                    value={donors.length}
+                    value={donorList.length}
                     description="Potentially compatible"
                 />
 
@@ -377,6 +407,20 @@ export default function DonorMatching() {
                             Notify selected
                         </Button>
                     </div>
+                </div>
+            )}
+
+            {loading && (
+                <div className="rounded-2xl border border-neutral-200 bg-white p-8 text-center">
+                    <p className="text-sm text-neutral-500">
+                        Finding compatible donors...
+                    </p>
+                </div>
+            )}
+
+            {apiError && (
+                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {apiError}
                 </div>
             )}
 

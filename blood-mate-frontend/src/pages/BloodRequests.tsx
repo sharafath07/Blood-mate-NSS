@@ -11,13 +11,14 @@ import {
     Search,
     X,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 // import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
+import { api } from '../services/api'
 
 import {
     bloodRequests,
@@ -62,20 +63,36 @@ const bloodGroups = [
 ]
 
 export default function BloodRequests() {
-    const [requests, setRequests] =
-        useState<BloodRequest[]>(bloodRequests)
-
+    const [requests, setRequests] = useState<BloodRequest[]>(bloodRequests)
+    const [loading, setLoading] = useState(true)
+    const [apiError, setApiError] = useState<string | null>(null)
     const [formOpen, setFormOpen] = useState(false)
-    const [editingRequest, setEditingRequest] =
-        useState<BloodRequest | null>(null)
-
+    const [editingRequest, setEditingRequest] = useState<BloodRequest | null>(null)
     const [search, setSearch] = useState('')
     const [status, setStatus] = useState('All statuses')
     const [urgency, setUrgency] = useState('All urgency')
     const [bloodGroup, setBloodGroup] = useState('All blood groups')
+    const [selectedRequest, setSelectedRequest] = useState<BloodRequest | null>(null)
 
-    const [selectedRequest, setSelectedRequest] =
-        useState<BloodRequest | null>(null)
+    useEffect(() => {
+        const loadRequests = async () => {
+            try {
+                setLoading(true)
+                setApiError(null)
+
+                const data = await api.requests.getAll()
+
+                setRequests(data)
+            } catch (error) {
+                console.error('Failed to load blood requests:', error)
+                setApiError('Unable to load blood requests from the server.')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        loadRequests()
+    }, [])
 
     const filteredRequests = useMemo(() => {
         const query = search.toLowerCase().trim()
@@ -135,21 +152,32 @@ export default function BloodRequests() {
         setBloodGroup('All blood groups')
     }
 
-    const handleSaveRequest = (request: BloodRequest) => {
-        setRequests((current) => {
-            const exists = current.some((item) => item.id === request.id)
+    const handleSaveRequest = async (request: BloodRequest) => {
+        try {
+            setApiError(null)
+
+            const exists = requests.some((item) => item.id === request.id)
 
             if (exists) {
-                return current.map((item) =>
-                    item.id === request.id ? request : item,
+                const updated = await api.requests.update(request.id, request)
+
+                setRequests((current) =>
+                    current.map((item) =>
+                        item.id === request.id ? updated : item,
+                    ),
                 )
+            } else {
+                const created = await api.requests.create(request)
+
+                setRequests((current) => [created, ...current])
             }
 
-            return [request, ...current]
-        })
-
-        setFormOpen(false)
-        setEditingRequest(null)
+            setFormOpen(false)
+            setEditingRequest(null)
+        } catch (error) {
+            console.error('Failed to save blood request:', error)
+            setApiError('Unable to save the blood request.')
+        }
     }
 
     return (
@@ -315,6 +343,20 @@ export default function BloodRequests() {
                         More filters
                     </button>
                 </div>
+
+                {loading && (
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-8 text-center">
+                        <p className="text-sm text-neutral-500">
+                            Loading blood requests...
+                        </p>
+                    </div>
+                )}
+
+                {apiError && (
+                    <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {apiError}
+                    </div>
+                )}
 
                 {/* Desktop */}
                 <div className="hidden overflow-x-auto lg:block">

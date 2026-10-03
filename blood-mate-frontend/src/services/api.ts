@@ -1,3 +1,6 @@
+import type { BloodRequest } from '../data/bloodRequests'
+import type { Donor } from '../data/donors'
+
 const API_BASE_URL =
     import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -50,20 +53,19 @@ export const api = {
     },
 
     requests: {
-        getAll: () =>
-            request('/requests'),
+        getAll: () => request<BloodRequest[]>('/requests'),
 
         getById: (id: string) =>
-            request(`/requests/${id}`),
+            request<BloodRequest>(`/requests/${id}`),
 
-        create: <T>(data: T) =>
-            request('/requests', {
+        create: (data: BloodRequest) =>
+            request<BloodRequest>('/requests', {
                 method: 'POST',
                 body: JSON.stringify(data),
             }),
 
-        update: <T>(id: string, data: T) =>
-            request(`/requests/${id}`, {
+        update: (id: string, data: BloodRequest) =>
+            request<BloodRequest>(`/requests/${id}`, {
                 method: 'PUT',
                 body: JSON.stringify(data),
             }),
@@ -71,7 +73,7 @@ export const api = {
 
     donors: {
         getMatches: (requestId: string) =>
-            request(`/requests/${requestId}/donors`),
+            request<Donor[]>(`/requests/${requestId}/donors`),
     },
 
     notifications: {
