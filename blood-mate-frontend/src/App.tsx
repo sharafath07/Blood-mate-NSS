@@ -3,6 +3,7 @@ import DashboardLayout from './layouts/DashboardLayout'
 import Dashboard from './pages/Dashboard'
 import Students from './pages/Students'
 import BloodRequests from './pages/BloodRequests'
+import DonorMatching from './pages/DonorMatching'
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -31,10 +32,7 @@ export default function App() {
 
           <Route path="/requests" element={<BloodRequests />} />
 
-          <Route
-            path="/donors"
-            element={<Placeholder title="Donor Matching" />}
-          />
+          <Route path="/donors" element={<DonorMatching />} />
 
           <Route
             path="/notifications"
