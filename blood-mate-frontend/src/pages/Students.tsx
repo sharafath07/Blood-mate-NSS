@@ -19,7 +19,7 @@ import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
 import StudentForm from '../components/students/StudentForm'
 
-import api from '../services/api'
+import { api } from '../services/api'
 
 import {
     students as initialStudents,

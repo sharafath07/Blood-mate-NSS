@@ -1,4 +1,3 @@
-import type { Student } from '../data/students'
 import type { BloodRequest } from '../data/bloodRequests'
 import type { Donor } from '../data/donors'
 

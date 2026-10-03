@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import {
     Bell,
     Check,
@@ -76,7 +77,9 @@ export default function Notifications() {
         donors?: Donor[]
     } | null
 
-    const selectedDonors = notificationState?.donors ?? []
+    const [selectedDonors, setSelectedDonors] = useState<Donor[]>(
+        notificationState?.donors ?? [],
+    )
     const [message, setMessage] = useState(defaultMessage)
     const [sending, setSending] = useState(false)
     const [sent, setSent] = useState(false)
@@ -154,7 +157,7 @@ export default function Notifications() {
             sentAt: 'Just now',
         }))
 
-        setNotifications((current) => [
+        setRecords((current) => [
             ...newNotifications,
             ...current,
         ])
@@ -248,7 +251,9 @@ export default function Notifications() {
                                         Send notification
                                     </h2>
                                     <p className="mt-1 text-xs text-neutral-500">
-                                        BM-1024 · O+ · Critical request
+                                        {notificationState?.requestId ?? 'Request'} ·{' '}
+                                        {notificationState?.bloodGroup ?? 'Blood group'} ·{' '}
+                                        Donor notification
                                     </p>
                                 </div>
 
@@ -550,7 +555,7 @@ function StatCard({
 }: {
     label: string
     value: number
-    icon: React.ReactNode
+    icon: ReactNode
 }) {
     return (
         <Card className="p-4">

@@ -1,60 +1,76 @@
-import type { SelectHTMLAttributes } from 'react'
-import { ChevronDown } from 'lucide-react'
+import type { ChangeEvent, SelectHTMLAttributes } from 'react'
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectOption {
+    label: string
+    value: string
+}
+
+type SelectOptions = string[] | SelectOption[]
+
+interface SelectProps
+    extends Omit<
+        SelectHTMLAttributes<HTMLSelectElement>,
+        'value' | 'onChange'
+    > {
     label?: string
-    error?: string
-    options: string[]
+    value: string
+    onChange: (event: ChangeEvent<HTMLSelectElement>) => void
+    options: SelectOptions
     placeholder?: string
+    error?: string
 }
 
 export default function Select({
     label,
-    error,
+    value,
+    onChange,
     options,
     placeholder,
-    className = '',
+    error,
+    id,
     ...props
 }: SelectProps) {
     return (
-        <div className="w-full">
+        <div className="space-y-2">
             {label && (
-                <label className="mb-1.5 block text-[10px] font-bold text-neutral-600">
+                <label
+                    htmlFor={id}
+                    className="block text-sm font-medium text-neutral-800"
+                >
                     {label}
                 </label>
             )}
 
-            <div className="relative">
-                <select
-                    className={`
-            w-full appearance-none rounded-xl border
-            bg-white px-3.5 py-2.5 pr-9
-            text-[12px] text-neutral-800
-            outline-none transition
-            ${error
-                            ? 'border-red-300 focus:border-red-500'
-                            : 'border-neutral-200 focus:border-neutral-400'
-                        }
-            ${className}
-          `}
-                    {...props}
-                >
-                    {placeholder && (
-                        <option value="">{placeholder}</option>
-                    )}
+            <select
+                {...props}
+                id={id}
+                value={value}
+                onChange={onChange}
+                className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100 ${error ? 'border-red-400' : 'border-neutral-200'
+                    }`}
+            >
+                {placeholder && (
+                    <option value="" disabled>
+                        {placeholder}
+                    </option>
+                )}
 
-                    {options.map((option) => (
-                        <option key={option} value={option}>
-                            {option}
+                {options.map((option) => {
+                    const item =
+                        typeof option === 'string'
+                            ? { label: option, value: option }
+                            : option
+
+                    return (
+                        <option key={item.value} value={item.value}>
+                            {item.label}
                         </option>
-                    ))}
-                </select>
-
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-            </div>
+                    )
+                })}
+            </select>
 
             {error && (
-                <p className="mt-1 text-[9px] font-medium text-red-500">
+                <p className="text-xs text-red-600">
                     {error}
                 </p>
             )}

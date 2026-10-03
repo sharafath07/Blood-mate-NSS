@@ -14,7 +14,7 @@ import {
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import Badge from '../components/ui/Badge'
+// import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
@@ -22,8 +22,8 @@ import Input from '../components/ui/Input'
 import {
     bloodRequests,
     type BloodRequest,
-    type RequestStatus,
-    type Urgency,
+    // type RequestStatus,
+    // type Urgency,
 } from '../data/bloodRequests'
 
 import {
@@ -52,13 +52,13 @@ const urgencies = [
 const bloodGroups = [
     'All blood groups',
     'A+',
-    'A−',
+    'A-',
     'B+',
-    'B−',
+    'B-',
     'AB+',
-    'AB−',
+    'AB-',
     'O+',
-    'O−',
+    'O-',
 ]
 
 export default function BloodRequests() {
