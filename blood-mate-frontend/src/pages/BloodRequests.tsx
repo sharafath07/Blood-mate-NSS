@@ -152,10 +152,6 @@ export default function BloodRequests() {
         setEditingRequest(null)
     }
 
-    function handleRequestCreated(request: BloodRequest) {
-        setRequests((current) => [request, ...current])
-    }
-
     return (
         <div className="mx-auto max-w-[1500px]">
 
