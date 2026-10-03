@@ -29,6 +29,7 @@ import {
     RequestStatusBadge,
     UrgencyBadge,
 } from '../components/requests/RequestStatusBadge'
+import BloodRequestForm from '../components/requests/BloodRequestForm'
 
 const statuses = [
     'All statuses',
@@ -62,6 +63,10 @@ const bloodGroups = [
 export default function BloodRequests() {
     const [requests, setRequests] =
         useState<BloodRequest[]>(bloodRequests)
+
+    const [formOpen, setFormOpen] = useState(false)
+    const [editingRequest, setEditingRequest] =
+        useState<BloodRequest | null>(null)
 
     const [search, setSearch] = useState('')
     const [status, setStatus] = useState('All statuses')
@@ -130,6 +135,23 @@ export default function BloodRequests() {
         setBloodGroup('All blood groups')
     }
 
+    const handleSaveRequest = (request: BloodRequest) => {
+        setRequests((current) => {
+            const exists = current.some((item) => item.id === request.id)
+
+            if (exists) {
+                return current.map((item) =>
+                    item.id === request.id ? request : item,
+                )
+            }
+
+            return [request, ...current]
+        })
+
+        setFormOpen(false)
+        setEditingRequest(null)
+    }
+
     function handleRequestCreated(request: BloodRequest) {
         setRequests((current) => [request, ...current])
     }
@@ -158,12 +180,13 @@ export default function BloodRequests() {
                 </div>
 
                 <Button
-                    icon={<Plus className="h-3.5 w-3.5" />}
+                    icon={<Plus size={16} />}
                     onClick={() => {
-                        // Form will be connected in the next step.
+                        setEditingRequest(null)
+                        setFormOpen(true)
                     }}
                 >
-                    Create request
+                    Create Request
                 </Button>
             </div>
 
@@ -397,6 +420,22 @@ export default function BloodRequests() {
                 <RequestDetails
                     request={selectedRequest}
                     onClose={() => setSelectedRequest(null)}
+                    onEdit={(request) => {
+                        setSelectedRequest(null)
+                        setEditingRequest(request)
+                        setFormOpen(true)
+                    }}
+                />
+            )}
+
+            {formOpen && (
+                <BloodRequestForm
+                    request={editingRequest}
+                    onClose={() => {
+                        setFormOpen(false)
+                        setEditingRequest(null)
+                    }}
+                    onSave={handleSaveRequest}
                 />
             )}
         </div>
@@ -594,9 +633,11 @@ function RequestCard({
 function RequestDetails({
     request,
     onClose,
+    onEdit,
 }: {
     request: BloodRequest
     onClose: () => void
+    onEdit: (request: BloodRequest) => void
 }) {
     return (
         <>
@@ -739,12 +780,19 @@ function RequestDetails({
 
                     {/* Actions */}
                     <div className="mt-6 grid grid-cols-2 gap-2">
-                        <Button>
+                        <Button
+                            onClick={() => {
+                                // Donor matching will be connected here next.
+                            }}
+                        >
                             Find donors
                         </Button>
 
-                        <Button variant="outline">
-                            Update status
+                        <Button
+                            variant="outline"
+                            onClick={() => onEdit(request)}
+                        >
+                            Edit request
                         </Button>
                     </div>
 
