@@ -16,6 +16,7 @@ import {
     X,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import Avatar from '../components/ui/Avatar'
 import Badge from '../components/ui/Badge'
@@ -90,6 +91,8 @@ export default function DonorMatching() {
     const [selectedDonor, setSelectedDonor] =
         useState<Donor | null>(null)
 
+    const navigate = useNavigate()
+
     const filteredDonors = useMemo(() => {
         const query = search.toLowerCase().trim()
 
@@ -147,6 +150,23 @@ export default function DonorMatching() {
 
     function clearSelection() {
         setSelected([])
+    }
+
+    const handleNotifySelected = () => {
+        if (selectedDonors.length === 0) return
+
+        const donorsToNotify = donors.filter((donor) =>
+            selectedDonors.includes(donor.id),
+        )
+
+        navigate('/notifications', {
+            state: {
+                requestId: selectedRequest.id,
+                bloodGroup: selectedRequest.bloodGroup,
+                hospital: selectedRequest.hospital,
+                donors: donorsToNotify,
+            },
+        })
     }
 
     const allSelected =
@@ -344,7 +364,11 @@ export default function DonorMatching() {
                             Clear
                         </button>
 
-                        <Button icon={<MessageCircle className="h-3.5 w-3.5" />}>
+                        <Button
+                            icon={<MessageCircle className="h-3.5 w-3.5" />}
+                            onClick={handleNotifySelected}
+                            disabled={selected.length === 0}
+                        >
                             Notify selected
                         </Button>
                     </div>

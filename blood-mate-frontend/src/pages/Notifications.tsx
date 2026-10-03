@@ -6,19 +6,22 @@ import {
     Clock3,
     MessageCircle,
     MoreHorizontal,
-    Phone,
+    // Phone,
     Search,
     Send,
-    UserRound,
-    Users,
+    // UserRound,
+    // Users,
     X,
     AlertCircle,
 } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import Avatar from '../components/ui/Avatar'
+
+import type { Donor } from '../data/donors'
 
 import {
     notifications as initialNotifications,
@@ -63,24 +66,21 @@ export default function Notifications() {
         useState<NotificationRecord[]>(initialNotifications)
 
     const [search, setSearch] = useState('')
-    const [selectedDonors, setSelectedDonors] = useState([
-        {
-            id: 'd1',
-            name: 'Afsal Rahman',
-            phone: '+91 98765 43210',
-            bloodGroup: 'O+',
-        },
-        {
-            id: 'd2',
-            name: 'Amal Dev',
-            phone: '+91 98470 11223',
-            bloodGroup: 'O+',
-        },
-    ])
 
+    const location = useLocation()
+
+    const notificationState = location.state as {
+        requestId?: string
+        bloodGroup?: string
+        hospital?: string
+        donors?: Donor[]
+    } | null
+
+    const selectedDonors = notificationState?.donors ?? []
     const [message, setMessage] = useState(defaultMessage)
     const [sending, setSending] = useState(false)
     const [sent, setSent] = useState(false)
+    const navigate = useNavigate()
 
     const filteredRecords = useMemo(() => {
         const query = search.toLowerCase().trim()
@@ -108,38 +108,57 @@ export default function Notifications() {
         responses: records.filter((r) => r.status === 'Responded').length,
     }
 
+    const previewDonor = selectedDonors[0]
+
     const previewMessage = message
-        .replaceAll('[Name]', 'Afsal')
-        .replaceAll('[Blood Group]', 'O+')
-        .replaceAll('[Hospital]', 'Aster MIMS Hospital')
+        .replace('[Name]', previewDonor?.name ?? 'Donor')
+        .replace(
+            '[Blood Group]',
+            notificationState?.bloodGroup ?? 'blood',
+        )
+        .replace(
+            '[Hospital]',
+            notificationState?.hospital ?? 'the hospital',
+        )
 
     const handleRemoveDonor = (id: string) => {
         setSelectedDonors((current) => current.filter((donor) => donor.id !== id))
     }
 
     const handleSend = async () => {
-        if (!selectedDonors.length || !message.trim()) return
+        if (selectedDonors.length === 0) return
 
         setSending(true)
-        setSent(false)
 
-        await new Promise((resolve) => setTimeout(resolve, 900))
+        await new Promise((resolve) => setTimeout(resolve, 800))
 
-        const newRecords: NotificationRecord[] = selectedDonors.map(
-            (donor, index) => ({
-                id: `NT-${Date.now()}-${index}`,
-                requestId: 'BM-1024',
-                donorName: donor.name,
-                phone: donor.phone,
-                bloodGroup: donor.bloodGroup,
-                hospital: 'Aster MIMS Hospital',
-                message: previewMessage,
-                status: 'Sent',
-                sentAt: 'Just now',
-            }),
-        )
+        const newNotifications = selectedDonors.map((donor) => ({
+            id: crypto.randomUUID(),
+            requestId: notificationState?.requestId ?? '',
+            donorId: donor.id,
+            donorName: donor.name,
+            phone: donor.phone,
+            bloodGroup: donor.bloodGroup,
+            hospital: notificationState?.hospital ?? '',
+            message: message
+                .replace('[Name]', donor.name)
+                .replace(
+                    '[Blood Group]',
+                    notificationState?.bloodGroup ?? donor.bloodGroup,
+                )
+                .replace(
+                    '[Hospital]',
+                    notificationState?.hospital ?? '',
+                ),
+            status: 'Sent' as const,
+            sentAt: 'Just now',
+        }))
 
-        setRecords((current) => [...newRecords, ...current])
+        setNotifications((current) => [
+            ...newNotifications,
+            ...current,
+        ])
+
         setSending(false)
         setSent(true)
     }
@@ -199,184 +218,206 @@ export default function Notifications() {
             </div>
 
             {/* Composer */}
-            <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-                <Card className="overflow-hidden">
-                    <div className="border-b border-neutral-100 px-5 py-4">
-                        <div className="flex items-center justify-between gap-3">
-                            <div>
-                                <h2 className="font-['Manrope'] text-lg font-bold text-neutral-900">
-                                    Send notification
-                                </h2>
-                                <p className="mt-1 text-xs text-neutral-500">
-                                    BM-1024 · O+ · Critical request
-                                </p>
-                            </div>
+            {selectedDonors.length === 0 ? (
+                <Card className="p-8">
+                    <div className="text-center">
+                        <h3 className="font-['Manrope'] text-lg font-bold text-neutral-900">
+                            No donors selected
+                        </h3>
 
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                                <MessageCircle size={18} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-5 p-5">
-                        {/* Recipients */}
-                        <div>
-                            <div className="mb-2 flex items-center justify-between">
-                                <label className="text-sm font-semibold text-neutral-800">
-                                    Recipients
-                                </label>
-
-                                <span className="text-xs font-medium text-neutral-400">
-                                    {selectedDonors.length} selected
-                                </span>
-                            </div>
-
-                            <div className="flex min-h-16 flex-wrap gap-2 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
-                                {selectedDonors.length ? (
-                                    selectedDonors.map((donor) => (
-                                        <div
-                                            key={donor.id}
-                                            className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-2 py-2"
-                                        >
-                                            <Avatar name={donor.name} size="sm" />
-
-                                            <div className="min-w-0">
-                                                <p className="max-w-32 truncate text-xs font-semibold text-neutral-800">
-                                                    {donor.name}
-                                                </p>
-                                                <p className="text-[11px] text-neutral-400">
-                                                    {donor.bloodGroup}
-                                                </p>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveDonor(donor.id)}
-                                                className="ml-1 rounded-lg p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700"
-                                                aria-label={`Remove ${donor.name}`}
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="flex w-full items-center justify-center py-2 text-xs text-neutral-400">
-                                        No donors selected
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Message */}
-                        <div>
-                            <div className="mb-2 flex items-center justify-between">
-                                <label
-                                    htmlFor="notification-message"
-                                    className="text-sm font-semibold text-neutral-800"
-                                >
-                                    Message
-                                </label>
-
-                                <span className="text-xs text-neutral-400">
-                                    {message.length}/500
-                                </span>
-                            </div>
-
-                            <textarea
-                                id="notification-message"
-                                value={message}
-                                maxLength={500}
-                                onChange={(event) => setMessage(event.target.value)}
-                                rows={7}
-                                className="w-full resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm leading-6 text-neutral-800 outline-none transition placeholder:text-neutral-400 focus:border-red-400 focus:ring-4 focus:ring-red-50"
-                            />
-
-                            <div className="mt-2 flex flex-wrap gap-2">
-                                {['[Name]', '[Blood Group]', '[Hospital]'].map((variable) => (
-                                    <button
-                                        key={variable}
-                                        type="button"
-                                        onClick={() =>
-                                            setMessage((current) => `${current} ${variable}`)
-                                        }
-                                        className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                                    >
-                                        {variable}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {sent && (
-                            <div className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700">
-                                <Check size={16} />
-                                Notification queued successfully. Backend delivery will be connected later.
-                            </div>
-                        )}
-
-                        <div className="flex flex-col gap-3 border-t border-neutral-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                            <p className="text-xs text-neutral-400">
-                                Messages are simulated in the frontend.
-                            </p>
-
-                            <Button
-                                variant="primary"
-                                icon={<Send size={16} />}
-                                loading={sending}
-                                disabled={!selectedDonors.length || !message.trim()}
-                                onClick={handleSend}
-                            >
-                                Send WhatsApp
-                            </Button>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* WhatsApp preview */}
-                <Card className="overflow-hidden">
-                    <div className="border-b border-neutral-100 px-5 py-4">
-                        <h2 className="font-['Manrope'] text-lg font-bold text-neutral-900">
-                            Message preview
-                        </h2>
-                        <p className="mt-1 text-xs text-neutral-500">
-                            Preview how the donor notification will appear.
+                        <p className="mt-2 text-sm text-neutral-500">
+                            Select compatible donors from Donor Matching before sending
+                            notifications.
                         </p>
+
+                        <Button
+                            className="mt-5"
+                            onClick={() => navigate('/donors')}
+                        >
+                            Find donors
+                        </Button>
                     </div>
-
-                    <div className="min-h-[390px] bg-[#efeae2] p-5">
-                        <div className="mx-auto max-w-sm">
-                            <div className="mb-3 flex items-center gap-3 rounded-xl bg-white px-3 py-2 shadow-sm">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-red-600">
-                                    <HeartIcon />
-                                </div>
-
+                </Card>
+            ) : (
+                <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+                    <Card className="overflow-hidden">
+                        <div className="border-b border-neutral-100 px-5 py-4">
+                            <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-xs font-bold text-neutral-800">
-                                        Blood Mate
-                                    </p>
-                                    <p className="text-[10px] text-neutral-400">
-                                        Official donor notification
+                                    <h2 className="font-['Manrope'] text-lg font-bold text-neutral-900">
+                                        Send notification
+                                    </h2>
+                                    <p className="mt-1 text-xs text-neutral-500">
+                                        BM-1024 · O+ · Critical request
                                     </p>
                                 </div>
-                            </div>
 
-                            <div className="relative rounded-2xl rounded-tl-sm bg-white px-4 py-3 shadow-sm">
-                                <p className="whitespace-pre-wrap text-sm leading-6 text-neutral-700">
-                                    {previewMessage}
-                                </p>
-
-                                <div className="mt-2 flex justify-end text-[10px] text-neutral-400">
-                                    5:45 PM
-                                    <CheckCheck
-                                        size={13}
-                                        className="ml-1 text-emerald-500"
-                                    />
+                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                                    <MessageCircle size={18} />
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </Card>
-            </div>
+
+                        <div className="space-y-5 p-5">
+                            {/* Recipients */}
+                            <div>
+                                <div className="mb-2 flex items-center justify-between">
+                                    <label className="text-sm font-semibold text-neutral-800">
+                                        Recipients
+                                    </label>
+
+                                    <span className="text-xs font-medium text-neutral-400">
+                                        {selectedDonors.length} selected
+                                    </span>
+                                </div>
+
+                                <div className="flex min-h-16 flex-wrap gap-2 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
+                                    {selectedDonors.length ? (
+                                        selectedDonors.map((donor) => (
+                                            <div
+                                                key={donor.id}
+                                                className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-2 py-2"
+                                            >
+                                                <Avatar name={donor.name} size="sm" />
+
+                                                <div className="min-w-0">
+                                                    <p className="max-w-32 truncate text-xs font-semibold text-neutral-800">
+                                                        {donor.name}
+                                                    </p>
+                                                    <p className="text-[11px] text-neutral-400">
+                                                        {donor.bloodGroup}
+                                                    </p>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveDonor(donor.id)}
+                                                    className="ml-1 rounded-lg p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700"
+                                                    aria-label={`Remove ${donor.name}`}
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="flex w-full items-center justify-center py-2 text-xs text-neutral-400">
+                                            No donors selected
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Message */}
+                            <div>
+                                <div className="mb-2 flex items-center justify-between">
+                                    <label
+                                        htmlFor="notification-message"
+                                        className="text-sm font-semibold text-neutral-800"
+                                    >
+                                        Message
+                                    </label>
+
+                                    <span className="text-xs text-neutral-400">
+                                        {message.length}/500
+                                    </span>
+                                </div>
+
+                                <textarea
+                                    id="notification-message"
+                                    value={message}
+                                    maxLength={500}
+                                    onChange={(event) => setMessage(event.target.value)}
+                                    rows={7}
+                                    className="w-full resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm leading-6 text-neutral-800 outline-none transition placeholder:text-neutral-400 focus:border-red-400 focus:ring-4 focus:ring-red-50"
+                                />
+
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {['[Name]', '[Blood Group]', '[Hospital]'].map((variable) => (
+                                        <button
+                                            key={variable}
+                                            type="button"
+                                            onClick={() =>
+                                                setMessage((current) => `${current} ${variable}`)
+                                            }
+                                            className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                                        >
+                                            {variable}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {sent && (
+                                <div className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700">
+                                    <Check size={16} />
+                                    Notification queued successfully. Backend delivery will be connected later.
+                                </div>
+                            )}
+
+                            <div className="flex flex-col gap-3 border-t border-neutral-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-xs text-neutral-400">
+                                    Messages are simulated in the frontend.
+                                </p>
+
+                                <Button
+                                    variant="primary"
+                                    icon={<Send size={16} />}
+                                    loading={sending}
+                                    disabled={!selectedDonors.length || !message.trim()}
+                                    onClick={handleSend}
+                                >
+                                    Send WhatsApp
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* WhatsApp preview */}
+                    <Card className="overflow-hidden">
+                        <div className="border-b border-neutral-100 px-5 py-4">
+                            <h2 className="font-['Manrope'] text-lg font-bold text-neutral-900">
+                                Message preview
+                            </h2>
+                            <p className="mt-1 text-xs text-neutral-500">
+                                Preview how the donor notification will appear.
+                            </p>
+                        </div>
+
+                        <div className="min-h-[390px] bg-[#efeae2] p-5">
+                            <div className="mx-auto max-w-sm">
+                                <div className="mb-3 flex items-center gap-3 rounded-xl bg-white px-3 py-2 shadow-sm">
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-red-600">
+                                        <HeartIcon />
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs font-bold text-neutral-800">
+                                            Blood Mate
+                                        </p>
+                                        <p className="text-[10px] text-neutral-400">
+                                            Official donor notification
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="relative rounded-2xl rounded-tl-sm bg-white px-4 py-3 shadow-sm">
+                                    <p className="whitespace-pre-wrap text-sm leading-6 text-neutral-700">
+                                        {previewMessage}
+                                    </p>
+
+                                    <div className="mt-2 flex justify-end text-[10px] text-neutral-400">
+                                        5:45 PM
+                                        <CheckCheck
+                                            size={13}
+                                            className="ml-1 text-emerald-500"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            )}
 
             {/* History */}
             <Card className="overflow-hidden">
