@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import DashboardLayout from './layouts/DashboardLayout'
 import Dashboard from './pages/Dashboard'
 import Students from './pages/Students'
+import BloodRequests from './pages/BloodRequests'
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -28,10 +29,7 @@ export default function App() {
 
           <Route path="/students" element={<Students />} />
 
-          <Route
-            path="/requests"
-            element={<Placeholder title="Blood Requests" />}
-          />
+          <Route path="/requests" element={<BloodRequests />} />
 
           <Route
             path="/donors"
