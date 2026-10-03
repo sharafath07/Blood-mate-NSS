@@ -2,6 +2,7 @@ import type { BloodRequest } from '../data/bloodRequests'
 import type { Donor } from '../data/donors'
 import type { NotificationRecord } from '../data/notifications'
 import type { DashboardStats } from '../types/api'
+import type { Student } from '../data/students'
 
 const API_BASE_URL =
     import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -35,20 +36,19 @@ async function request<T>(
 
 export const api = {
     students: {
-        getAll: () =>
-            request('/students'),
+        getAll: () => request<Student[]>('/students'),
 
         getById: (id: string) =>
-            request(`/students/${id}`),
+            request<Student>(`/students/${id}`),
 
-        create: <T>(data: T) =>
-            request('/students', {
+        create: (data: Partial<Student>) =>
+            request<Student>('/students', {
                 method: 'POST',
                 body: JSON.stringify(data),
             }),
 
-        update: <T>(id: string, data: T) =>
-            request(`/students/${id}`, {
+        update: (id: string, data: Partial<Student>) =>
+            request<Student>(`/students/${id}`, {
                 method: 'PUT',
                 body: JSON.stringify(data),
             }),
