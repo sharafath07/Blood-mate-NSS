@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import DashboardLayout from './layouts/DashboardLayout'
 import Dashboard from './pages/Dashboard'
+import Students from './pages/Students'
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -25,10 +26,7 @@ export default function App() {
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<Dashboard />} />
 
-          <Route
-            path="/students"
-            element={<Placeholder title="Students" />}
-          />
+          <Route path="/students" element={<Students />} />
 
           <Route
             path="/requests"
