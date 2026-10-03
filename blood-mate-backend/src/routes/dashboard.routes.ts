@@ -1,9 +1,10 @@
 import { Router } from "express";
+
+import { getStats } from "../controllers/dashboard.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
-import { getMatchedDonors } from "../controllers/donor-matching.controller.js";
 
 const router = Router();
 
-router.get("/:requestId", authenticate, getMatchedDonors);
+router.get("/stats", authenticate, getStats);
 
 export default router;
