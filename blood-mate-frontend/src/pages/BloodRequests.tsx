@@ -12,6 +12,7 @@ import {
     X,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
@@ -71,8 +72,7 @@ export default function BloodRequests() {
     const [search, setSearch] = useState('')
     const [status, setStatus] = useState('All statuses')
     const [urgency, setUrgency] = useState('All urgency')
-    const [bloodGroup, setBloodGroup] =
-        useState('All blood groups')
+    const [bloodGroup, setBloodGroup] = useState('All blood groups')
 
     const [selectedRequest, setSelectedRequest] =
         useState<BloodRequest | null>(null)
@@ -639,6 +639,8 @@ function RequestDetails({
     onClose: () => void
     onEdit: (request: BloodRequest) => void
 }) {
+    const navigate = useNavigate()
+
     return (
         <>
             <div
@@ -782,7 +784,11 @@ function RequestDetails({
                     <div className="mt-6 grid grid-cols-2 gap-2">
                         <Button
                             onClick={() => {
-                                // Donor matching will be connected here next.
+                                navigate('/donors', {
+                                    state: {
+                                        request: request,
+                                    },
+                                })
                             }}
                         >
                             Find donors

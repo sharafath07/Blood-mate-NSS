@@ -16,7 +16,7 @@ import {
     X,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 import Avatar from '../components/ui/Avatar'
 import Badge from '../components/ui/Badge'
@@ -29,6 +29,7 @@ import {
     type Donor,
     type DonorAvailability,
 } from '../data/donors'
+import { bloodRequests, type BloodRequest } from '../data/bloodRequests'
 
 const availabilityOptions = [
     'All availability',
@@ -92,6 +93,10 @@ export default function DonorMatching() {
         useState<Donor | null>(null)
 
     const navigate = useNavigate()
+    const location = useLocation()
+
+    const requestFromState = location.state?.request as BloodRequest | undefined
+    const selectedRequest = requestFromState ?? bloodRequests[0]
 
     const filteredDonors = useMemo(() => {
         const query = search.toLowerCase().trim()
@@ -153,10 +158,10 @@ export default function DonorMatching() {
     }
 
     const handleNotifySelected = () => {
-        if (selectedDonors.length === 0) return
+        if (selected.length === 0) return
 
         const donorsToNotify = donors.filter((donor) =>
-            selectedDonors.includes(donor.id),
+            selected.includes(donor.id),
         )
 
         navigate('/notifications', {
