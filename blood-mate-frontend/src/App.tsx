@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import Students from './pages/Students'
 import BloodRequests from './pages/BloodRequests'
 import DonorMatching from './pages/DonorMatching'
+import Notifications from './pages/Notifications'
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -34,10 +35,7 @@ export default function App() {
 
           <Route path="/donors" element={<DonorMatching />} />
 
-          <Route
-            path="/notifications"
-            element={<Placeholder title="Notifications" />}
-          />
+          <Route path="/notifications" element={<Notifications />} />
 
           <Route
             path="/reports"
