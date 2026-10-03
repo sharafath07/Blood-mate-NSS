@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 
 import healthRoutes from "./routes/health.routes.js";
 import studentRoutes from "./routes/student.routes.js";
@@ -12,8 +13,10 @@ import authRoutes from "./routes/auth.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import whatsappRoutes from "./routes/whatsapp.routes.js";
 
+
 const app = express();
 
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use((req, _res, next) => {
