@@ -10,7 +10,7 @@ import {
     Users,
     X,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 
 import Avatar from '../components/ui/Avatar'
 import Badge from '../components/ui/Badge'
@@ -18,6 +18,8 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
 import StudentForm from '../components/students/StudentForm'
+
+import api from '../services/api'
 
 import {
     students as initialStudents,
@@ -323,9 +325,7 @@ function StudentDetails({
 }
 
 export default function Students() {
-    const [studentList, setStudentList] = useState<Student[]>(
-        initialStudents,
-    )
+    const [studentList, setStudentList] = useState<Student[]>(initialStudents)
     const [search, setSearch] = useState('')
     const [department, setDepartment] = useState('All departments')
     const [bloodGroup, setBloodGroup] = useState('All blood groups')
@@ -334,24 +334,73 @@ export default function Students() {
     const [formOpen, setFormOpen] = useState(false)
     const [editingStudent, setEditingStudent] =
         useState<Student | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [apiError, setApiError] = useState<string | null>(null)
 
-    function handleSaveStudent(student: Student) {
-        setStudentList((current) => {
-            const exists = current.some(
-                (item) => item.id === student.id,
-            )
+    useEffect(() => {
+        let cancelled = false
 
-            if (exists) {
-                return current.map((item) =>
-                    item.id === student.id ? student : item,
+        const loadStudents = async () => {
+            try {
+                setLoading(true)
+                setApiError(null)
+
+                const data = await api.students.getAll()
+
+                if (!cancelled) {
+                    setStudentList(data as Student[])
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setApiError(
+                        error instanceof Error
+                            ? error.message
+                            : 'Unable to load students',
+                    )
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false)
+                }
+            }
+        }
+
+        loadStudents()
+
+        return () => {
+            cancelled = true
+        }
+    }, [])
+
+    const handleSaveStudent = async (student: Student) => {
+        try {
+            if (editingStudent) {
+                const updated = await api.students.update(
+                    student.id,
+                    student,
                 )
+
+                setStudentList((current) =>
+                    current.map((item) =>
+                        item.id === student.id
+                            ? (updated as Student)
+                            : item,
+                    ),
+                )
+            } else {
+                const created = await api.students.create(student)
+
+                setStudentList((current) => [
+                    created as Student,
+                    ...current,
+                ])
             }
 
-            return [student, ...current]
-        })
-
-        setFormOpen(false)
-        setEditingStudent(null)
+            setFormOpen(false)
+            setEditingStudent(null)
+        } catch (error) {
+            console.error('Failed to save student:', error)
+        }
     }
 
     const filteredStudents = useMemo(() => {
@@ -431,6 +480,18 @@ export default function Students() {
                     Add student
                 </Button>
             </div>
+
+            {loading && (
+                <p className="text-sm text-neutral-400">
+                    Loading students…
+                </p>
+            )}
+
+            {apiError && (
+                <div className="mt-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-700">
+                    Backend unavailable. Showing local development data.
+                </div>
+            )}
 
             {/* Summary */}
             <div className="mb-5 grid gap-3 sm:grid-cols-3">
