@@ -20,8 +20,11 @@ import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
 import { api } from '../services/api'
 
+import { motion } from 'motion/react'
+import { pageMotion } from '../lib/motion'
+
 import {
-    bloodRequests,
+    // bloodRequests,
     type BloodRequest,
     // type RequestStatus,
     // type Urgency,
@@ -63,7 +66,7 @@ const bloodGroups = [
 ]
 
 export default function BloodRequests() {
-    const [requests, setRequests] = useState<BloodRequest[]>(bloodRequests)
+    const [requests, setRequests] = useState<BloodRequest[]>([])
     const [loading, setLoading] = useState(true)
     const [apiError, setApiError] = useState<string | null>(null)
     const [formOpen, setFormOpen] = useState(false)
@@ -181,7 +184,7 @@ export default function BloodRequests() {
     }
 
     return (
-        <div className="mx-auto max-w-[1500px]">
+        <motion.div {...pageMotion} className="mx-auto max-w-[1500px]">
 
             {/* Header */}
             <div className="mb-7 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
@@ -476,7 +479,7 @@ export default function BloodRequests() {
                     onSave={handleSaveRequest}
                 />
             )}
-        </div>
+        </motion.div>
     )
 }
 

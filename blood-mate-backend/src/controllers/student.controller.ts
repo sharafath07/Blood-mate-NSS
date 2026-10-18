@@ -22,10 +22,10 @@ export async function listStudents(
 
         const limit = Math.min(
             Math.max(
-                Number.parseInt(String(req.query.limit ?? "20"), 10) || 20,
+                Number.parseInt(String(req.query.limit ?? "370"), 10) || 370,
                 1
             ),
-            100
+            500
         );
 
         const search =

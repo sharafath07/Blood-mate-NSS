@@ -14,8 +14,12 @@ import {
     // Users,
     X,
     AlertCircle,
+    ShieldCheck,
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
+
+import { motion, AnimatePresence } from 'motion/react'
+import { pageMotion } from '../lib/motion'
 
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -26,7 +30,7 @@ import { api } from '../services/api'
 import type { Donor } from '../data/donors'
 
 import {
-    notifications as initialNotifications,
+    // notifications as initialNotifications,
     type NotificationRecord,
     type NotificationStatus,
 } from '../data/notifications'
@@ -65,7 +69,7 @@ function StatusBadge({ status }: { status: NotificationStatus }) {
 
 export default function Notifications() {
     const [records, setRecords] =
-        useState<NotificationRecord[]>(initialNotifications)
+        useState<NotificationRecord[]>([])
 
     const [search, setSearch] = useState('')
 
@@ -184,33 +188,9 @@ export default function Notifications() {
                 notifications,
             })
 
-            const newNotifications = selectedDonors.map((donor) => ({
-                id: crypto.randomUUID(),
-                requestId: notificationState?.requestId ?? '',
-                donorId: donor.id,
-                donorName: donor.name,
-                phone: donor.phone,
-                bloodGroup:
-                    notificationState?.bloodGroup ?? donor.bloodGroup,
-                hospital: notificationState?.hospital ?? '',
-                message: message
-                    .replace('[Name]', donor.name)
-                    .replace(
-                        '[Blood Group]',
-                        notificationState?.bloodGroup ?? donor.bloodGroup,
-                    )
-                    .replace(
-                        '[Hospital]',
-                        notificationState?.hospital ?? '',
-                    ),
-                status: 'Sent' as const,
-                sentAt: 'Just now',
-            }))
+            const updatedRecords = await api.notifications.getAll()
 
-            setRecords((current) => [
-                ...newNotifications,
-                ...current,
-            ])
+            setRecords(updatedRecords)
 
             setSent(true)
         } catch (error) {
@@ -222,7 +202,7 @@ export default function Notifications() {
     }
 
     return (
-        <div className="space-y-6 pb-10">
+        <motion.div {...pageMotion} className="space-y-6 pb-10">
             {/* Header */}
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
@@ -413,6 +393,33 @@ export default function Notifications() {
                                     Notification queued successfully. Backend delivery will be connected later.
                                 </div>
                             )}
+                            <AnimatePresence>
+                                {sent && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5"
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                                                <ShieldCheck size={18} />
+                                            </div>
+
+                                            <div>
+                                                <h3 className="font-semibold text-emerald-900">
+                                                    Notifications sent successfully
+                                                </h3>
+
+                                                <p className="mt-1 text-sm text-emerald-700">
+                                                    The selected donors have been notified.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             <div className="flex flex-col gap-3 border-t border-neutral-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
                                 <p className="text-xs text-neutral-400">
@@ -617,7 +624,7 @@ export default function Notifications() {
                     </div>
                 )}
             </Card>
-        </div>
+        </motion.div>
     )
 }
 

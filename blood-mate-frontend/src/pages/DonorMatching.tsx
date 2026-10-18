@@ -5,6 +5,7 @@ import {
     Clock3,
     Droplets,
     Filter,
+    HeartPulse,
     MapPin,
     MessageCircle,
     Phone,
@@ -18,6 +19,8 @@ import {
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
+import { motion } from 'motion/react'
+import { pageMotion } from '../lib/motion'
 import Avatar from '../components/ui/Avatar'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
@@ -26,11 +29,14 @@ import Input from '../components/ui/Input'
 import { api } from '../services/api'
 
 import {
-    donors,
+    // donors,
     type Donor,
     type DonorAvailability,
 } from '../data/donors'
-import { bloodRequests, type BloodRequest } from '../data/bloodRequests'
+import {
+    // bloodRequests, 
+    type BloodRequest
+} from '../data/bloodRequests'
 
 const availabilityOptions = [
     'All availability',
@@ -98,9 +104,9 @@ export default function DonorMatching() {
 
     const navigate = useNavigate()
     const location = useLocation()
-    const [donorList, setDonorList] = useState<Donor[]>(donors)
+    const [donorList, setDonorList] = useState<Donor[]>([])
     const requestFromState = location.state?.request as BloodRequest | undefined
-    const selectedRequest = requestFromState ?? bloodRequests[0]
+    const selectedRequest = requestFromState
 
     useEffect(() => {
         const loadDonors = async () => {
@@ -193,6 +199,11 @@ export default function DonorMatching() {
             selected.includes(donor.id),
         )
 
+        if (!selectedRequest) {
+            setApiError('Please select a blood request first.')
+            return
+        }
+
         navigate('/notifications', {
             state: {
                 requestId: selectedRequest.id,
@@ -211,8 +222,32 @@ export default function DonorMatching() {
             )
             .every((donor) => selected.includes(donor.id))
 
+    if (!selectedRequest) {
+        return (
+            <div className="flex min-h-[60vh] items-center justify-center px-6">
+                <div className="max-w-md text-center">
+                    <h2 className="font-['Manrope'] text-xl font-bold text-neutral-900">
+                        No blood request selected
+                    </h2>
+
+                    <p className="mt-2 text-sm text-neutral-500">
+                        Select a blood request first to find matching donors.
+                    </p>
+
+                    <button
+                        type="button"
+                        onClick={() => navigate('/requests')}
+                        className="mt-5 rounded-xl bg-[#8f1722] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#7c131d]"
+                    >
+                        View Blood Requests
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
     return (
-        <div className="mx-auto max-w-[1500px] pb-24">
+        <motion.div {...pageMotion} className="mx-auto max-w-[1500px] pb-24">
 
             {/* Header */}
             <div className="mb-6 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
@@ -481,6 +516,23 @@ export default function DonorMatching() {
 
             </Card>
 
+            {!loading && !apiError && donorList.length === 0 && (
+                <div className="rounded-2xl border border-neutral-200 bg-white px-6 py-12 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-[#8f1722]">
+                        <HeartPulse size={22} />
+                    </div>
+
+                    <h3 className="mt-4 font-['Manrope'] text-lg font-bold text-neutral-900">
+                        No matching donors found
+                    </h3>
+
+                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-neutral-500">
+                        We couldn't find available donors matching this request.
+                        Try again later or review the request details.
+                    </p>
+                </div>
+            )}
+
             {/* Bottom notification panel */}
             {selected.length > 0 && (
                 <div className="fixed bottom-5 left-1/2 z-40 w-[calc(100%-32px)] max-w-[720px] -translate-x-1/2">
@@ -522,7 +574,7 @@ export default function DonorMatching() {
                     selected={selected.includes(selectedDonor.id)}
                 />
             )}
-        </div>
+        </motion.div>
     )
 }
 

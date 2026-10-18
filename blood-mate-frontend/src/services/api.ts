@@ -1,95 +1,274 @@
+import axios from 'axios'
+
 import type { BloodRequest } from '../data/bloodRequests'
 import type { Donor } from '../data/donors'
 import type { NotificationRecord } from '../data/notifications'
-import type { DashboardStats } from '../types/api'
 import type { Student } from '../data/students'
+import type { DashboardStats } from '../types/api'
 
 const API_BASE_URL =
     import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
-async function request<T>(
-    endpoint: string,
-    options: RequestInit = {},
-): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-            'Content-Type': 'application/json',
-            ...(options.headers || {}),
-        },
-        ...options,
-    })
+const apiClient = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+})
 
-    if (!response.ok) {
-        const message = await response.text()
-
-        throw new Error(
-            message || `Request failed with status ${response.status}`,
-        )
-    }
-
-    if (response.status === 204) {
-        return undefined as T
-    }
-
-    return response.json()
+export interface StudentPagination {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
 }
+
+export interface PaginatedStudents {
+    students: Student[]
+    pagination: StudentPagination
+}
+
+interface ApiEnvelope<T> {
+    success?: boolean
+    data: T
+    message?: string
+}
+
+interface LoginResponse {
+    success: boolean
+    token?: string
+    user?: {
+        id: string
+        name: string
+        email: string
+        role?: string
+    }
+    message?: string
+}
+
+function unwrap<T>(response: T | ApiEnvelope<T>): T {
+    if (
+        response &&
+        typeof response === 'object' &&
+        'data' in response &&
+        'success' in response
+    ) {
+        return (response as ApiEnvelope<T>).data
+    }
+
+    return response as T
+}
+
+// Add authentication token to every protected request.
+apiClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token')
+
+    if (token) {
+        config.headers = config.headers ?? {}
+        config.headers.Authorization = `Bearer ${token}`
+    }
+
+    return config
+})
+
+// Handle expired/invalid authentication.
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+
+            if (window.location.pathname !== '/login') {
+                window.location.replace('/login')
+            }
+        }
+
+        return Promise.reject(error)
+    },
+)
 
 export const api = {
     students: {
-        getAll: () => request<Student[]>('/students'),
+        getAll: async (
+            page = 1,
+            limit = 20,
+        ): Promise<PaginatedStudents> => {
+            const response = await apiClient.get(
+                '/students',
+                {
+                    params: { page, limit },
+                },
+            )
 
-        getById: (id: string) =>
-            request<Student>(`/students/${id}`),
+            const body = response.data
 
-        create: (data: Partial<Student>) =>
-            request<Student>('/students', {
-                method: 'POST',
-                body: JSON.stringify(data),
-            }),
+            const payload =
+                body?.data && !Array.isArray(body.data)
+                    ? body.data
+                    : body
 
-        update: (id: string, data: Partial<Student>) =>
-            request<Student>(`/students/${id}`, {
-                method: 'PUT',
-                body: JSON.stringify(data),
-            }),
+            return {
+                students: Array.isArray(payload?.students)
+                    ? payload.students
+                    : [],
+                pagination: {
+                    page: Number(payload?.pagination?.page ?? page),
+                    limit: Number(payload?.pagination?.limit ?? limit),
+                    total: Number(payload?.pagination?.total ?? 0),
+                    totalPages: Number(payload?.pagination?.totalPages ?? 0),
+                },
+            }
+        },
+
+        getById: async (id: string) => {
+            const response = await apiClient.get<
+                Student | ApiEnvelope<Student>
+            >(`/students/${id}`)
+
+            return unwrap(response.data)
+        },
+
+        create: async (data: Partial<Student>) => {
+            const response = await apiClient.post<
+                Student | ApiEnvelope<Student>
+            >('/students', data)
+
+            return unwrap(response.data)
+        },
+
+        update: async (id: string, data: Partial<Student>) => {
+            const response = await apiClient.put<
+                Student | ApiEnvelope<Student>
+            >(`/students/${id}`, data)
+
+            return unwrap(response.data)
+        },
     },
 
     requests: {
-        getAll: () => request<BloodRequest[]>('/requests'),
+        getAll: async () => {
+            const response = await apiClient.get<
+                BloodRequest[] | ApiEnvelope<BloodRequest[]>
+            >('/blood-requests')
 
-        getById: (id: string) =>
-            request<BloodRequest>(`/requests/${id}`),
+            return unwrap(response.data)
+        },
 
-        create: (data: BloodRequest) =>
-            request<BloodRequest>('/requests', {
-                method: 'POST',
-                body: JSON.stringify(data),
-            }),
+        getById: async (id: string) => {
+            const response = await apiClient.get<
+                BloodRequest | ApiEnvelope<BloodRequest>
+            >(`/blood-requests/${id}`)
 
-        update: (id: string, data: BloodRequest) =>
-            request<BloodRequest>(`/requests/${id}`, {
-                method: 'PUT',
-                body: JSON.stringify(data),
-            }),
+            return unwrap(response.data)
+        },
+
+        create: async (data: BloodRequest) => {
+            const response = await apiClient.post<
+                BloodRequest | ApiEnvelope<BloodRequest>
+            >('/blood-requests', data)
+
+            return unwrap(response.data)
+        },
+
+        update: async (id: string, data: BloodRequest) => {
+            const response = await apiClient.put<
+                BloodRequest | ApiEnvelope<BloodRequest>
+            >(`/blood-requests/${id}`, data)
+
+            return unwrap(response.data)
+        },
     },
 
     donors: {
-        getMatches: (requestId: string) =>
-            request<Donor[]>(`/requests/${requestId}/donors`),
+        getMatches: async (requestId: string) => {
+            const response = await apiClient.get<{
+                success: boolean
+                data: {
+                    request: BloodRequest
+                    donors: Donor[]
+                    totalDonors: number
+                }
+            }>(`/donor-matching/${requestId}`)
+
+            return response.data.data.donors
+        },
     },
 
     notifications: {
-        send: <T>(data: T) =>
-            request('/notifications/send', {
-                method: 'POST',
-                body: JSON.stringify(data),
-            }),
+        send: async <T>(data: T) => {
+            const response = await apiClient.post('/notifications/send', data)
 
-        getAll: () => request<NotificationRecord[]>('/notifications'),
+            return response.data
+        },
+
+        getAll: async () => {
+            const response = await apiClient.get<
+                NotificationRecord[] | ApiEnvelope<NotificationRecord[]>
+            >('/notifications')
+
+            return unwrap(response.data)
+        },
     },
 
     dashboard: {
-        getStats: () =>
-            request<DashboardStats>('/dashboard/stats'),
+        getStats: async () => {
+            const response = await apiClient.get<
+                DashboardStats | ApiEnvelope<DashboardStats>
+            >('/dashboard/stats')
+
+            return unwrap(response.data)
+        },
+    },
+
+    auth: {
+        login: async (email: string, password: string) => {
+            const response = await apiClient.post<LoginResponse>(
+                '/auth/login',
+                {
+                    email,
+                    password,
+                },
+            )
+
+            const data = response.data
+
+            if (!data.success || !data.token) {
+                throw new Error(
+                    data.message || 'Login failed. Authentication token was not returned.',
+                )
+            }
+
+            localStorage.setItem('token', data.token)
+
+            if (data.user) {
+                localStorage.setItem('user', JSON.stringify(data.user))
+            }
+
+            return data
+        },
+
+        logout: () => {
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+        },
+
+        getUser: () => {
+            const user = localStorage.getItem('user')
+
+            if (!user) {
+                return null
+            }
+
+            try {
+                return JSON.parse(user)
+            } catch {
+                return null
+            }
+        },
+
+        isAuthenticated: () => {
+            return Boolean(localStorage.getItem('token'))
+        },
     },
 }

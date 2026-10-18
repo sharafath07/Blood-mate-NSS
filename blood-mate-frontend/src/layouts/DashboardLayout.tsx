@@ -13,6 +13,8 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { api } from '../services/api'
 
 const navigation = [
     {
@@ -35,6 +37,15 @@ const navigation = [
 
 export default function DashboardLayout() {
     const [mobileOpen, setMobileOpen] = useState(false)
+    const user = api.auth.getUser()
+    const userName = user?.name || 'Coordinator'
+    const userRole = user?.role || 'Administrator'
+    const navigate = useNavigate()
+
+    const handleLogout = () => {
+        api.auth.logout()
+        navigate('/login', { replace: true })
+    }
 
     return (
         <div className="min-h-screen bg-[#f7f7f5] text-neutral-900">
@@ -164,10 +175,10 @@ export default function DashboardLayout() {
 
                             <div className="min-w-0 flex-1">
                                 <p className="truncate text-xs font-bold text-neutral-900">
-                                    Coordinator
+                                    {userName}
                                 </p>
                                 <p className="truncate text-[10px] text-neutral-400">
-                                    Blood Mate Admin
+                                    {userRole}
                                 </p>
                             </div>
 
@@ -220,14 +231,22 @@ export default function DashboardLayout() {
 
                             <div className="hidden text-left sm:block">
                                 <p className="text-[11px] font-bold text-neutral-800">
-                                    Coordinator
+                                    {userName}
                                 </p>
                                 <p className="text-[9px] text-neutral-400">
-                                    Administrator
+                                    {userRole}
                                 </p>
                             </div>
 
                             <ChevronDown className="hidden h-3.5 w-3.5 text-neutral-400 sm:block" />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleLogout}
+                            className="rounded-xl px-3 py-2 text-xs font-semibold text-neutral-500 transition hover:bg-red-50 hover:text-red-600"
+                        >
+                            Sign out
                         </button>
 
                     </div>

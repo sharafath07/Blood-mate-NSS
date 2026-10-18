@@ -14,6 +14,8 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { api } from '../services/api'
+import { motion } from 'motion/react'
+import { pageMotion } from '../lib/motion'
 
 const bloodGroups = [
     { group: 'O+', count: 96, percentage: 82 },
@@ -75,7 +77,7 @@ function StatCard({
 }: {
     label: string
     value: string | number
-    change: string
+    change?: string
     description: string
     icon: typeof Users
     urgent?: boolean
@@ -107,14 +109,16 @@ function StatCard({
                         {value}
                     </h3>
 
-                    <span
-                        className={`mb-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${urgent
-                            ? 'bg-red-50 text-red-600'
-                            : 'bg-emerald-50 text-emerald-600'
-                            }`}
-                    >
-                        {change}
-                    </span>
+                    {change && (
+                        <span
+                            className={`mb-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${urgent
+                                ? 'bg-red-50 text-red-600'
+                                : 'bg-emerald-50 text-emerald-600'
+                                }`}
+                        >
+                            {change}
+                        </span>
+                    )}
                 </div>
 
                 <p className="mt-1 text-[10px] text-neutral-400">{description}</p>
@@ -192,30 +196,26 @@ export default function Dashboard() {
         {
             label: 'Registered Students',
             value: dashboardStats.registeredStudents,
-            change: '+8.2%',
-            description: 'from last month',
+            description: 'registered in Blood Mate',
             icon: Users,
         },
         {
             label: 'Active Donors',
             value: dashboardStats.activeDonors,
-            change: '+12.4%',
-            description: 'from last month',
+            description: 'currently available',
             icon: HeartPulse,
         },
         {
             label: 'Active Requests',
             value: dashboardStats.activeRequests,
-            change: `${dashboardStats.urgentRequests} urgent`,
-            description: 'need attention',
+            description: `${dashboardStats.urgentRequests} urgent`,
             icon: Droplets,
             urgent: true,
         },
         {
             label: 'Requests Fulfilled',
             value: `${dashboardStats.requestsFulfilled}%`,
-            change: '+4.6%',
-            description: 'this month',
+            description: 'overall fulfillment ',
             icon: ShieldCheck,
         },
     ]
@@ -242,7 +242,7 @@ export default function Dashboard() {
 
 
     return (
-        <div className="mx-auto max-w-[1500px]">
+        <motion.div {...pageMotion} className="mx-auto max-w-[1500px]">
 
             {/* Page heading */}
             <div className="mb-7 flex flex-col justify-between gap-5 md:flex-row md:items-end">
@@ -548,6 +548,6 @@ export default function Dashboard() {
                 </button>
             </div>
 
-        </div>
+        </motion.div>
     )
 }

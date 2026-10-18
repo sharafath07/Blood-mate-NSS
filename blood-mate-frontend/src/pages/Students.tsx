@@ -1,7 +1,7 @@
 import {
     ChevronDown,
-    ChevronLeft,
-    ChevronRight,
+    // ChevronLeft,
+    // ChevronRight,
     Filter,
     MoreHorizontal,
     Plus,
@@ -12,17 +12,21 @@ import {
 } from 'lucide-react'
 import { useMemo, useState, useEffect } from 'react'
 
+import type { StudentPagination } from '../services/api'
+
 import Avatar from '../components/ui/Avatar'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
 import StudentForm from '../components/students/StudentForm'
+import { motion } from 'motion/react'
+import { pageMotion, listContainer, listItem } from '../lib/motion'
 
 import { api } from '../services/api'
 
 import {
-    students as initialStudents,
+    // students as initialStudents,
     type DonorStatus,
     type Student,
 } from '../data/students'
@@ -69,83 +73,83 @@ function statusVariant(status: DonorStatus) {
     }
 }
 
-function StudentRow({
-    student,
-    onSelect,
-}: {
-    student: Student
-    onSelect: (student: Student) => void
-}) {
-    return (
-        <tr
-            onClick={() => onSelect(student)}
-            className="group cursor-pointer border-b border-neutral-50 transition hover:bg-neutral-50/70"
-        >
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-3">
-                    <Avatar name={student.name} />
+// function StudentRow({
+//     student,
+//     onSelect,
+// }: {
+//     student: Student
+//     onSelect: (student: Student) => void
+// }) {
+//     return (
+//         <tr
+//             onClick={() => onSelect(student)}
+//             className="group cursor-pointer border-b border-neutral-50 transition hover:bg-neutral-50/70"
+//         >
+//             <td className="px-6 py-4">
+//                 <div className="flex items-center gap-3">
+//                     <Avatar name={student.name} />
 
-                    <div className="min-w-0">
-                        <p className="truncate text-[11px] font-bold text-neutral-800">
-                            {student.name}
-                        </p>
+//                     <div className="min-w-0">
+//                         <p className="truncate text-[11px] font-bold text-neutral-800">
+//                             {student.name}
+//                         </p>
 
-                        <p className="mt-0.5 text-[9px] text-neutral-400">
-                            {student.studentId}
-                        </p>
-                    </div>
-                </div>
-            </td>
+//                         <p className="mt-0.5 text-[9px] text-neutral-400">
+//                             {student.studentId}
+//                         </p>
+//                     </div>
+//                 </div>
+//             </td>
 
-            <td className="px-4 py-4">
-                <span className="text-[10px] font-medium text-neutral-500">
-                    {student.department}
-                </span>
-            </td>
+//             <td className="px-4 py-4">
+//                 <span className="text-[10px] font-medium text-neutral-500">
+//                     {student.department}
+//                 </span>
+//             </td>
 
-            <td className="px-4 py-4">
-                <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
-                    {student.bloodGroup}
-                </span>
-            </td>
+//             <td className="px-4 py-4">
+//                 <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
+//                     {student.bloodGroup}
+//                 </span>
+//             </td>
 
-            <td className="px-4 py-4">
-                <span className="text-[10px] text-neutral-500">
-                    {student.phone}
-                </span>
-            </td>
+//             <td className="px-4 py-4">
+//                 <span className="text-[10px] text-neutral-500">
+//                     {student.phone}
+//                 </span>
+//             </td>
 
-            <td className="px-4 py-4">
-                <Badge variant={statusVariant(student.donorStatus)} dot>
-                    {student.donorStatus}
-                </Badge>
-            </td>
+//             <td className="px-4 py-4">
+//                 <Badge variant={statusVariant(student.donorStatus)} dot>
+//                     {student.donorStatus}
+//                 </Badge>
+//             </td>
 
-            <td className="px-4 py-4">
-                <span className="text-[10px] text-neutral-500">
-                    {student.lastDonation}
-                </span>
-            </td>
+//             <td className="px-4 py-4">
+//                 <span className="text-[10px] text-neutral-500">
+//                     {student.lastDonation}
+//                 </span>
+//             </td>
 
-            <td className="px-4 py-4 text-center">
-                <span className="text-[10px] font-bold text-neutral-700">
-                    {student.donations}
-                </span>
-            </td>
+//             <td className="px-4 py-4 text-center">
+//                 <span className="text-[10px] font-bold text-neutral-700">
+//                     {student.donations}
+//                 </span>
+//             </td>
 
-            <td className="px-6 py-4 text-right">
-                <button
-                    onClick={(event) => {
-                        event.stopPropagation()
-                    }}
-                    className="rounded-lg p-1.5 text-neutral-300 opacity-0 transition group-hover:opacity-100 hover:bg-white hover:text-neutral-700"
-                >
-                    <MoreHorizontal className="h-4 w-4" />
-                </button>
-            </td>
-        </tr>
-    )
-}
+//             <td className="px-6 py-4 text-right">
+//                 <button
+//                     onClick={(event) => {
+//                         event.stopPropagation()
+//                     }}
+//                     className="rounded-lg p-1.5 text-neutral-300 opacity-0 transition group-hover:opacity-100 hover:bg-white hover:text-neutral-700"
+//                 >
+//                     <MoreHorizontal className="h-4 w-4" />
+//                 </button>
+//             </td>
+//         </tr>
+//     )
+// }
 
 function StudentCard({
     student,
@@ -325,17 +329,32 @@ function StudentDetails({
 }
 
 export default function Students() {
-    const [studentList, setStudentList] = useState<Student[]>(initialStudents)
+    const [studentList, setStudentList] = useState<Student[]>([])
     const [search, setSearch] = useState('')
     const [department, setDepartment] = useState('All departments')
     const [bloodGroup, setBloodGroup] = useState('All blood groups')
     const [status, setStatus] = useState('All statuses')
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
     const [formOpen, setFormOpen] = useState(false)
-    const [editingStudent, setEditingStudent] =
-        useState<Student | null>(null)
+    const [editingStudent, setEditingStudent] = useState<Student | null>(null)
     const [loading, setLoading] = useState(true)
     const [apiError, setApiError] = useState<string | null>(null)
+
+    const [pagination, setPagination] = useState<StudentPagination>({
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0,
+    })
+    const totalStudents = pagination?.total ?? 0
+
+    const [currentPage, setCurrentPage] = useState(1)
+
+    const availableDonors = studentList.filter(
+        (student) =>
+            student.donorStatus === 'Available' &&
+            student.consent,
+    ).length
 
     useEffect(() => {
         let cancelled = false
@@ -345,17 +364,18 @@ export default function Students() {
                 setLoading(true)
                 setApiError(null)
 
-                const data = await api.students.getAll()
+                const result = await api.students.getAll(currentPage, 20)
 
                 if (!cancelled) {
-                    setStudentList(data as Student[])
+                    setStudentList(result.students)
+                    setPagination(result.pagination)
                 }
             } catch (error) {
                 if (!cancelled) {
                     setApiError(
                         error instanceof Error
                             ? error.message
-                            : 'Unable to load students',
+                            : 'Unable to load students.',
                     )
                 }
             } finally {
@@ -365,12 +385,12 @@ export default function Students() {
             }
         }
 
-        loadStudents()
+        void loadStudents()
 
         return () => {
             cancelled = true
         }
-    }, [])
+    }, [currentPage])
 
     const handleSaveStudent = async (student: Student) => {
         try {
@@ -400,6 +420,12 @@ export default function Students() {
             setEditingStudent(null)
         } catch (error) {
             console.error('Failed to save student:', error)
+
+            setApiError(
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to save student.',
+            )
         }
     }
 
@@ -432,7 +458,7 @@ export default function Students() {
                 matchesStatus
             )
         })
-    }, [search, department, bloodGroup, status])
+    }, [studentList, search, department, bloodGroup, status])
 
     const hasFilters =
         search ||
@@ -448,7 +474,7 @@ export default function Students() {
     }
 
     return (
-        <div className="mx-auto max-w-[1500px]">
+        <motion.div {...pageMotion} className="mx-auto max-w-[1500px]">
 
             {/* Header */}
             <div className="mb-7 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
@@ -488,8 +514,8 @@ export default function Students() {
             )}
 
             {apiError && (
-                <div className="mt-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-700">
-                    Backend unavailable. Showing local development data.
+                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    Unable to load students from the server. Please check the backend connection and try again.
                 </div>
             )}
 
@@ -503,12 +529,12 @@ export default function Students() {
 
                     <div className="mt-1 flex items-end gap-2">
                         <span className="font-['Manrope'] text-2xl font-extrabold tracking-tight">
-                            1,248
+                            {totalStudents}
                         </span>
 
-                        <span className="mb-1 text-[9px] font-bold text-emerald-600">
+                        {/* <span className="mb-1 text-[9px] font-bold text-emerald-600">
                             +8.2%
-                        </span>
+                        </span> */}
                     </div>
                 </Card>
 
@@ -519,16 +545,16 @@ export default function Students() {
 
                     <div className="mt-1 flex items-end gap-2">
                         <span className="font-['Manrope'] text-2xl font-extrabold tracking-tight">
-                            386
+                            {availableDonors}
                         </span>
 
-                        <span className="mb-1 text-[9px] font-bold text-emerald-600">
+                        {/* <span className="mb-1 text-[9px] font-bold text-emerald-600">
                             30.9%
-                        </span>
+                        </span> */}
                     </div>
                 </Card>
 
-                <Card className="p-4">
+                {/* <Card className="p-4">
                     <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-400">
                         New this month
                     </p>
@@ -542,7 +568,7 @@ export default function Students() {
                             +14.5%
                         </span>
                     </div>
-                </Card>
+                </Card> */}
 
             </div>
 
@@ -554,7 +580,10 @@ export default function Students() {
                         <Input
                             placeholder="Search by name, ID or phone..."
                             value={search}
-                            onChange={(event) => setSearch(event.target.value)}
+                            onChange={(event) => {
+                                setSearch(event.target.value)
+                                setCurrentPage(1)
+                            }}
                             className="pl-10"
                         />
 
@@ -564,19 +593,28 @@ export default function Students() {
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:flex">
                         <FilterSelect
                             value={department}
-                            onChange={setDepartment}
+                            onChange={(value) => {
+                                setDepartment(value)
+                                setCurrentPage(1)
+                            }}
                             options={departments}
                         />
 
                         <FilterSelect
                             value={bloodGroup}
-                            onChange={setBloodGroup}
+                            onChange={(value) => {
+                                setBloodGroup(value)
+                                setCurrentPage(1)
+                            }}
                             options={bloodGroups}
                         />
 
                         <FilterSelect
                             value={status}
-                            onChange={setStatus}
+                            onChange={(value) => {
+                                setStatus(value)
+                                setCurrentPage(1)
+                            }}
                             options={donorStatuses}
                         />
                     </div>
@@ -662,15 +700,81 @@ export default function Students() {
                                     </tr>
                                 </thead>
 
-                                <tbody>
+                                <motion.tbody
+                                    variants={listContainer}
+                                    initial="hidden"
+                                    animate="show"
+                                >
                                     {filteredStudents.map((student) => (
-                                        <StudentRow
+                                        <motion.tr
                                             key={student.id}
-                                            student={student}
-                                            onSelect={setSelectedStudent}
-                                        />
+                                            variants={listItem}
+                                            onClick={() => setSelectedStudent(student)}
+                                            className="group cursor-pointer border-b border-neutral-50 transition hover:bg-neutral-50/70"
+                                        >
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar name={student.name} />
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-[11px] font-bold text-neutral-800">
+                                                            {student.name}
+                                                        </p>
+                                                        <p className="mt-0.5 text-[9px] text-neutral-400">
+                                                            {student.studentId}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <td className="px-4 py-4">
+                                                <span className="text-[10px] font-medium text-neutral-500">
+                                                    {student.department}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-4 py-4">
+                                                <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
+                                                    {student.bloodGroup}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-4 py-4">
+                                                <span className="text-[10px] text-neutral-500">
+                                                    {student.phone}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-4 py-4">
+                                                <Badge variant={statusVariant(student.donorStatus)} dot>
+                                                    {student.donorStatus}
+                                                </Badge>
+                                            </td>
+
+                                            <td className="px-4 py-4">
+                                                <span className="text-[10px] text-neutral-500">
+                                                    {student.lastDonation}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="text-[10px] font-bold text-neutral-700">
+                                                    {student.donations}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-6 py-4 text-right">
+                                                <button
+                                                    type="button"
+                                                    aria-label={`More options for ${student.name}`}
+                                                    onClick={(event) => event.stopPropagation()}
+                                                    className="rounded-lg p-1.5 text-neutral-300 opacity-0 transition group-hover:opacity-100 hover:bg-white hover:text-neutral-700"
+                                                >
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </button>
+                                            </td>
+                                        </motion.tr>
                                     ))}
-                                </tbody>
+                                </motion.tbody>
                             </table>
                         </div>
 
@@ -688,27 +792,43 @@ export default function Students() {
                 )}
 
                 {/* Pagination */}
-                {filteredStudents.length > 0 && (
-                    <div className="flex items-center justify-between border-t border-neutral-100 px-5 py-3.5">
-                        <p className="text-[9px] text-neutral-400">
-                            1–{filteredStudents.length} of {studentList.length}
-                        </p>
+                <div className="mt-5 flex flex-col gap-3 border-t border-neutral-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-neutral-500">
+                        {pagination.total === 0
+                            ? 'No students found'
+                            : `Showing ${(pagination.page - 1) * pagination.limit + 1
+                            }–${Math.min(
+                                pagination.page * pagination.limit,
+                                pagination.total,
+                            )} of ${pagination.total} students`}
+                    </p>
 
-                        <div className="flex items-center gap-1">
-                            <button className="rounded-lg p-1.5 text-neutral-300 hover:bg-neutral-50 hover:text-neutral-700">
-                                <ChevronLeft className="h-3.5 w-3.5" />
-                            </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            disabled={currentPage <= 1 || loading}
+                            onClick={() => setCurrentPage((page) => page - 1)}
+                            className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                            Previous
+                        </button>
 
-                            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-neutral-900 text-[9px] font-bold text-white">
-                                1
-                            </span>
+                        <span className="min-w-24 text-center text-sm text-neutral-600">
+                            Page {pagination.page} of {pagination.totalPages || 1}
+                        </span>
 
-                            <button className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-50 hover:text-neutral-700">
-                                <ChevronRight className="h-3.5 w-3.5" />
-                            </button>
-                        </div>
+                        <button
+                            type="button"
+                            disabled={
+                                currentPage >= pagination.totalPages || loading
+                            }
+                            onClick={() => setCurrentPage((page) => page + 1)}
+                            className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                            Next
+                        </button>
                     </div>
-                )}
+                </div>
 
             </Card>
 
@@ -734,7 +854,7 @@ export default function Students() {
                     onSave={handleSaveStudent}
                 />
             )}
-        </div>
+        </motion.div>
     )
 }
 

@@ -9,6 +9,7 @@ export type NotificationStatus =
 export interface NotificationRecord {
     id: string
     requestId: string
+    donorId: string
     donorName: string
     phone: string
     bloodGroup: string
@@ -23,6 +24,7 @@ export const notifications: NotificationRecord[] = [
     {
         id: 'NT-1001',
         requestId: 'BM-1024',
+        donorId: 'DN-1001',
         donorName: 'Afsal Rahman',
         phone: '+91 98765 43210',
         bloodGroup: 'O+',
@@ -36,6 +38,7 @@ export const notifications: NotificationRecord[] = [
     {
         id: 'NT-1002',
         requestId: 'BM-1024',
+        donorId: 'DN-1002',
         donorName: 'Amal Dev',
         phone: '+91 98470 11223',
         bloodGroup: 'O+',
@@ -48,6 +51,7 @@ export const notifications: NotificationRecord[] = [
     {
         id: 'NT-1003',
         requestId: 'BM-1023',
+        donorId: 'DN-1003',
         donorName: 'Fathima Nisa',
         phone: '+91 98951 22334',
         bloodGroup: 'B+',
@@ -60,6 +64,7 @@ export const notifications: NotificationRecord[] = [
     {
         id: 'NT-1004',
         requestId: 'BM-1022',
+        donorId: 'DN-1004',
         donorName: 'Hiba Mariyam',
         phone: '+91 97462 44556',
         bloodGroup: 'A-',
@@ -72,6 +77,7 @@ export const notifications: NotificationRecord[] = [
     {
         id: 'NT-1005',
         requestId: 'BM-1021',
+        donorId: 'DN-1005',
         donorName: 'Riyas Ahmed',
         phone: '+91 99610 66778',
         bloodGroup: 'B-',

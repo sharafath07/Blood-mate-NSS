@@ -14,7 +14,7 @@ import type {
 interface BloodRequestFormProps {
     request?: BloodRequest | null
     onClose: () => void
-    onSave: (request: BloodRequest) => void
+    onSave: (request: BloodRequest) => Promise<void> | void
 }
 
 const bloodGroups = [
@@ -170,21 +170,26 @@ export default function BloodRequestForm({
 
         setSaving(true)
 
-        await new Promise((resolve) => setTimeout(resolve, 700))
+        try {
+            const savedRequest: BloodRequest = {
+                ...form,
+                id:
+                    request?.id ??
+                    `BM-${Math.floor(1000 + Math.random() * 9000)}`,
+                createdAt:
+                    request?.createdAt ??
+                    new Date().toLocaleString('en-IN', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                    }),
+            }
 
-        const savedRequest: BloodRequest = {
-            ...form,
-            id: request?.id ?? `BM-${Math.floor(1000 + Math.random() * 9000)}`,
-            createdAt:
-                request?.createdAt ??
-                new Date().toLocaleString('en-IN', {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                }),
+            await onSave(savedRequest)
+        } catch (error) {
+            console.error('Failed to save blood request:', error)
+        } finally {
+            setSaving(false)
         }
-
-        onSave(savedRequest)
-        setSaving(false)
     }
 
     return (

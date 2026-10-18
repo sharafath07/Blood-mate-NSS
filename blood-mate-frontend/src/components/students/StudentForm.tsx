@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { CheckCircle2, UserRound, X } from 'lucide-react'
 
 import Button from '../ui/Button'
@@ -10,7 +10,7 @@ import type { Student, DonorStatus } from '../../data/students'
 interface StudentFormProps {
     student?: Student | null
     onClose: () => void
-    onSave: (student: Student) => void
+    onSave: (student: Student) => Promise<void> | void
 }
 
 interface FormData {
@@ -162,36 +162,37 @@ export default function StudentForm({
         return Object.keys(nextErrors).length === 0
     }
 
-    async function handleSubmit(event: React.FormEvent) {
+    async function handleSubmit(event: FormEvent) {
         event.preventDefault()
 
         if (!validate()) return
 
         setSaving(true)
 
-        // Simulate an API request.
-        await new Promise((resolve) => setTimeout(resolve, 700))
+        try {
+            const savedStudent: Student = {
+                id: student?.id ?? crypto.randomUUID(),
+                name: form.name.trim(),
+                studentId: form.studentId.trim(),
+                department: form.department,
+                course: form.course,
+                semester: form.semester,
+                bloodGroup: form.bloodGroup,
+                phone: form.phone.trim(),
+                email: form.email.trim(),
+                donorStatus: form.donorStatus,
+                lastDonation: form.lastDonation || '—',
+                donations: Number(form.donations) || 0,
+                consent: form.consent,
+                verified: form.verified,
+            }
 
-        const savedStudent: Student = {
-            id: student?.id ?? crypto.randomUUID(),
-            name: form.name.trim(),
-            studentId: form.studentId.trim(),
-            department: form.department,
-            course: form.course,
-            semester: form.semester,
-            bloodGroup: form.bloodGroup,
-            phone: form.phone.trim(),
-            email: form.email.trim(),
-            donorStatus: form.donorStatus,
-            lastDonation: form.lastDonation || '—',
-            donations: Number(form.donations) || 0,
-            consent: form.consent,
-            verified: form.verified,
+            await onSave(savedStudent)
+        } catch (error) {
+            console.error('Failed to save student:', error)
+        } finally {
+            setSaving(false)
         }
-
-        onSave(savedStudent)
-
-        setSaving(false)
     }
 
     return (

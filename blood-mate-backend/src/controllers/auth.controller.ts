@@ -27,6 +27,7 @@ export async function login(
         });
 
         return res.json({
+            token: result.token,
             success: true,
             data: result,
         });
