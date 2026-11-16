@@ -121,7 +121,6 @@ export const BloodRequestScalarFieldEnum = {
   units: 'units',
   requiredAt: 'requiredAt',
   status: 'status',
-  requesterId: 'requesterId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

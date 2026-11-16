@@ -3,7 +3,7 @@ import {
     ChevronDown,
     ChevronLeft,
     ChevronRight,
-    Clock3,
+    // Clock3,
     FileHeart,
     Filter,
     MoreHorizontal,
@@ -134,12 +134,12 @@ export default function BloodRequests() {
 
     const searchingCount = requests.filter(
         (request) =>
-            request.status === 'Searching' ||
-            request.status === 'Donors Contacted',
+            request.status === 'PENDING' ||
+            request.status === 'MATCHING',
     ).length
 
     const fulfilledCount = requests.filter(
-        (request) => request.status === 'Fulfilled',
+        (request) => request.status === 'FULFILLED',
     ).length
 
     const hasFilters =
@@ -156,13 +156,14 @@ export default function BloodRequests() {
     }
 
     const handleSaveRequest = async (request: BloodRequest) => {
+        console.log('Saving request:', request)
         try {
             setApiError(null)
 
             const exists = requests.some((item) => item.id === request.id)
 
             if (exists) {
-                const updated = await api.requests.update(request.id, request)
+                const updated = await api.requests.update(request.id, request.status)
 
                 setRequests((current) =>
                     current.map((item) =>
@@ -170,8 +171,9 @@ export default function BloodRequests() {
                     ),
                 )
             } else {
+                console.log('Creating new request:', request)
                 const created = await api.requests.create(request)
-
+                console.log('Created request:', request)
                 setRequests((current) => [created, ...current])
             }
 
@@ -579,9 +581,9 @@ function RequestRow({
                         {request.unitsRequired > 1 ? 's' : ''}
                     </p>
 
-                    <p className="mt-0.5 text-[9px] text-neutral-400">
+                    {/* <p className="mt-0.5 text-[9px] text-neutral-400">
                         {request.requiredDate}
-                    </p>
+                    </p> */}
                 </div>
             </td>
 
@@ -659,10 +661,10 @@ function RequestCard({
                         {request.hospital}
                     </p>
 
-                    <p className="mt-0.5 flex items-center gap-1 text-[8px] text-neutral-400">
+                    {/* <p className="mt-0.5 flex items-center gap-1 text-[8px] text-neutral-400">
                         <Clock3 className="h-2.5 w-2.5" />
                         {request.requiredDate} • {request.requiredTime}
-                    </p>
+                    </p> */}
                 </div>
 
                 <RequestStatusBadge status={request.status} />
@@ -743,9 +745,9 @@ function RequestDetails({
                                 {request.patientName}
                             </p>
 
-                            <p className="mt-1 text-[9px] text-white/50">
+                            {/* <p className="mt-1 text-[9px] text-white/50">
                                 {request.patientAge} years • {request.patientGender}
-                            </p>
+                            </p> */}
                         </div>
                     </div>
 
@@ -787,10 +789,10 @@ function RequestDetails({
                             {[
                                 ['Hospital', request.hospital],
                                 ['Location', request.location],
-                                ['Ward', request.ward],
-                                ['Contact person', request.contactPerson],
-                                ['Contact number', request.contactNumber],
-                                ['Required', `${request.requiredDate} • ${request.requiredTime}`],
+                                // ['Ward', request.ward],
+                                ['Bystander name', request.bystanderName],
+                                ['Bystander phone', request.bystanderPhone],
+                                // ['Required', `${request.requiredDate} • ${request.requiredTime}`],
                             ].map(([label, value]) => (
                                 <div
                                     key={label}

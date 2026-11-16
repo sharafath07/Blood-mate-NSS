@@ -45,7 +45,6 @@ export type BloodRequestMinAggregateOutputType = {
   units: number | null
   requiredAt: Date | null
   status: $Enums.RequestStatus | null
-  requesterId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -61,7 +60,6 @@ export type BloodRequestMaxAggregateOutputType = {
   units: number | null
   requiredAt: Date | null
   status: $Enums.RequestStatus | null
-  requesterId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -77,7 +75,6 @@ export type BloodRequestCountAggregateOutputType = {
   units: number
   requiredAt: number
   status: number
-  requesterId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -103,7 +100,6 @@ export type BloodRequestMinAggregateInputType = {
   units?: true
   requiredAt?: true
   status?: true
-  requesterId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -119,7 +115,6 @@ export type BloodRequestMaxAggregateInputType = {
   units?: true
   requiredAt?: true
   status?: true
-  requesterId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -135,7 +130,6 @@ export type BloodRequestCountAggregateInputType = {
   units?: true
   requiredAt?: true
   status?: true
-  requesterId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -238,7 +232,6 @@ export type BloodRequestGroupByOutputType = {
   units: number
   requiredAt: Date | null
   status: $Enums.RequestStatus
-  requesterId: string
   createdAt: Date
   updatedAt: Date
   _count: BloodRequestCountAggregateOutputType | null
@@ -277,10 +270,8 @@ export type BloodRequestWhereInput = {
   units?: Prisma.IntFilter<"BloodRequest"> | number
   requiredAt?: Prisma.DateTimeNullableFilter<"BloodRequest"> | Date | string | null
   status?: Prisma.EnumRequestStatusFilter<"BloodRequest"> | $Enums.RequestStatus
-  requesterId?: Prisma.StringFilter<"BloodRequest"> | string
   createdAt?: Prisma.DateTimeFilter<"BloodRequest"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BloodRequest"> | Date | string
-  requester?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   responses?: Prisma.DonorResponseListRelationFilter
 }
 
@@ -295,10 +286,8 @@ export type BloodRequestOrderByWithRelationInput = {
   units?: Prisma.SortOrder
   requiredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
-  requesterId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  requester?: Prisma.UserOrderByWithRelationInput
   responses?: Prisma.DonorResponseOrderByRelationAggregateInput
 }
 
@@ -316,10 +305,8 @@ export type BloodRequestWhereUniqueInput = Prisma.AtLeast<{
   units?: Prisma.IntFilter<"BloodRequest"> | number
   requiredAt?: Prisma.DateTimeNullableFilter<"BloodRequest"> | Date | string | null
   status?: Prisma.EnumRequestStatusFilter<"BloodRequest"> | $Enums.RequestStatus
-  requesterId?: Prisma.StringFilter<"BloodRequest"> | string
   createdAt?: Prisma.DateTimeFilter<"BloodRequest"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BloodRequest"> | Date | string
-  requester?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   responses?: Prisma.DonorResponseListRelationFilter
 }, "id">
 
@@ -334,7 +321,6 @@ export type BloodRequestOrderByWithAggregationInput = {
   units?: Prisma.SortOrder
   requiredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
-  requesterId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BloodRequestCountOrderByAggregateInput
@@ -358,7 +344,6 @@ export type BloodRequestScalarWhereWithAggregatesInput = {
   units?: Prisma.IntWithAggregatesFilter<"BloodRequest"> | number
   requiredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"BloodRequest"> | Date | string | null
   status?: Prisma.EnumRequestStatusWithAggregatesFilter<"BloodRequest"> | $Enums.RequestStatus
-  requesterId?: Prisma.StringWithAggregatesFilter<"BloodRequest"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"BloodRequest"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"BloodRequest"> | Date | string
 }
@@ -376,7 +361,6 @@ export type BloodRequestCreateInput = {
   status?: $Enums.RequestStatus
   createdAt?: Date | string
   updatedAt?: Date | string
-  requester: Prisma.UserCreateNestedOneWithoutBloodRequestsInput
   responses?: Prisma.DonorResponseCreateNestedManyWithoutRequestInput
 }
 
@@ -391,7 +375,6 @@ export type BloodRequestUncheckedCreateInput = {
   units?: number
   requiredAt?: Date | string | null
   status?: $Enums.RequestStatus
-  requesterId: string
   createdAt?: Date | string
   updatedAt?: Date | string
   responses?: Prisma.DonorResponseUncheckedCreateNestedManyWithoutRequestInput
@@ -410,7 +393,6 @@ export type BloodRequestUpdateInput = {
   status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  requester?: Prisma.UserUpdateOneRequiredWithoutBloodRequestsNestedInput
   responses?: Prisma.DonorResponseUpdateManyWithoutRequestNestedInput
 }
 
@@ -425,7 +407,6 @@ export type BloodRequestUncheckedUpdateInput = {
   units?: Prisma.IntFieldUpdateOperationsInput | number
   requiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
-  requesterId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   responses?: Prisma.DonorResponseUncheckedUpdateManyWithoutRequestNestedInput
@@ -442,7 +423,6 @@ export type BloodRequestCreateManyInput = {
   units?: number
   requiredAt?: Date | string | null
   status?: $Enums.RequestStatus
-  requesterId: string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -473,19 +453,8 @@ export type BloodRequestUncheckedUpdateManyInput = {
   units?: Prisma.IntFieldUpdateOperationsInput | number
   requiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
-  requesterId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type BloodRequestListRelationFilter = {
-  every?: Prisma.BloodRequestWhereInput
-  some?: Prisma.BloodRequestWhereInput
-  none?: Prisma.BloodRequestWhereInput
-}
-
-export type BloodRequestOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
 }
 
 export type BloodRequestCountOrderByAggregateInput = {
@@ -499,7 +468,6 @@ export type BloodRequestCountOrderByAggregateInput = {
   units?: Prisma.SortOrder
   requiredAt?: Prisma.SortOrder
   status?: Prisma.SortOrder
-  requesterId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -519,7 +487,6 @@ export type BloodRequestMaxOrderByAggregateInput = {
   units?: Prisma.SortOrder
   requiredAt?: Prisma.SortOrder
   status?: Prisma.SortOrder
-  requesterId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -535,7 +502,6 @@ export type BloodRequestMinOrderByAggregateInput = {
   units?: Prisma.SortOrder
   requiredAt?: Prisma.SortOrder
   status?: Prisma.SortOrder
-  requesterId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -547,48 +513,6 @@ export type BloodRequestSumOrderByAggregateInput = {
 export type BloodRequestScalarRelationFilter = {
   is?: Prisma.BloodRequestWhereInput
   isNot?: Prisma.BloodRequestWhereInput
-}
-
-export type BloodRequestCreateNestedManyWithoutRequesterInput = {
-  create?: Prisma.XOR<Prisma.BloodRequestCreateWithoutRequesterInput, Prisma.BloodRequestUncheckedCreateWithoutRequesterInput> | Prisma.BloodRequestCreateWithoutRequesterInput[] | Prisma.BloodRequestUncheckedCreateWithoutRequesterInput[]
-  connectOrCreate?: Prisma.BloodRequestCreateOrConnectWithoutRequesterInput | Prisma.BloodRequestCreateOrConnectWithoutRequesterInput[]
-  createMany?: Prisma.BloodRequestCreateManyRequesterInputEnvelope
-  connect?: Prisma.BloodRequestWhereUniqueInput | Prisma.BloodRequestWhereUniqueInput[]
-}
-
-export type BloodRequestUncheckedCreateNestedManyWithoutRequesterInput = {
-  create?: Prisma.XOR<Prisma.BloodRequestCreateWithoutRequesterInput, Prisma.BloodRequestUncheckedCreateWithoutRequesterInput> | Prisma.BloodRequestCreateWithoutRequesterInput[] | Prisma.BloodRequestUncheckedCreateWithoutRequesterInput[]
-  connectOrCreate?: Prisma.BloodRequestCreateOrConnectWithoutRequesterInput | Prisma.BloodRequestCreateOrConnectWithoutRequesterInput[]
-  createMany?: Prisma.BloodRequestCreateManyRequesterInputEnvelope
-  connect?: Prisma.BloodRequestWhereUniqueInput | Prisma.BloodRequestWhereUniqueInput[]
-}
-
-export type BloodRequestUpdateManyWithoutRequesterNestedInput = {
-  create?: Prisma.XOR<Prisma.BloodRequestCreateWithoutRequesterInput, Prisma.BloodRequestUncheckedCreateWithoutRequesterInput> | Prisma.BloodRequestCreateWithoutRequesterInput[] | Prisma.BloodRequestUncheckedCreateWithoutRequesterInput[]
-  connectOrCreate?: Prisma.BloodRequestCreateOrConnectWithoutRequesterInput | Prisma.BloodRequestCreateOrConnectWithoutRequesterInput[]
-  upsert?: Prisma.BloodRequestUpsertWithWhereUniqueWithoutRequesterInput | Prisma.BloodRequestUpsertWithWhereUniqueWithoutRequesterInput[]
-  createMany?: Prisma.BloodRequestCreateManyRequesterInputEnvelope
-  set?: Prisma.BloodRequestWhereUniqueInput | Prisma.BloodRequestWhereUniqueInput[]
-  disconnect?: Prisma.BloodRequestWhereUniqueInput | Prisma.BloodRequestWhereUniqueInput[]
-  delete?: Prisma.BloodRequestWhereUniqueInput | Prisma.BloodRequestWhereUniqueInput[]
-  connect?: Prisma.BloodRequestWhereUniqueInput | Prisma.BloodRequestWhereUniqueInput[]
-  update?: Prisma.BloodRequestUpdateWithWhereUniqueWithoutRequesterInput | Prisma.BloodRequestUpdateWithWhereUniqueWithoutRequesterInput[]
-  updateMany?: Prisma.BloodRequestUpdateManyWithWhereWithoutRequesterInput | Prisma.BloodRequestUpdateManyWithWhereWithoutRequesterInput[]
-  deleteMany?: Prisma.BloodRequestScalarWhereInput | Prisma.BloodRequestScalarWhereInput[]
-}
-
-export type BloodRequestUncheckedUpdateManyWithoutRequesterNestedInput = {
-  create?: Prisma.XOR<Prisma.BloodRequestCreateWithoutRequesterInput, Prisma.BloodRequestUncheckedCreateWithoutRequesterInput> | Prisma.BloodRequestCreateWithoutRequesterInput[] | Prisma.BloodRequestUncheckedCreateWithoutRequesterInput[]
-  connectOrCreate?: Prisma.BloodRequestCreateOrConnectWithoutRequesterInput | Prisma.BloodRequestCreateOrConnectWithoutRequesterInput[]
-  upsert?: Prisma.BloodRequestUpsertWithWhereUniqueWithoutRequesterInput | Prisma.BloodRequestUpsertWithWhereUniqueWithoutRequesterInput[]
-  createMany?: Prisma.BloodRequestCreateManyRequesterInputEnvelope
-  set?: Prisma.BloodRequestWhereUniqueInput | Prisma.BloodRequestWhereUniqueInput[]
-  disconnect?: Prisma.BloodRequestWhereUniqueInput | Prisma.BloodRequestWhereUniqueInput[]
-  delete?: Prisma.BloodRequestWhereUniqueInput | Prisma.BloodRequestWhereUniqueInput[]
-  connect?: Prisma.BloodRequestWhereUniqueInput | Prisma.BloodRequestWhereUniqueInput[]
-  update?: Prisma.BloodRequestUpdateWithWhereUniqueWithoutRequesterInput | Prisma.BloodRequestUpdateWithWhereUniqueWithoutRequesterInput[]
-  updateMany?: Prisma.BloodRequestUpdateManyWithWhereWithoutRequesterInput | Prisma.BloodRequestUpdateManyWithWhereWithoutRequesterInput[]
-  deleteMany?: Prisma.BloodRequestScalarWhereInput | Prisma.BloodRequestScalarWhereInput[]
 }
 
 export type EnumBloodGroupFieldUpdateOperationsInput = {
@@ -621,83 +545,6 @@ export type BloodRequestUpdateOneRequiredWithoutResponsesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BloodRequestUpdateToOneWithWhereWithoutResponsesInput, Prisma.BloodRequestUpdateWithoutResponsesInput>, Prisma.BloodRequestUncheckedUpdateWithoutResponsesInput>
 }
 
-export type BloodRequestCreateWithoutRequesterInput = {
-  id?: string
-  patientName: string
-  hospital?: string | null
-  location?: string | null
-  bystanderName: string
-  bystanderPhone: string
-  bloodGroup: $Enums.BloodGroup
-  units?: number
-  requiredAt?: Date | string | null
-  status?: $Enums.RequestStatus
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  responses?: Prisma.DonorResponseCreateNestedManyWithoutRequestInput
-}
-
-export type BloodRequestUncheckedCreateWithoutRequesterInput = {
-  id?: string
-  patientName: string
-  hospital?: string | null
-  location?: string | null
-  bystanderName: string
-  bystanderPhone: string
-  bloodGroup: $Enums.BloodGroup
-  units?: number
-  requiredAt?: Date | string | null
-  status?: $Enums.RequestStatus
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  responses?: Prisma.DonorResponseUncheckedCreateNestedManyWithoutRequestInput
-}
-
-export type BloodRequestCreateOrConnectWithoutRequesterInput = {
-  where: Prisma.BloodRequestWhereUniqueInput
-  create: Prisma.XOR<Prisma.BloodRequestCreateWithoutRequesterInput, Prisma.BloodRequestUncheckedCreateWithoutRequesterInput>
-}
-
-export type BloodRequestCreateManyRequesterInputEnvelope = {
-  data: Prisma.BloodRequestCreateManyRequesterInput | Prisma.BloodRequestCreateManyRequesterInput[]
-  skipDuplicates?: boolean
-}
-
-export type BloodRequestUpsertWithWhereUniqueWithoutRequesterInput = {
-  where: Prisma.BloodRequestWhereUniqueInput
-  update: Prisma.XOR<Prisma.BloodRequestUpdateWithoutRequesterInput, Prisma.BloodRequestUncheckedUpdateWithoutRequesterInput>
-  create: Prisma.XOR<Prisma.BloodRequestCreateWithoutRequesterInput, Prisma.BloodRequestUncheckedCreateWithoutRequesterInput>
-}
-
-export type BloodRequestUpdateWithWhereUniqueWithoutRequesterInput = {
-  where: Prisma.BloodRequestWhereUniqueInput
-  data: Prisma.XOR<Prisma.BloodRequestUpdateWithoutRequesterInput, Prisma.BloodRequestUncheckedUpdateWithoutRequesterInput>
-}
-
-export type BloodRequestUpdateManyWithWhereWithoutRequesterInput = {
-  where: Prisma.BloodRequestScalarWhereInput
-  data: Prisma.XOR<Prisma.BloodRequestUpdateManyMutationInput, Prisma.BloodRequestUncheckedUpdateManyWithoutRequesterInput>
-}
-
-export type BloodRequestScalarWhereInput = {
-  AND?: Prisma.BloodRequestScalarWhereInput | Prisma.BloodRequestScalarWhereInput[]
-  OR?: Prisma.BloodRequestScalarWhereInput[]
-  NOT?: Prisma.BloodRequestScalarWhereInput | Prisma.BloodRequestScalarWhereInput[]
-  id?: Prisma.StringFilter<"BloodRequest"> | string
-  patientName?: Prisma.StringFilter<"BloodRequest"> | string
-  hospital?: Prisma.StringNullableFilter<"BloodRequest"> | string | null
-  location?: Prisma.StringNullableFilter<"BloodRequest"> | string | null
-  bystanderName?: Prisma.StringFilter<"BloodRequest"> | string
-  bystanderPhone?: Prisma.StringFilter<"BloodRequest"> | string
-  bloodGroup?: Prisma.EnumBloodGroupFilter<"BloodRequest"> | $Enums.BloodGroup
-  units?: Prisma.IntFilter<"BloodRequest"> | number
-  requiredAt?: Prisma.DateTimeNullableFilter<"BloodRequest"> | Date | string | null
-  status?: Prisma.EnumRequestStatusFilter<"BloodRequest"> | $Enums.RequestStatus
-  requesterId?: Prisma.StringFilter<"BloodRequest"> | string
-  createdAt?: Prisma.DateTimeFilter<"BloodRequest"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"BloodRequest"> | Date | string
-}
-
 export type BloodRequestCreateWithoutResponsesInput = {
   id?: string
   patientName: string
@@ -711,7 +558,6 @@ export type BloodRequestCreateWithoutResponsesInput = {
   status?: $Enums.RequestStatus
   createdAt?: Date | string
   updatedAt?: Date | string
-  requester: Prisma.UserCreateNestedOneWithoutBloodRequestsInput
 }
 
 export type BloodRequestUncheckedCreateWithoutResponsesInput = {
@@ -725,7 +571,6 @@ export type BloodRequestUncheckedCreateWithoutResponsesInput = {
   units?: number
   requiredAt?: Date | string | null
   status?: $Enums.RequestStatus
-  requesterId: string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -759,73 +604,9 @@ export type BloodRequestUpdateWithoutResponsesInput = {
   status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  requester?: Prisma.UserUpdateOneRequiredWithoutBloodRequestsNestedInput
 }
 
 export type BloodRequestUncheckedUpdateWithoutResponsesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  patientName?: Prisma.StringFieldUpdateOperationsInput | string
-  hospital?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  bystanderName?: Prisma.StringFieldUpdateOperationsInput | string
-  bystanderPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  bloodGroup?: Prisma.EnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup
-  units?: Prisma.IntFieldUpdateOperationsInput | number
-  requiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
-  requesterId?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type BloodRequestCreateManyRequesterInput = {
-  id?: string
-  patientName: string
-  hospital?: string | null
-  location?: string | null
-  bystanderName: string
-  bystanderPhone: string
-  bloodGroup: $Enums.BloodGroup
-  units?: number
-  requiredAt?: Date | string | null
-  status?: $Enums.RequestStatus
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type BloodRequestUpdateWithoutRequesterInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  patientName?: Prisma.StringFieldUpdateOperationsInput | string
-  hospital?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  bystanderName?: Prisma.StringFieldUpdateOperationsInput | string
-  bystanderPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  bloodGroup?: Prisma.EnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup
-  units?: Prisma.IntFieldUpdateOperationsInput | number
-  requiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  responses?: Prisma.DonorResponseUpdateManyWithoutRequestNestedInput
-}
-
-export type BloodRequestUncheckedUpdateWithoutRequesterInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  patientName?: Prisma.StringFieldUpdateOperationsInput | string
-  hospital?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  bystanderName?: Prisma.StringFieldUpdateOperationsInput | string
-  bystanderPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  bloodGroup?: Prisma.EnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup
-  units?: Prisma.IntFieldUpdateOperationsInput | number
-  requiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  responses?: Prisma.DonorResponseUncheckedUpdateManyWithoutRequestNestedInput
-}
-
-export type BloodRequestUncheckedUpdateManyWithoutRequesterInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   patientName?: Prisma.StringFieldUpdateOperationsInput | string
   hospital?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -882,10 +663,8 @@ export type BloodRequestSelect<ExtArgs extends runtime.Types.Extensions.Internal
   units?: boolean
   requiredAt?: boolean
   status?: boolean
-  requesterId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  requester?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   responses?: boolean | Prisma.BloodRequest$responsesArgs<ExtArgs>
   _count?: boolean | Prisma.BloodRequestCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bloodRequest"]>
@@ -901,10 +680,8 @@ export type BloodRequestSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   units?: boolean
   requiredAt?: boolean
   status?: boolean
-  requesterId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  requester?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bloodRequest"]>
 
 export type BloodRequestSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -918,10 +695,8 @@ export type BloodRequestSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   units?: boolean
   requiredAt?: boolean
   status?: boolean
-  requesterId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  requester?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bloodRequest"]>
 
 export type BloodRequestSelectScalar = {
@@ -935,28 +710,21 @@ export type BloodRequestSelectScalar = {
   units?: boolean
   requiredAt?: boolean
   status?: boolean
-  requesterId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BloodRequestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "patientName" | "hospital" | "location" | "bystanderName" | "bystanderPhone" | "bloodGroup" | "units" | "requiredAt" | "status" | "requesterId" | "createdAt" | "updatedAt", ExtArgs["result"]["bloodRequest"]>
+export type BloodRequestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "patientName" | "hospital" | "location" | "bystanderName" | "bystanderPhone" | "bloodGroup" | "units" | "requiredAt" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["bloodRequest"]>
 export type BloodRequestInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  requester?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   responses?: boolean | Prisma.BloodRequest$responsesArgs<ExtArgs>
   _count?: boolean | Prisma.BloodRequestCountOutputTypeDefaultArgs<ExtArgs>
 }
-export type BloodRequestIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  requester?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-}
-export type BloodRequestIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  requester?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-}
+export type BloodRequestIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type BloodRequestIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
 
 export type $BloodRequestPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "BloodRequest"
   objects: {
-    requester: Prisma.$UserPayload<ExtArgs>
     responses: Prisma.$DonorResponsePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -970,7 +738,6 @@ export type $BloodRequestPayload<ExtArgs extends runtime.Types.Extensions.Intern
     units: number
     requiredAt: Date | null
     status: $Enums.RequestStatus
-    requesterId: string
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["bloodRequest"]>
@@ -1367,7 +1134,6 @@ readonly fields: BloodRequestFieldRefs;
  */
 export interface Prisma__BloodRequestClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  requester<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   responses<T extends Prisma.BloodRequest$responsesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BloodRequest$responsesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DonorResponsePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1408,7 +1174,6 @@ export interface BloodRequestFieldRefs {
   readonly units: Prisma.FieldRef<"BloodRequest", 'Int'>
   readonly requiredAt: Prisma.FieldRef<"BloodRequest", 'DateTime'>
   readonly status: Prisma.FieldRef<"BloodRequest", 'RequestStatus'>
-  readonly requesterId: Prisma.FieldRef<"BloodRequest", 'String'>
   readonly createdAt: Prisma.FieldRef<"BloodRequest", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"BloodRequest", 'DateTime'>
 }
@@ -1665,10 +1430,6 @@ export type BloodRequestCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ex
    */
   data: Prisma.BloodRequestCreateManyInput | Prisma.BloodRequestCreateManyInput[]
   skipDuplicates?: boolean
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.BloodRequestIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1739,10 +1500,6 @@ export type BloodRequestUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Ex
    * Limit how many BloodRequests to update.
    */
   limit?: number
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.BloodRequestIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**

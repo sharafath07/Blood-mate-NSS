@@ -3,6 +3,7 @@ import {
     DonorStatus,
     RequestStatus,
     ResponseStatus,
+    BloodGroup,
 } from "../generated/prisma/client.js";
 
 export async function getDashboardStats() {
@@ -20,6 +21,14 @@ export async function getDashboardStats() {
         pendingResponses,
         acceptedResponses,
         declinedResponses,
+        aPosBlood,
+        aNegBlood,
+        bPosBlood,
+        bNegBlood,
+        abPosBlood,
+        abNegBlood,
+        oPosBlood,
+        oNegBlood,
     ] = await Promise.all([
         prisma.student.count(),
 
@@ -93,6 +102,62 @@ export async function getDashboardStats() {
                 status: ResponseStatus.DECLINED,
             },
         }),
+
+        prisma.student.count({
+            where: {
+                isDonor: true,
+                bloodGroup: BloodGroup.A_POSITIVE,
+            },
+        }),
+
+        prisma.student.count({
+            where: {
+                isDonor: true,
+                bloodGroup: BloodGroup.A_NEGATIVE,
+            },
+        }),
+
+        prisma.student.count({
+            where: {
+                isDonor: true,
+                bloodGroup: BloodGroup.B_POSITIVE,
+            },
+        }),
+
+        prisma.student.count({
+            where: {
+                isDonor: true,
+                bloodGroup: BloodGroup.B_NEGATIVE,
+            },
+        }),
+
+        prisma.student.count({
+            where: {
+                isDonor: true,
+                bloodGroup: BloodGroup.AB_POSITIVE,
+            },
+        }),
+
+        prisma.student.count({
+            where: {
+                isDonor: true,
+                bloodGroup: BloodGroup.AB_NEGATIVE,
+            },
+        }),
+
+        prisma.student.count({
+            where: {
+                isDonor: true,
+                bloodGroup: BloodGroup.O_POSITIVE,
+            },
+        }),
+
+        prisma.student.count({
+            where: {
+                isDonor: true,
+                bloodGroup: BloodGroup.O_NEGATIVE,
+            },
+        }),
     ]);
 
     return {
@@ -120,5 +185,40 @@ export async function getDashboardStats() {
             accepted: acceptedResponses,
             declined: declinedResponses,
         },
+
+        donorDistribution: [
+            {
+                group: "A+",
+                count: aPosBlood,
+            },
+            {
+                group: "A-",
+                count: aNegBlood,
+            },
+            {
+                group: "B+",
+                count: bPosBlood,
+            },
+            {
+                group: "B-",
+                count: bNegBlood,
+            },
+            {
+                group: "AB+",
+                count: abPosBlood,
+            },
+            {
+                group: "AB-",
+                count: abNegBlood,
+            },
+            {
+                group: "O+",
+                count: oPosBlood,
+            },
+            {
+                group: "O-",
+                count: oNegBlood,
+            },
+        ],
     };
 }

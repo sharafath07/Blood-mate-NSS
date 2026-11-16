@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import type { BloodRequest } from '../data/bloodRequests'
+import type { BloodRequest, RequestStatus } from '../data/bloodRequests'
 import type { Donor } from '../data/donors'
 import type { NotificationRecord } from '../data/notifications'
 import type { Student } from '../data/students'
@@ -147,9 +147,10 @@ export const api = {
     },
 
     requests: {
-        getAll: async () => {
+        getAll: async (): Promise<BloodRequest[]> => {
             const response = await apiClient.get<
-                BloodRequest[] | ApiEnvelope<BloodRequest[]>
+                | BloodRequest[]
+                | ApiEnvelope<BloodRequest[]>
             >('/blood-requests')
 
             return unwrap(response.data)
@@ -171,13 +172,21 @@ export const api = {
             return unwrap(response.data)
         },
 
-        update: async (id: string, data: BloodRequest) => {
-            const response = await apiClient.put<
+        update: async (id: string, status: RequestStatus) => {
+            const response = await apiClient.patch<
                 BloodRequest | ApiEnvelope<BloodRequest>
-            >(`/blood-requests/${id}`, data)
+            >(`/blood-requests/${id}`, status)
 
             return unwrap(response.data)
         },
+
+        delete: async (id: string) => {
+            const response = await apiClient.delete<
+                BloodRequest | ApiEnvelope<BloodRequest>
+            >(`/blood-requests/${id}`)
+
+            return unwrap(response.data)
+        }
     },
 
     donors: {
@@ -210,14 +219,15 @@ export const api = {
             return unwrap(response.data)
         },
     },
-
     dashboard: {
-        getStats: async () => {
-            const response = await apiClient.get<
-                DashboardStats | ApiEnvelope<DashboardStats>
-            >('/dashboard/stats')
+        getStats: async (): Promise<DashboardStats> => {
+            const response = await apiClient.get<{
+                success: boolean
+                data: DashboardStats
+                message?: string
+            }>('/dashboard/stats')
 
-            return unwrap(response.data)
+            return response.data.data
         },
     },
 

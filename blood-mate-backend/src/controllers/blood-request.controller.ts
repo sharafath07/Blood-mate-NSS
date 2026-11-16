@@ -22,21 +22,21 @@ export async function createRequest(req: Request, res: Response) {
             location,
             bloodGroup,
             units,
-            requiredAt,
-            requesterId,
+            // requiredAt,
+            // requesterId,
         } = req.body;
 
         if (
             !patientName ||
             !bystanderName ||
             !bystanderPhone ||
-            !bloodGroup ||
-            !requesterId
+            !bloodGroup
+            // !requesterId
         ) {
             res.status(400).json({
                 success: false,
                 message:
-                    "patientName, bystanderName, bystanderPhone, bloodGroup and requesterId are required",
+                    "patientName, bystanderName, bystanderPhone and bloodGroup are required",
             });
             return;
         }
@@ -49,7 +49,7 @@ export async function createRequest(req: Request, res: Response) {
             return;
         }
 
-        const request = await createBloodRequest({
+        const input = {
             patientName,
             bystanderName,
             bystanderPhone,
@@ -57,9 +57,13 @@ export async function createRequest(req: Request, res: Response) {
             location,
             bloodGroup,
             units,
-            requiredAt: requiredAt ? new Date(requiredAt) : undefined,
-            requesterId,
-        });
+            // requiredAt,
+            // requesterId,
+        };
+
+        const request = await createBloodRequest(
+            input
+        );
 
         res.status(201).json({
             success: true,

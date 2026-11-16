@@ -18,42 +18,41 @@ interface BloodRequestFormProps {
 }
 
 const bloodGroups = [
-    'A+',
-    'A-',
-    'B+',
-    'B-',
-    'AB+',
-    'AB-',
-    'O+',
-    'O-',
+    'A_POSITIVE',
+    'A_NEGATIVE',
+    'B_POSITIVE',
+    'B_NEGATIVE',
+    'AB_POSITIVE',
+    'AB_NEGATIVE',
+    'O_POSITIVE',
+    'O_NEGATIVE',
 ]
 
+
 const statuses: RequestStatus[] = [
-    'New',
-    'Searching',
-    'Donors Contacted',
-    'Partially Fulfilled',
-    'Fulfilled',
-    'Cancelled',
+    'PENDING',
+    'MATCHING',
+    'FULFILLED',
+    'CANCELLED',
 ]
 
 const urgencies: Urgency[] = ['Critical', 'Urgent', 'Normal']
 
 const emptyRequest: Omit<BloodRequest, 'id' | 'createdAt'> = {
     patientName: '',
-    patientAge: 0,
-    patientGender: 'Male',
-    bloodGroup: 'O+',
+    // patientAge: 0,
+    // patientGender: 'Male',
+    bloodGroup: '',
     unitsRequired: 1,
     hospital: '',
     location: '',
-    ward: '',
-    contactPerson: '',
-    contactNumber: '',
-    requiredDate: '',
-    requiredTime: '',
+    // ward: '',
+    bystanderName: '',
+    bystanderPhone: '',
+    // requiredDate: '',
+    // requiredTime: '',
     urgency: 'Normal',
-    status: 'New',
+    status: 'PENDING',
     matchedDonors: 0,
     contactedDonors: 0,
     confirmedDonors: 0,
@@ -75,17 +74,17 @@ export default function BloodRequestForm({
         if (request) {
             setForm({
                 patientName: request.patientName,
-                patientAge: request.patientAge,
-                patientGender: request.patientGender,
+                // patientAge: request.patientAge,
+                // patientGender: request.patientGender,
                 bloodGroup: request.bloodGroup,
                 unitsRequired: request.unitsRequired,
                 hospital: request.hospital,
                 location: request.location,
-                ward: request.ward,
-                contactPerson: request.contactPerson,
-                contactNumber: request.contactNumber,
-                requiredDate: request.requiredDate,
-                requiredTime: request.requiredTime,
+                // ward: request.ward,
+                bystanderName: request.bystanderName,
+                bystanderPhone: request.bystanderPhone,
+                // requiredDate: request.requiredDate,
+                // requiredTime: request.requiredTime,
                 urgency: request.urgency,
                 status: request.status,
                 matchedDonors: request.matchedDonors,
@@ -123,9 +122,9 @@ export default function BloodRequestForm({
             nextErrors.patientName = 'Patient name is required'
         }
 
-        if (!form.patientAge || form.patientAge < 1 || form.patientAge > 120) {
-            nextErrors.patientAge = 'Enter a valid age'
-        }
+        // if (!form.patientAge || form.patientAge < 1 || form.patientAge > 120) {
+        //     nextErrors.patientAge = 'Enter a valid age'
+        // }
 
         if (!form.bloodGroup) {
             nextErrors.bloodGroup = 'Select a blood group'
@@ -139,24 +138,24 @@ export default function BloodRequestForm({
             nextErrors.hospital = 'Hospital is required'
         }
 
-        if (!form.contactPerson.trim()) {
-            nextErrors.contactPerson = 'Contact person is required'
+        if (!form.bystanderName.trim()) {
+            nextErrors.bystanderName = 'Bystander name is required'
         }
 
-        const digits = form.contactNumber.replace(/\D/g, '')
-        if (!form.contactNumber.trim()) {
-            nextErrors.contactNumber = 'Contact number is required'
+        const digits = form.bystanderPhone.replace(/\D/g, '')
+        if (!form.bystanderPhone.trim()) {
+            nextErrors.bystanderPhone = 'Bystander phone is required'
         } else if (digits.length < 10 || digits.length > 15) {
-            nextErrors.contactNumber = 'Enter a valid phone number'
+            nextErrors.bystanderPhone = 'Enter a valid phone number'
         }
 
-        if (!form.requiredDate) {
-            nextErrors.requiredDate = 'Required date is required'
-        }
+        // if (!form.requiredDate) {
+        //     nextErrors.requiredDate = 'Required date is required'
+        // }
 
-        if (!form.requiredTime) {
-            nextErrors.requiredTime = 'Required time is required'
-        }
+        // if (!form.requiredTime) {
+        //     nextErrors.requiredTime = 'Required time is required'
+        // }
 
         setErrors(nextErrors)
 
@@ -183,7 +182,7 @@ export default function BloodRequestForm({
                         timeStyle: 'short',
                     }),
             }
-
+            console.log('Saved request:', savedRequest)
             await onSave(savedRequest)
         } catch (error) {
             console.error('Failed to save blood request:', error)
@@ -255,13 +254,14 @@ export default function BloodRequestForm({
                                             value={form.patientName}
                                             error={errors.patientName}
                                             placeholder="Enter patient's full name"
+                                            required
                                             onChange={(event) =>
                                                 update('patientName', event.target.value)
                                             }
                                         />
                                     </div>
 
-                                    <Input
+                                    {/* <Input
                                         label="Age"
                                         type="number"
                                         min={1}
@@ -272,9 +272,9 @@ export default function BloodRequestForm({
                                         onChange={(event) =>
                                             update('patientAge', Number(event.target.value))
                                         }
-                                    />
+                                    /> */}
 
-                                    <Select
+                                    {/* <Select
                                         label="Gender"
                                         value={form.patientGender}
                                         options={[
@@ -285,7 +285,7 @@ export default function BloodRequestForm({
                                         onChange={(event) =>
                                             update('patientGender', event.target.value)
                                         }
-                                    />
+                                    /> */}
                                 </div>
                             </section>
 
@@ -302,9 +302,10 @@ export default function BloodRequestForm({
                                         value={form.bloodGroup}
                                         error={errors.bloodGroup}
                                         options={bloodGroups.map((group) => ({
-                                            label: group,
+                                            label: group.replace('_', '').replace('POSITIVE', '+').replace('NEGATIVE', '-'),
                                             value: group,
                                         }))}
+                                        required
                                         onChange={(event) =>
                                             update('bloodGroup', event.target.value)
                                         }
@@ -346,7 +347,7 @@ export default function BloodRequestForm({
                                         }
                                     />
 
-                                    <Input
+                                    {/* <Input
                                         label="Required date"
                                         type="date"
                                         value={form.requiredDate}
@@ -364,7 +365,7 @@ export default function BloodRequestForm({
                                         onChange={(event) =>
                                             update('requiredTime', event.target.value)
                                         }
-                                    />
+                                    /> */}
                                 </div>
                             </section>
 
@@ -382,6 +383,7 @@ export default function BloodRequestForm({
                                             value={form.hospital}
                                             error={errors.hospital}
                                             placeholder="Hospital name"
+                                            required
                                             onChange={(event) =>
                                                 update('hospital', event.target.value)
                                             }
@@ -392,19 +394,20 @@ export default function BloodRequestForm({
                                         label="Location"
                                         value={form.location}
                                         placeholder="City / area"
+                                        required
                                         onChange={(event) =>
                                             update('location', event.target.value)
                                         }
                                     />
 
-                                    <Input
+                                    {/* <Input
                                         label="Ward / room"
                                         value={form.ward}
                                         placeholder="Ward, ICU, room..."
                                         onChange={(event) =>
                                             update('ward', event.target.value)
                                         }
-                                    />
+                                    /> */}
                                 </div>
                             </section>
 
@@ -417,22 +420,24 @@ export default function BloodRequestForm({
 
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <Input
-                                        label="Contact person"
-                                        value={form.contactPerson}
-                                        error={errors.contactPerson}
+                                        label="Bystander name"
+                                        value={form.bystanderName}
+                                        error={errors.bystanderName}
                                         placeholder="Full name"
+                                        required
                                         onChange={(event) =>
-                                            update('contactPerson', event.target.value)
+                                            update('bystanderName', event.target.value)
                                         }
                                     />
 
                                     <Input
                                         label="Contact number"
-                                        value={form.contactNumber}
-                                        error={errors.contactNumber}
+                                        value={form.bystanderPhone}
+                                        error={errors.bystanderPhone}
                                         placeholder="+91 98765 43210"
+                                        required
                                         onChange={(event) =>
-                                            update('contactNumber', event.target.value)
+                                            update('bystanderPhone', event.target.value)
                                         }
                                     />
                                 </div>

@@ -17,28 +17,26 @@ interface CreateBloodRequestInput {
     bystanderPhone: string;
     bloodGroup: BloodGroup;
     units?: number;
-    requiredAt?: Date;
-    requesterId: string;
+    // requiredAt?: Date;
+    // requesterId: string;
+    status?: RequestStatus;
 }
 
 export async function createBloodRequest(
-    input: CreateBloodRequestInput
+    input: CreateBloodRequestInput,
 ) {
-    const request =
-        await prisma.bloodRequest.create({
-            data: {
-                patientName: input.patientName,
-                bystanderName: input.bystanderName,
-                bystanderPhone: input.bystanderPhone,
-                hospital: input.hospital ?? null,
-                location: input.location ?? null,
-                bloodGroup: input.bloodGroup,
-                units: input.units ?? 1,
-                requiredAt: input.requiredAt ?? null,
-                requesterId: input.requesterId,
-                status: RequestStatus.PENDING,
-            },
-        });
+    const request = await prisma.bloodRequest.create({
+        data: {
+            patientName: input.patientName,
+            bystanderName: input.bystanderName,
+            bystanderPhone: input.bystanderPhone,
+            hospital: input.hospital ?? null,
+            location: input.location ?? null,
+            bloodGroup: input.bloodGroup,
+            units: input.units ?? 1,
+            status: RequestStatus.PENDING,
+        },
+    });
 
     const donors =
         await findDonorsByBloodGroup(

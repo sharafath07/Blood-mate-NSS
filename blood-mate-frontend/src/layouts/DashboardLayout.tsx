@@ -140,12 +140,6 @@ export default function DashboardLayout() {
                                                         />
 
                                                         <span>{item.name}</span>
-
-                                                        {item.name === 'Blood Requests' && (
-                                                            <span className="ml-auto rounded-full bg-[#b91c1c] px-1.5 py-0.5 text-[9px] font-bold text-white">
-                                                                3
-                                                            </span>
-                                                        )}
                                                     </>
                                                 )}
                                             </NavLink>

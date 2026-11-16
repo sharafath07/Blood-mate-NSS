@@ -16,56 +16,9 @@ import { useEffect, useState } from 'react'
 import { api } from '../services/api'
 import { motion } from 'motion/react'
 import { pageMotion } from '../lib/motion'
-
-const bloodGroups = [
-    { group: 'O+', count: 96, percentage: 82 },
-    { group: 'A+', count: 78, percentage: 68 },
-    { group: 'B+', count: 64, percentage: 56 },
-    { group: 'AB+', count: 38, percentage: 34 },
-    { group: 'O-', count: 31, percentage: 28 },
-    { group: 'A-', count: 28, percentage: 24 },
-    { group: 'B-', count: 26, percentage: 22 },
-    { group: 'AB-', count: 12, percentage: 11 },
-]
-
-const requests = [
-    {
-        id: '#BM-1024',
-        patient: 'Muhammed Riyas',
-        blood: 'O+',
-        hospital: 'Baby Memorial Hospital',
-        units: 2,
-        urgency: 'Critical',
-        time: '12 min ago',
-    },
-    {
-        id: '#BM-1023',
-        patient: 'Fathima Nisa',
-        blood: 'B+',
-        hospital: 'Kozhikode Medical College',
-        units: 1,
-        urgency: 'Urgent',
-        time: '42 min ago',
-    },
-    {
-        id: '#BM-1022',
-        patient: 'Adil Rahman',
-        blood: 'A−',
-        hospital: 'IQRAA Hospital',
-        units: 2,
-        urgency: 'Normal',
-        time: '2 hrs ago',
-    },
-    {
-        id: '#BM-1021',
-        patient: 'Shahana K',
-        blood: 'O−',
-        hospital: 'MVR Cancer Centre',
-        units: 1,
-        urgency: 'Urgent',
-        time: '3 hrs ago',
-    },
-]
+import type { BloodRequest } from '../data/bloodRequests'
+import type { DonorDistribution, DashboardStats } from '../types/api'
+// import { useNavigate } from 'react-router-dom'
 
 function StatCard({
     label,
@@ -182,64 +135,119 @@ function UrgencyBadge({ urgency }: { urgency: string }) {
 }
 
 export default function Dashboard() {
-    const [dashboardStats, setDashboardStats] = useState({
-        registeredStudents: 0,
-        activeDonors: 0,
-        activeRequests: 0,
-        requestsFulfilled: 0,
-        urgentRequests: 0,
-    })
+    const [dashboardStats, setDashboardStats] = useState<DashboardStats>(null as unknown as DashboardStats)
+
+    // const navigate = useNavigate()
+
+    const [recentRequests, setRecentRequests] = useState<BloodRequest[]>([])
+    const [bloodGroups, setBloodGroups] = useState<DonorDistribution[]>([])
+    const [requestsLoading, setRequestsLoading] = useState(true)
 
     const [loading, setLoading] = useState(true)
     const [apiError, setApiError] = useState<string | null>(null)
     const stats = [
         {
             label: 'Registered Students',
-            value: dashboardStats.registeredStudents,
+            value: dashboardStats?.students.total ?? 0,
             description: 'registered in Blood Mate',
             icon: Users,
         },
         {
             label: 'Active Donors',
-            value: dashboardStats.activeDonors,
+            value: dashboardStats?.donors.available ?? 0,
             description: 'currently available',
             icon: HeartPulse,
         },
         {
             label: 'Active Requests',
-            value: dashboardStats.activeRequests,
-            description: `${dashboardStats.urgentRequests} urgent`,
+            value: dashboardStats?.bloodRequests.pending ?? 0,
+            description: `${dashboardStats?.bloodRequests.pending ?? 0} pending`,
             icon: Droplets,
             urgent: true,
         },
         {
             label: 'Requests Fulfilled',
-            value: `${dashboardStats.requestsFulfilled}%`,
-            description: 'overall fulfillment ',
+            value: dashboardStats?.bloodRequests.fulfilled ?? 0,
+            description: 'requests fulfilled',
             icon: ShieldCheck,
         },
     ]
 
     useEffect(() => {
-        const loadStats = async () => {
-            try {
-                setLoading(true)
-                setApiError(null)
+        console.log(dashboardStats)
+        for (const group of bloodGroups) {
+            group.percentage = Math.round((group.count / dashboardStats?.donors?.total) * 100 * 100) / 100
+        }
+        console.log(bloodGroups)
+    }, [bloodGroups, dashboardStats])
 
-                const data = await api.dashboard.getStats()
+    useEffect(() => {
+        let cancelled = false
+
+        async function loadDashboard() {
+            setLoading(true)
+            setRequestsLoading(true)
+            setApiError(null)
+
+            const [statsResult, requestsResult] = await Promise.allSettled([
+                api.dashboard.getStats(),
+                api.requests.getAll(),
+            ])
+
+            if (cancelled) return
+
+            if (statsResult.status === 'fulfilled') {
+                const data = statsResult.value
+                console.log(data);
 
                 setDashboardStats(data)
-            } catch (error) {
-                console.error('Failed to load dashboard stats:', error)
+                setBloodGroups(data.donorDistribution ?? [])
+            } else {
+                console.error(
+                    'Failed to load dashboard statistics:',
+                    statsResult.reason,
+                )
                 setApiError('Unable to load dashboard statistics.')
-            } finally {
-                setLoading(false)
             }
+
+            if (requestsResult.status === 'fulfilled') {
+                const data = requestsResult.value
+
+                if (Array.isArray(data)) {
+                    setRecentRequests(
+                        [...data]
+                            .sort(
+                                (a, b) =>
+                                    new Date(b.createdAt).getTime() -
+                                    new Date(a.createdAt).getTime(),
+                            )
+                            .slice(0, 5),
+                    )
+                } else {
+                    setRecentRequests([])
+                }
+            } else {
+                console.error(
+                    'Failed to load recent requests:',
+                    requestsResult.reason,
+                )
+                setApiError((current) =>
+                    current
+                        ? `${current} Recent requests could not be loaded.`
+                        : 'Unable to load recent blood requests.',
+                )
+            }
+
+            setLoading(false)
+            setRequestsLoading(false)
         }
 
-        loadStats()
-    }, [])
+        void loadDashboard()
 
+        return () => {
+            cancelled = true
+        }
+    }, [])
 
     return (
         <motion.div {...pageMotion} className="mx-auto max-w-[1500px]">
@@ -317,11 +325,17 @@ export default function Dashboard() {
                         </button>
                     </div>
 
-                    <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
-                        {bloodGroups.map((item) => (
-                            <BloodGroupRow key={item.group} {...item} />
-                        ))}
-                    </div>
+                    {bloodGroups.length > 0 ? (
+                        <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+                            {bloodGroups.map((item) => (
+                                <BloodGroupRow key={item.group} {...item} />
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-neutral-500">
+                            Donor distribution is not available yet.
+                        </p>
+                    )}
                 </section>
 
                 {/* Quick actions */}
@@ -388,7 +402,7 @@ export default function Dashboard() {
                             </h2>
 
                             <span className="rounded-full bg-red-50 px-2 py-0.5 text-[9px] font-bold text-red-600">
-                                6 urgent
+                                {dashboardStats?.bloodRequests.pending ?? 0} pending
                             </span>
                         </div>
 
@@ -410,118 +424,131 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Desktop table */}
-                <div className="hidden overflow-x-auto md:block">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-neutral-100 text-left">
-                                <th className="px-6 py-3 text-[9px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Request
-                                </th>
-                                <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Blood
-                                </th>
-                                <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Hospital
-                                </th>
-                                <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Units
-                                </th>
-                                <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Urgency
-                                </th>
-                                <th className="px-6 py-3 text-right text-[9px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Updated
-                                </th>
-                            </tr>
-                        </thead>
+                {requestsLoading ? (
+                    <p className="p-6 text-sm text-neutral-500">
+                        Loading recent requests…
+                    </p>
+                ) : recentRequests.length === 0 ? (
+                    <p className="p-6 text-sm text-neutral-500">
+                        No blood requests found.
+                    </p>
+                ) : (
+                    <div>
+                        {/* Desktop table */}
+                        <div className="hidden overflow-x-auto md:block">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-neutral-100 text-left">
+                                        <th className="px-6 py-3 text-[9px] font-bold uppercase tracking-wider text-neutral-400">
+                                            Request
+                                        </th>
+                                        <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-neutral-400">
+                                            Blood
+                                        </th>
+                                        <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-neutral-400">
+                                            Hospital
+                                        </th>
+                                        <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-neutral-400">
+                                            Units
+                                        </th>
+                                        <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-neutral-400">
+                                            Urgency
+                                        </th>
+                                        <th className="px-6 py-3 text-right text-[9px] font-bold uppercase tracking-wider text-neutral-400">
+                                            Updated
+                                        </th>
+                                    </tr>
+                                </thead>
 
-                        <tbody>
-                            {requests.map((request) => (
-                                <tr
-                                    key={request.id}
-                                    className="group border-b border-neutral-50 transition hover:bg-neutral-50/70"
-                                >
-                                    <td className="px-6 py-4">
-                                        <div>
-                                            <p className="text-[11px] font-bold text-neutral-800">
-                                                {request.patient}
-                                            </p>
-                                            <p className="mt-0.5 text-[9px] text-neutral-400">
-                                                {request.id}
-                                            </p>
+
+                                <tbody>
+                                    {recentRequests.map((request) => (
+                                        <tr
+                                            key={request.id}
+                                            className="group border-b border-neutral-50 transition hover:bg-neutral-50/70"
+                                        >
+                                            <td className="px-6 py-4">
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-neutral-800">
+                                                        {request.patientName}
+                                                    </p>
+                                                    <p className="mt-0.5 text-[9px] text-neutral-400">
+                                                        {request.id}
+                                                    </p>
+                                                </div>
+                                            </td>
+
+                                            <td className="px-4 py-4">
+                                                <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
+                                                    {request.bloodGroup}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-4 py-4">
+                                                <span className="text-[10px] font-medium text-neutral-600">
+                                                    {request.hospital}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-4 py-4">
+                                                <span className="text-[10px] font-semibold text-neutral-700">
+                                                    {request.unitsRequired} unit{request.unitsRequired > 1 ? 's' : ''}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-4 py-4">
+                                                <UrgencyBadge urgency={request.urgency} />
+                                            </td>
+
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-1.5 text-[9px] text-neutral-400">
+                                                    <Clock3 className="h-3 w-3" />
+                                                    {request.createdAt}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile cards */}
+                        <div className="divide-y divide-neutral-100 md:hidden">
+                            {recentRequests.map((request) => (
+                                <div key={request.id} className="p-4">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-[11px] font-bold text-red-600">
+                                                {request.bloodGroup}
+                                            </div>
+
+                                            <div>
+                                                <p className="text-[11px] font-bold text-neutral-800">
+                                                    {request.patientName}
+                                                </p>
+                                                <p className="mt-0.5 text-[9px] text-neutral-400">
+                                                    {request.id}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </td>
 
-                                    <td className="px-4 py-4">
-                                        <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
-                                            {request.blood}
-                                        </span>
-                                    </td>
+                                        <UrgencyBadge urgency={request.urgency} />
+                                    </div>
 
-                                    <td className="px-4 py-4">
-                                        <span className="text-[10px] font-medium text-neutral-600">
+                                    <div className="mt-3 flex items-center justify-between">
+                                        <span className="text-[9px] text-neutral-400">
                                             {request.hospital}
                                         </span>
-                                    </td>
 
-                                    <td className="px-4 py-4">
-                                        <span className="text-[10px] font-semibold text-neutral-700">
-                                            {request.units} unit{request.units > 1 ? 's' : ''}
+                                        <span className="text-[9px] font-semibold text-neutral-500">
+                                            {request.unitsRequired} unit{request.unitsRequired > 1 ? 's' : ''}
                                         </span>
-                                    </td>
-
-                                    <td className="px-4 py-4">
-                                        <UrgencyBadge urgency={request.urgency} />
-                                    </td>
-
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-1.5 text-[9px] text-neutral-400">
-                                            <Clock3 className="h-3 w-3" />
-                                            {request.time}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Mobile cards */}
-                <div className="divide-y divide-neutral-100 md:hidden">
-                    {requests.map((request) => (
-                        <div key={request.id} className="p-4">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-[11px] font-bold text-red-600">
-                                        {request.blood}
-                                    </div>
-
-                                    <div>
-                                        <p className="text-[11px] font-bold text-neutral-800">
-                                            {request.patient}
-                                        </p>
-                                        <p className="mt-0.5 text-[9px] text-neutral-400">
-                                            {request.id}
-                                        </p>
                                     </div>
                                 </div>
-
-                                <UrgencyBadge urgency={request.urgency} />
-                            </div>
-
-                            <div className="mt-3 flex items-center justify-between">
-                                <span className="text-[9px] text-neutral-400">
-                                    {request.hospital}
-                                </span>
-
-                                <span className="text-[9px] font-semibold text-neutral-500">
-                                    {request.units} unit{request.units > 1 ? 's' : ''}
-                                </span>
-                            </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </div>
+                )}
 
             </section>
 
@@ -548,6 +575,6 @@ export default function Dashboard() {
                 </button>
             </div>
 
-        </motion.div>
+        </motion.div >
     )
 }
