@@ -84,7 +84,7 @@ export default function BloodRequests() {
                 setApiError(null)
 
                 const data = await api.requests.getAll()
-
+                console.log('Loaded blood requests:', data)
                 setRequests(data)
             } catch (error) {
                 console.error('Failed to load blood requests:', error)
@@ -638,7 +638,7 @@ function RequestCard({
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-[10px] font-bold text-red-600">
-                        {request.bloodGroup}
+                        {request.bloodGroup.replace('_', '').replace('POSITIVE', '+').replace('NEGATIVE', '-')}
                     </div>
 
                     <div>
@@ -728,7 +728,7 @@ function RequestDetails({
                                 </p>
 
                                 <p className="mt-2 font-['Manrope'] text-4xl font-extrabold tracking-[-0.05em]">
-                                    {request.bloodGroup}
+                                    {request.bloodGroup.replace('_', '').replace('POSITIVE', '+').replace('NEGATIVE', '-')}
                                 </p>
 
                                 <p className="mt-1 text-[10px] text-white/60">

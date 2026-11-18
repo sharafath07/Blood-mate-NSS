@@ -1,7 +1,5 @@
 import {
     ChevronDown,
-    // ChevronLeft,
-    // ChevronRight,
     Filter,
     MoreHorizontal,
     Plus,
@@ -10,9 +8,7 @@ import {
     Users,
     X,
 } from 'lucide-react'
-import { useMemo, useState, useEffect } from 'react'
-
-import type { StudentPagination } from '../services/api'
+import { useMemo, useState, useEffect, useRef } from 'react'
 
 import Avatar from '../components/ui/Avatar'
 import Badge from '../components/ui/Badge'
@@ -21,7 +17,7 @@ import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
 import StudentForm from '../components/students/StudentForm'
 import { motion } from 'motion/react'
-import { pageMotion, listContainer, listItem } from '../lib/motion'
+import { pageMotion } from '../lib/motion'
 
 import { api } from '../services/api'
 
@@ -33,40 +29,69 @@ import {
 
 const departments = [
     'All departments',
-    'Computer Science',
-    'Commerce',
-    'Physics',
-    'English',
-    'Mathematics',
-    'Zoology',
-    'Economics',
-    'History',
+    "BA Arabic",
+    "BA Islamic History",
+    "BA English",
+    "BA Malayalam",
+    "BA Sociology",
+    "BA Multimedia",
+    "BA Economics",
+    "BA Functional English",
+    "BA History",
+    "BSc Physics",
+    "BSc Chemistry",
+    "BSc Mathematics",
+    "BSc Statistics",
+    "BSc Zoology",
+    "BSc Botany",
+    "BSc Computer Science",
+    "BSc Psychology",
+    "BBA",
+    "BCA",
+    "BCom with Computer Applications",
+    "BCom Finance",
+    "BVoc Software Development",
+    "BVoc Automobile",
+    "MA Arabic",
+    "MA English",
+    "MA History",
+    "MA Economics",
+    "MA Journalism and Mass Communication",
+    "MSc Physics",
+    "MSc Chemistry",
+    "MSc Mathematics",
+    "MSc Statistics",
+    "MSc Zoology",
+    "MSc Computer Science",
+    "MSc Psychology",
+    "MSc Geology",
+    "MCom"
 ]
 
 const bloodGroups = [
     'All blood groups',
     'A+',
-    'A−',
+    'A-',
     'B+',
-    'B−',
+    'B-',
     'AB+',
-    'AB−',
+    'AB-',
     'O+',
-    'O−',
+    'O-',
 ]
 
 const donorStatuses = [
     'All statuses',
-    'Available',
-    'Unavailable',
-    'Not Confirmed',
+    'AVAILABLE',
+    'UNAVAILABLE',
+    'INACTIVE',
 ]
 
 function statusVariant(status: DonorStatus) {
     switch (status) {
-        case 'Available':
+        case 'AVAILABLE':
             return 'success' as const
-        case 'Unavailable':
+        case 'UNAVAILABLE':
             return 'warning' as const
         default:
             return 'neutral' as const
@@ -172,9 +197,9 @@ function StudentCard({
                             {student.name}
                         </p>
 
-                        <p className="mt-0.5 text-[9px] text-neutral-400">
+                        {/* <p className="mt-0.5 text-[9px] text-neutral-400">
                             {student.studentId}
-                        </p>
+                        </p> */}
                     </div>
                 </div>
 
@@ -244,7 +269,7 @@ function StudentDetails({
                             </h3>
 
                             <p className="mt-1 text-[10px] text-neutral-400">
-                                {student.studentId} • {student.course}
+                                {student.department}
                             </p>
 
                             <div className="mt-2">
@@ -266,7 +291,7 @@ function StudentDetails({
                             </p>
                         </div>
 
-                        <div className="rounded-xl bg-neutral-50 p-4">
+                        {/* <div className="rounded-xl bg-neutral-50 p-4">
                             <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-400">
                                 Donations
                             </p>
@@ -274,7 +299,7 @@ function StudentDetails({
                             <p className="mt-1 font-['Manrope'] text-xl font-extrabold text-neutral-900">
                                 {student.donations}
                             </p>
-                        </div>
+                        </div> */}
                     </div>
 
                     <div className="mt-7">
@@ -285,10 +310,10 @@ function StudentDetails({
                         <Card className="divide-y divide-neutral-100">
                             {[
                                 ['Phone', student.phone],
-                                ['Email', student.email],
+                                // ['Email', student.email],
                                 ['Department', student.department],
-                                ['Course', student.course],
-                                ['Last donation', student.lastDonation],
+                                // ['Course', student.course],
+                                // ['Last donation', student.lastDonation],
                             ].map(([label, value]) => (
                                 <div
                                     key={label}
@@ -340,20 +365,11 @@ export default function Students() {
     const [loading, setLoading] = useState(true)
     const [apiError, setApiError] = useState<string | null>(null)
 
-    const [pagination, setPagination] = useState<StudentPagination>({
-        page: 1,
-        limit: 20,
-        total: 0,
-        totalPages: 0,
-    })
-    const totalStudents = pagination?.total ?? 0
-
-    const [currentPage, setCurrentPage] = useState(1)
+    const resultsRef = useRef<HTMLDivElement>(null)
 
     const availableDonors = studentList.filter(
         (student) =>
-            student.donorStatus === 'Available' &&
-            student.consent,
+            student.donorStatus === 'AVAILABLE'
     ).length
 
     useEffect(() => {
@@ -364,11 +380,24 @@ export default function Students() {
                 setLoading(true)
                 setApiError(null)
 
-                const result = await api.students.getAll(currentPage, 20)
+                const pageSize = 500
+                const firstPage = await api.students.getAll(1, pageSize)
+                const students = [...firstPage.students]
+
+                for (let page = 2; page <= firstPage.pagination.totalPages; page += 1) {
+                    if (cancelled) return
+                    const result = await api.students.getAll(page, pageSize)
+                    students.push(...result.students)
+                }
 
                 if (!cancelled) {
-                    setStudentList(result.students)
-                    setPagination(result.pagination)
+                    setStudentList((current) => {
+                        const studentsById = new Map(students.map((student) => [student.id, student]))
+                        for (const student of current) {
+                            studentsById.set(student.id, student)
+                        }
+                        return [...studentsById.values()]
+                    })
                 }
             } catch (error) {
                 if (!cancelled) {
@@ -390,7 +419,13 @@ export default function Students() {
         return () => {
             cancelled = true
         }
-    }, [currentPage])
+    }, [])
+
+    useEffect(() => {
+        if (resultsRef.current) {
+            resultsRef.current.scrollTop = 0
+        }
+    }, [search, department, bloodGroup, status])
 
     const handleSaveStudent = async (student: Student) => {
         try {
@@ -436,7 +471,7 @@ export default function Students() {
             const matchesSearch =
                 !query ||
                 student.name.toLowerCase().includes(query) ||
-                student.studentId.toLowerCase().includes(query) ||
+                // student.studentId.toLowerCase().includes(query) ||
                 student.phone.toLowerCase().includes(query)
 
             const matchesDepartment =
@@ -529,7 +564,7 @@ export default function Students() {
 
                     <div className="mt-1 flex items-end gap-2">
                         <span className="font-['Manrope'] text-2xl font-extrabold tracking-tight">
-                            {totalStudents}
+                            {studentList.length}
                         </span>
 
                         {/* <span className="mb-1 text-[9px] font-bold text-emerald-600">
@@ -573,48 +608,37 @@ export default function Students() {
             </div>
 
             {/* Filters */}
-            <Card className="mb-5 p-4">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
+            <Card className="mb-5 p-4 pl-2">
+                <div className="flex flex-col items-center justify-between gap-3 xl:flex-row xl:items-end">
 
-                    <div className="min-w-0 flex-1 xl:max-w-[330px]">
+                    <div className="min-w-0 flex flex-1 w-full">
+                        <Search className="pointer-events-none relative top-[16px] left-7 h-3.5 w-3.5 text-neutral-300" />
+
                         <Input
                             placeholder="Search by name, ID or phone..."
                             value={search}
-                            onChange={(event) => {
-                                setSearch(event.target.value)
-                                setCurrentPage(1)
-                            }}
+                            onChange={(event) => setSearch(event.target.value)}
                             className="pl-10"
                         />
 
-                        <Search className="pointer-events-none relative -top-[30px] left-3 h-3.5 w-3.5 text-neutral-300" />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:flex">
+                    <div className="grid grid-cols-1 gap-2 pl-2 sm:grid-cols-3 xl:flex">
                         <FilterSelect
                             value={department}
-                            onChange={(value) => {
-                                setDepartment(value)
-                                setCurrentPage(1)
-                            }}
+                            onChange={setDepartment}
                             options={departments}
                         />
 
                         <FilterSelect
                             value={bloodGroup}
-                            onChange={(value) => {
-                                setBloodGroup(value)
-                                setCurrentPage(1)
-                            }}
+                            onChange={setBloodGroup}
                             options={bloodGroups}
                         />
 
                         <FilterSelect
                             value={status}
-                            onChange={(value) => {
-                                setStatus(value)
-                                setCurrentPage(1)
-                            }}
+                            onChange={setStatus}
                             options={donorStatuses}
                         />
                     </div>
@@ -652,7 +676,7 @@ export default function Students() {
                     </button>
                 </div>
 
-                {filteredStudents.length === 0 ? (
+                {!loading && !apiError && filteredStudents.length === 0 ? (
                     <div className="flex min-h-[300px] flex-col items-center justify-center p-8 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-50">
                             <Filter className="h-5 w-5 text-neutral-300" />
@@ -673,12 +697,18 @@ export default function Students() {
                             Clear filters
                         </button>
                     </div>
-                ) : (
-                    <>
+                ) : filteredStudents.length > 0 && (
+                    <div
+                        ref={resultsRef}
+                        role="region"
+                        aria-label="Student directory results"
+                        tabIndex={0}
+                        className="max-h-[60vh] overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-red-600"
+                    >
                         {/* Desktop */}
-                        <div className="hidden overflow-x-auto lg:block">
+                        <div className="hidden lg:block">
                             <table className="w-full">
-                                <thead>
+                                <thead className="sticky top-0 z-10 bg-white">
                                     <tr className="border-b border-neutral-100 text-left">
                                         {[
                                             'Student',
@@ -686,9 +716,6 @@ export default function Students() {
                                             'Blood',
                                             'Phone',
                                             'Donor status',
-                                            'Last donation',
-                                            'Donations',
-                                            '',
                                         ].map((heading) => (
                                             <th
                                                 key={heading}
@@ -700,15 +727,10 @@ export default function Students() {
                                     </tr>
                                 </thead>
 
-                                <motion.tbody
-                                    variants={listContainer}
-                                    initial="hidden"
-                                    animate="show"
-                                >
+                                <tbody>
                                     {filteredStudents.map((student) => (
-                                        <motion.tr
+                                        <tr
                                             key={student.id}
-                                            variants={listItem}
                                             onClick={() => setSelectedStudent(student)}
                                             className="group cursor-pointer border-b border-neutral-50 transition hover:bg-neutral-50/70"
                                         >
@@ -719,9 +741,9 @@ export default function Students() {
                                                         <p className="truncate text-[11px] font-bold text-neutral-800">
                                                             {student.name}
                                                         </p>
-                                                        <p className="mt-0.5 text-[9px] text-neutral-400">
+                                                        {/* <p className="mt-0.5 text-[9px] text-neutral-400">
                                                             {student.studentId}
-                                                        </p>
+                                                        </p> */}
                                                     </div>
                                                 </div>
                                             </td>
@@ -734,7 +756,7 @@ export default function Students() {
 
                                             <td className="px-4 py-4">
                                                 <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
-                                                    {student.bloodGroup}
+                                                    {student.bloodGroup.replace('_', '').replace('positive', '+').replace('negative', '-')}
                                                 </span>
                                             </td>
 
@@ -750,7 +772,7 @@ export default function Students() {
                                                 </Badge>
                                             </td>
 
-                                            <td className="px-4 py-4">
+                                            {/* <td className="px-4 py-4">
                                                 <span className="text-[10px] text-neutral-500">
                                                     {student.lastDonation}
                                                 </span>
@@ -760,7 +782,7 @@ export default function Students() {
                                                 <span className="text-[10px] font-bold text-neutral-700">
                                                     {student.donations}
                                                 </span>
-                                            </td>
+                                            </td> */}
 
                                             <td className="px-6 py-4 text-right">
                                                 <button
@@ -772,9 +794,9 @@ export default function Students() {
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </button>
                                             </td>
-                                        </motion.tr>
+                                        </tr>
                                     ))}
-                                </motion.tbody>
+                                </tbody>
                             </table>
                         </div>
 
@@ -788,48 +810,8 @@ export default function Students() {
                                 />
                             ))}
                         </div>
-                    </>
-                )}
-
-                {/* Pagination */}
-                <div className="mt-5 flex flex-col gap-3 border-t border-neutral-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm text-neutral-500">
-                        {pagination.total === 0
-                            ? 'No students found'
-                            : `Showing ${(pagination.page - 1) * pagination.limit + 1
-                            }–${Math.min(
-                                pagination.page * pagination.limit,
-                                pagination.total,
-                            )} of ${pagination.total} students`}
-                    </p>
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            disabled={currentPage <= 1 || loading}
-                            onClick={() => setCurrentPage((page) => page - 1)}
-                            className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            Previous
-                        </button>
-
-                        <span className="min-w-24 text-center text-sm text-neutral-600">
-                            Page {pagination.page} of {pagination.totalPages || 1}
-                        </span>
-
-                        <button
-                            type="button"
-                            disabled={
-                                currentPage >= pagination.totalPages || loading
-                            }
-                            onClick={() => setCurrentPage((page) => page + 1)}
-                            className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            Next
-                        </button>
                     </div>
-                </div>
-
+                )}
             </Card>
 
             {selectedStudent && (

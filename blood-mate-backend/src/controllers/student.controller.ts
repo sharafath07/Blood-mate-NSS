@@ -8,6 +8,7 @@ import {
     getStudents,
     getStudentById,
     updateStudent,
+    addStudent,
 } from "../services/student.service.js";
 
 export async function listStudents(
@@ -197,6 +198,75 @@ export async function editStudent(
         return res.status(500).json({
             success: false,
             message: "Failed to update student",
+        });
+    }
+}
+
+export async function createStudent(
+    req: Request,
+    res: Response
+) {
+    try {
+        const {
+            name,
+            department,
+            age,
+            bloodGroup,
+            phone,
+            whatsapp,
+            address,
+            academicYear,
+            willingToDonate,
+            isDonor,
+            donorStatus,
+        } = req.body;
+
+        if (
+            bloodGroup !== undefined &&
+            bloodGroup !== null &&
+            !Object.values(BloodGroup).includes(bloodGroup)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid blood group",
+            });
+        }
+
+        if (
+            donorStatus !== undefined &&
+            !Object.values(DonorStatus).includes(donorStatus)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid donor status",
+            });
+        }
+
+        const newStudent = await addStudent({
+            name,
+            department,
+            age,
+            bloodGroup,
+            phone,
+            whatsapp,
+            address,
+            academicYear,
+            willingToDonate,
+            isDonor,
+            donorStatus,
+        });
+
+        return res.json({
+            success: true,
+            message: "Student created successfully",
+            data: newStudent,
+        });
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to create student",
         });
     }
 }

@@ -308,7 +308,7 @@ export default function DonorMatching() {
 
                                 <span className="flex items-center gap-1.5">
                                     <Clock3 className="h-3 w-3" />
-                                    Required {selectedRequest.requiredDate}
+                                    {/* Required {selectedRequest.requiredDate} */}
                                 </span>
                             </div>
                         </div>

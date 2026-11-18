@@ -55,14 +55,6 @@ export async function getAllBloodRequests() {
             createdAt: "desc",
         },
         include: {
-            requester: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    role: true,
-                },
-            },
             responses: {
                 select: {
                     id: true,

@@ -306,6 +306,7 @@ export default function BloodRequestForm({
                                             value: group,
                                         }))}
                                         required
+                                        placeholder="Select blood group"
                                         onChange={(event) =>
                                             update('bloodGroup', event.target.value)
                                         }

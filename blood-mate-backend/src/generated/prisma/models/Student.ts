@@ -41,7 +41,6 @@ export type StudentMinAggregateOutputType = {
   age: number | null
   bloodGroup: $Enums.BloodGroup | null
   phone: string | null
-  whatsapp: string | null
   address: string | null
   weightCategory: $Enums.WeightCategory | null
   gender: $Enums.Gender | null
@@ -62,7 +61,6 @@ export type StudentMaxAggregateOutputType = {
   age: number | null
   bloodGroup: $Enums.BloodGroup | null
   phone: string | null
-  whatsapp: string | null
   address: string | null
   weightCategory: $Enums.WeightCategory | null
   gender: $Enums.Gender | null
@@ -83,7 +81,6 @@ export type StudentCountAggregateOutputType = {
   age: number
   bloodGroup: number
   phone: number
-  whatsapp: number
   address: number
   weightCategory: number
   gender: number
@@ -114,7 +111,6 @@ export type StudentMinAggregateInputType = {
   age?: true
   bloodGroup?: true
   phone?: true
-  whatsapp?: true
   address?: true
   weightCategory?: true
   gender?: true
@@ -135,7 +131,6 @@ export type StudentMaxAggregateInputType = {
   age?: true
   bloodGroup?: true
   phone?: true
-  whatsapp?: true
   address?: true
   weightCategory?: true
   gender?: true
@@ -156,7 +151,6 @@ export type StudentCountAggregateInputType = {
   age?: true
   bloodGroup?: true
   phone?: true
-  whatsapp?: true
   address?: true
   weightCategory?: true
   gender?: true
@@ -264,7 +258,6 @@ export type StudentGroupByOutputType = {
   age: number | null
   bloodGroup: $Enums.BloodGroup | null
   phone: string | null
-  whatsapp: string | null
   address: string | null
   weightCategory: $Enums.WeightCategory | null
   gender: $Enums.Gender | null
@@ -308,7 +301,6 @@ export type StudentWhereInput = {
   age?: Prisma.IntNullableFilter<"Student"> | number | null
   bloodGroup?: Prisma.EnumBloodGroupNullableFilter<"Student"> | $Enums.BloodGroup | null
   phone?: Prisma.StringNullableFilter<"Student"> | string | null
-  whatsapp?: Prisma.StringNullableFilter<"Student"> | string | null
   address?: Prisma.StringNullableFilter<"Student"> | string | null
   weightCategory?: Prisma.EnumWeightCategoryNullableFilter<"Student"> | $Enums.WeightCategory | null
   gender?: Prisma.EnumGenderNullableFilter<"Student"> | $Enums.Gender | null
@@ -330,7 +322,6 @@ export type StudentOrderByWithRelationInput = {
   age?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodGroup?: Prisma.SortOrderInput | Prisma.SortOrder
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
-  whatsapp?: Prisma.SortOrderInput | Prisma.SortOrder
   address?: Prisma.SortOrderInput | Prisma.SortOrder
   weightCategory?: Prisma.SortOrderInput | Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -355,7 +346,6 @@ export type StudentWhereUniqueInput = Prisma.AtLeast<{
   age?: Prisma.IntNullableFilter<"Student"> | number | null
   bloodGroup?: Prisma.EnumBloodGroupNullableFilter<"Student"> | $Enums.BloodGroup | null
   phone?: Prisma.StringNullableFilter<"Student"> | string | null
-  whatsapp?: Prisma.StringNullableFilter<"Student"> | string | null
   address?: Prisma.StringNullableFilter<"Student"> | string | null
   weightCategory?: Prisma.EnumWeightCategoryNullableFilter<"Student"> | $Enums.WeightCategory | null
   gender?: Prisma.EnumGenderNullableFilter<"Student"> | $Enums.Gender | null
@@ -377,7 +367,6 @@ export type StudentOrderByWithAggregationInput = {
   age?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodGroup?: Prisma.SortOrderInput | Prisma.SortOrder
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
-  whatsapp?: Prisma.SortOrderInput | Prisma.SortOrder
   address?: Prisma.SortOrderInput | Prisma.SortOrder
   weightCategory?: Prisma.SortOrderInput | Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -406,7 +395,6 @@ export type StudentScalarWhereWithAggregatesInput = {
   age?: Prisma.IntNullableWithAggregatesFilter<"Student"> | number | null
   bloodGroup?: Prisma.EnumBloodGroupNullableWithAggregatesFilter<"Student"> | $Enums.BloodGroup | null
   phone?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
-  whatsapp?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
   address?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
   weightCategory?: Prisma.EnumWeightCategoryNullableWithAggregatesFilter<"Student"> | $Enums.WeightCategory | null
   gender?: Prisma.EnumGenderNullableWithAggregatesFilter<"Student"> | $Enums.Gender | null
@@ -427,7 +415,6 @@ export type StudentCreateInput = {
   age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
   phone?: string | null
-  whatsapp?: string | null
   address?: string | null
   weightCategory?: $Enums.WeightCategory | null
   gender?: $Enums.Gender | null
@@ -449,7 +436,6 @@ export type StudentUncheckedCreateInput = {
   age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
   phone?: string | null
-  whatsapp?: string | null
   address?: string | null
   weightCategory?: $Enums.WeightCategory | null
   gender?: $Enums.Gender | null
@@ -471,7 +457,6 @@ export type StudentUpdateInput = {
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
@@ -493,7 +478,6 @@ export type StudentUncheckedUpdateInput = {
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
@@ -515,7 +499,6 @@ export type StudentCreateManyInput = {
   age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
   phone?: string | null
-  whatsapp?: string | null
   address?: string | null
   weightCategory?: $Enums.WeightCategory | null
   gender?: $Enums.Gender | null
@@ -536,7 +519,6 @@ export type StudentUpdateManyMutationInput = {
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
@@ -557,7 +539,6 @@ export type StudentUncheckedUpdateManyInput = {
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
@@ -578,7 +559,6 @@ export type StudentCountOrderByAggregateInput = {
   age?: Prisma.SortOrder
   bloodGroup?: Prisma.SortOrder
   phone?: Prisma.SortOrder
-  whatsapp?: Prisma.SortOrder
   address?: Prisma.SortOrder
   weightCategory?: Prisma.SortOrder
   gender?: Prisma.SortOrder
@@ -603,7 +583,6 @@ export type StudentMaxOrderByAggregateInput = {
   age?: Prisma.SortOrder
   bloodGroup?: Prisma.SortOrder
   phone?: Prisma.SortOrder
-  whatsapp?: Prisma.SortOrder
   address?: Prisma.SortOrder
   weightCategory?: Prisma.SortOrder
   gender?: Prisma.SortOrder
@@ -624,7 +603,6 @@ export type StudentMinOrderByAggregateInput = {
   age?: Prisma.SortOrder
   bloodGroup?: Prisma.SortOrder
   phone?: Prisma.SortOrder
-  whatsapp?: Prisma.SortOrder
   address?: Prisma.SortOrder
   weightCategory?: Prisma.SortOrder
   gender?: Prisma.SortOrder
@@ -704,7 +682,6 @@ export type StudentCreateWithoutDonorResponsesInput = {
   age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
   phone?: string | null
-  whatsapp?: string | null
   address?: string | null
   weightCategory?: $Enums.WeightCategory | null
   gender?: $Enums.Gender | null
@@ -725,7 +702,6 @@ export type StudentUncheckedCreateWithoutDonorResponsesInput = {
   age?: number | null
   bloodGroup?: $Enums.BloodGroup | null
   phone?: string | null
-  whatsapp?: string | null
   address?: string | null
   weightCategory?: $Enums.WeightCategory | null
   gender?: $Enums.Gender | null
@@ -762,7 +738,6 @@ export type StudentUpdateWithoutDonorResponsesInput = {
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
@@ -783,7 +758,6 @@ export type StudentUncheckedUpdateWithoutDonorResponsesInput = {
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodGroup?: Prisma.NullableEnumBloodGroupFieldUpdateOperationsInput | $Enums.BloodGroup | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   weightCategory?: Prisma.NullableEnumWeightCategoryFieldUpdateOperationsInput | $Enums.WeightCategory | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
@@ -835,7 +809,6 @@ export type StudentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   age?: boolean
   bloodGroup?: boolean
   phone?: boolean
-  whatsapp?: boolean
   address?: boolean
   weightCategory?: boolean
   gender?: boolean
@@ -858,7 +831,6 @@ export type StudentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   age?: boolean
   bloodGroup?: boolean
   phone?: boolean
-  whatsapp?: boolean
   address?: boolean
   weightCategory?: boolean
   gender?: boolean
@@ -879,7 +851,6 @@ export type StudentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   age?: boolean
   bloodGroup?: boolean
   phone?: boolean
-  whatsapp?: boolean
   address?: boolean
   weightCategory?: boolean
   gender?: boolean
@@ -900,7 +871,6 @@ export type StudentSelectScalar = {
   age?: boolean
   bloodGroup?: boolean
   phone?: boolean
-  whatsapp?: boolean
   address?: boolean
   weightCategory?: boolean
   gender?: boolean
@@ -914,7 +884,7 @@ export type StudentSelectScalar = {
   updatedAt?: boolean
 }
 
-export type StudentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "department" | "age" | "bloodGroup" | "phone" | "whatsapp" | "address" | "weightCategory" | "gender" | "academicYear" | "willingToDonate" | "isDonor" | "donorStatus" | "registeredAt" | "lastDonationAt" | "createdAt" | "updatedAt", ExtArgs["result"]["student"]>
+export type StudentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "department" | "age" | "bloodGroup" | "phone" | "address" | "weightCategory" | "gender" | "academicYear" | "willingToDonate" | "isDonor" | "donorStatus" | "registeredAt" | "lastDonationAt" | "createdAt" | "updatedAt", ExtArgs["result"]["student"]>
 export type StudentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   donorResponses?: boolean | Prisma.Student$donorResponsesArgs<ExtArgs>
   _count?: boolean | Prisma.StudentCountOutputTypeDefaultArgs<ExtArgs>
@@ -934,7 +904,6 @@ export type $StudentPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     age: number | null
     bloodGroup: $Enums.BloodGroup | null
     phone: string | null
-    whatsapp: string | null
     address: string | null
     weightCategory: $Enums.WeightCategory | null
     gender: $Enums.Gender | null
@@ -1376,7 +1345,6 @@ export interface StudentFieldRefs {
   readonly age: Prisma.FieldRef<"Student", 'Int'>
   readonly bloodGroup: Prisma.FieldRef<"Student", 'BloodGroup'>
   readonly phone: Prisma.FieldRef<"Student", 'String'>
-  readonly whatsapp: Prisma.FieldRef<"Student", 'String'>
   readonly address: Prisma.FieldRef<"Student", 'String'>
   readonly weightCategory: Prisma.FieldRef<"Student", 'WeightCategory'>
   readonly gender: Prisma.FieldRef<"Student", 'Gender'>

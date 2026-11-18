@@ -77,7 +77,6 @@ model Student {
   bloodGroup BloodGroup?
 
   phone    String?
-  whatsapp String?
   address  String?
 
   weightCategory WeightCategory?
@@ -100,7 +99,6 @@ model Student {
   @@index([bloodGroup])
   @@index([donorStatus])
   @@index([phone])
-  @@index([whatsapp])
   @@index([department])
 }
 

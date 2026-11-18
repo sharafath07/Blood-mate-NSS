@@ -1,5 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { CheckCircle2, UserRound, X } from 'lucide-react'
+import {
+    // CheckCircle2,
+    UserRound, X
+} from 'lucide-react'
 
 import Button from '../ui/Button'
 import Input from '../ui/Input'
@@ -15,59 +18,79 @@ interface StudentFormProps {
 
 interface FormData {
     name: string
-    studentId: string
+    // studentId: string
     department: string
-    course: string
+    // course: string
     semester: string
     bloodGroup: string
     phone: string
-    email: string
+    // email: string
+    age: number
     donorStatus: DonorStatus
-    lastDonation: string
-    donations: string
-    consent: boolean
-    verified: boolean
+    address: string
+    // lastDonation: string
+    // donations: string
+    // consent: boolean
+    // verified: boolean
 }
 
-const departments = [
-    'Computer Science',
-    'Commerce',
-    'Physics',
-    'English',
-    'Mathematics',
-    'Zoology',
-    'Economics',
-    'History',
-]
-
 const bloodGroups = [
-    'A+',
-    'A−',
-    'B+',
-    'B−',
-    'AB+',
-    'AB−',
-    'O+',
-    'O−',
+    'A_POSITIVE',
+    'A_NEGATIVE',
+    'B_POSITIVE',
+    'B_NEGATIVE',
+    'AB_POSITIVE',
+    'AB_NEGATIVE',
+    'O_POSITIVE',
+    'O_NEGATIVE',
 ]
 
-const courses = [
-    'BCA',
-    'B.Com',
-    'B.Sc Physics',
-    'BA English',
-    'B.Sc Mathematics',
-    'B.Sc Zoology',
-    'BA Economics',
-    'BA History',
-]
+const semesters = ['All semesters', '1', '2', '3', '4', '5', '6']
 
-const semesters = ['1', '2', '3', '4', '5', '6']
+const departments = [
+    "BA Arabic",
+    "BA Islamic History",
+    "BA English",
+    "BA Malayalam",
+    "BA Sociology",
+    "BA Multimedia",
+    "BA Economics",
+    "BA Functional English",
+    "BA History",
+    "BSc Physics",
+    "BSc Chemistry",
+    "BSc Mathematics",
+    "BSc Statistics",
+    "BSc Zoology",
+    "BSc Botany",
+    "BSc Computer Science",
+    "BSc Psychology",
+    "BBA",
+    "BCA",
+    "BCom with Computer Applications",
+    "BCom Finance",
+    "BVoc Software Development",
+    "BVoc Automobile",
+    "MA Arabic",
+    "MA English",
+    "MA History",
+    "MA Economics",
+    "MA Journalism and Mass Communication",
+    "MSc Physics",
+    "MSc Chemistry",
+    "MSc Mathematics",
+    "MSc Statistics",
+    "MSc Zoology",
+    "MSc Computer Science",
+    "MSc Psychology",
+    "MSc Geology",
+    "MCom"
+]
 
 const donorStatuses: DonorStatus[] = [
-    'Available',
-    'Unavailable',
-    'Not Confirmed',
+    "AVAILABLE",
+    "UNAVAILABLE",
+    "INACTIVE"
 ]
 
 export default function StudentForm({
@@ -79,18 +102,20 @@ export default function StudentForm({
 
     const [form, setForm] = useState<FormData>({
         name: student?.name ?? '',
-        studentId: student?.studentId ?? '',
+        // studentId: student?.studentId ?? '',
         department: student?.department ?? '',
-        course: student?.course ?? '',
+        age: student?.age ?? 18,
+        // course: student?.course ?? '',
         semester: student?.semester ?? '',
         bloodGroup: student?.bloodGroup ?? '',
         phone: student?.phone ?? '',
-        email: student?.email ?? '',
-        donorStatus: student?.donorStatus ?? 'Not Confirmed',
-        lastDonation: student?.lastDonation ?? '',
-        donations: String(student?.donations ?? 0),
-        consent: student?.consent ?? false,
-        verified: student?.verified ?? false,
+        address: student?.address ?? '',
+        // email: student?.email ?? '',
+        donorStatus: student?.donorStatus ?? 'AVAILABLE',
+        // lastDonation: student?.lastDonation ?? '',
+        // donations: String(student?.donations ?? 0),
+        // consent: student?.consent ?? false,
+        // verified: student?.verified ?? false,
     })
 
     const [errors, setErrors] = useState<Record<string, string>>({})
@@ -120,17 +145,17 @@ export default function StudentForm({
             nextErrors.name = 'Full name is required'
         }
 
-        if (!form.studentId.trim()) {
-            nextErrors.studentId = 'Student ID is required'
-        }
+        // if (!form.studentId.trim()) {
+        //     nextErrors.studentId = 'Student ID is required'
+        // }
 
         if (!form.department) {
             nextErrors.department = 'Select a department'
         }
 
-        if (!form.course) {
-            nextErrors.course = 'Select a course'
-        }
+        // if (!form.course) {
+        //     nextErrors.course = 'Select a course'
+        // }
 
         if (!form.semester) {
             nextErrors.semester = 'Select a semester'
@@ -146,16 +171,16 @@ export default function StudentForm({
             nextErrors.phone = 'Enter a valid phone number'
         }
 
-        if (
-            form.email.trim() &&
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
-        ) {
-            nextErrors.email = 'Enter a valid email address'
-        }
+        // if (
+        //     form.email.trim() &&
+        //     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
+        // ) {
+        //     nextErrors.email = 'Enter a valid email address'
+        // }
 
-        if (!form.consent) {
-            nextErrors.consent = 'Donor consent must be confirmed'
-        }
+        // if (!form.consent) {
+        //     nextErrors.consent = 'Donor consent must be confirmed'
+        // }
 
         setErrors(nextErrors)
 
@@ -171,20 +196,22 @@ export default function StudentForm({
 
         try {
             const savedStudent: Student = {
-                id: student?.id ?? crypto.randomUUID(),
+                id: crypto.randomUUID(),
                 name: form.name.trim(),
-                studentId: form.studentId.trim(),
+                // studentId: form.studentId.trim(),
                 department: form.department,
-                course: form.course,
+                age: form.age,
+                // course: form.course,
                 semester: form.semester,
                 bloodGroup: form.bloodGroup,
                 phone: form.phone.trim(),
-                email: form.email.trim(),
+                address: form.address.trim(),
+                // email: form.email.trim(),
                 donorStatus: form.donorStatus,
-                lastDonation: form.lastDonation || '—',
-                donations: Number(form.donations) || 0,
-                consent: form.consent,
-                verified: form.verified,
+                // lastDonation: form.lastDonation || '—',
+                // donations: Number(form.donations) || 0,
+                // consent: form.consent,
+                // verified: form.verified,
             }
 
             await onSave(savedStudent)
@@ -244,12 +271,13 @@ export default function StudentForm({
                                     label="Full name *"
                                     placeholder="Enter student's full name"
                                     value={form.name}
+                                    required
                                     onChange={(e) => update('name', e.target.value)}
                                     error={errors.name}
                                 />
                             </div>
 
-                            <Input
+                            {/* <Input
                                 label="Student ID *"
                                 placeholder="FC2024XXX"
                                 value={form.studentId}
@@ -257,17 +285,46 @@ export default function StudentForm({
                                     update('studentId', e.target.value)
                                 }
                                 error={errors.studentId}
+                            /> */}
+
+                            <Input
+                                label="Age *"
+                                type="number"
+                                min="18"
+                                placeholder="Enter student's age"
+                                value={form.age}
+                                required
+                                onChange={(e) => update('age', e.target.valueAsNumber)}
+                                error={errors.age}
                             />
 
                             <Input
                                 label="Phone number *"
                                 placeholder="+91 XXXXX XXXXX"
                                 value={form.phone}
+                                required
                                 onChange={(e) => update('phone', e.target.value)}
                                 error={errors.phone}
                             />
 
-                            <div className="sm:col-span-2">
+                            <div className="w-full col-span-2">
+                                <label className="mb-1.5 block  text-[10px] font-bold text-neutral-600">
+                                    Address *
+                                </label>
+                                <textarea
+                                    className={`w-full rounded-lg border px-3  py-2 text-[10px] text-neutral-700 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-red-500 sm:text-[11px] ${errors.address ? 'border-red-500' : 'border-neutral-300'
+                                        }`}
+                                    placeholder="Enter student's address"
+                                    value={form.address}
+                                    rows={3}
+                                    required
+                                    onChange={(e) => update('address', e.target.value)}
+                                // error={errors.address}
+                                />
+                            </div>
+
+
+                            {/* <div className="sm:col-span-2">
                                 <Input
                                     label="Email address"
                                     type="email"
@@ -276,7 +333,7 @@ export default function StudentForm({
                                     onChange={(e) => update('email', e.target.value)}
                                     error={errors.email}
                                 />
-                            </div>
+                            </div> */}
                         </div>
                     </FormSection>
 
@@ -298,7 +355,7 @@ export default function StudentForm({
                                 error={errors.department}
                             />
 
-                            <Select
+                            {/* <Select
                                 label="Course *"
                                 value={form.course}
                                 onChange={(e) =>
@@ -307,7 +364,7 @@ export default function StudentForm({
                                 options={courses}
                                 placeholder="Select course"
                                 error={errors.course}
-                            />
+                            /> */}
 
                             <Select
                                 label="Semester *"
@@ -332,16 +389,20 @@ export default function StudentForm({
                             <Select
                                 label="Blood group *"
                                 value={form.bloodGroup}
-                                onChange={(e) =>
-                                    update('bloodGroup', e.target.value)
-                                }
-                                options={bloodGroups}
-                                placeholder="Select blood group"
                                 error={errors.bloodGroup}
+                                options={bloodGroups.map((group) => ({
+                                    label: group.replace('_', '').replace('POSITIVE', '+').replace('NEGATIVE', '-'),
+                                    value: group,
+                                }))}
+                                required
+                                placeholder="Select blood group"
+                                onChange={(event) =>
+                                    update('bloodGroup', event.target.value)
+                                }
                             />
 
                             <Select
-                                label="Donor status"
+                                label="Donor status *"
                                 value={form.donorStatus}
                                 onChange={(e) =>
                                     update(
@@ -352,7 +413,7 @@ export default function StudentForm({
                                 options={donorStatuses}
                             />
 
-                            <Input
+                            {/* <Input
                                 label="Last donation"
                                 type="date"
                                 value={
@@ -373,12 +434,12 @@ export default function StudentForm({
                                 onChange={(e) =>
                                     update('donations', e.target.value)
                                 }
-                            />
+                            /> */}
                         </div>
                     </FormSection>
 
                     {/* Verification */}
-                    <FormSection
+                    {/* <FormSection
                         number="04"
                         title="Consent & verification"
                         description="Confirm the information before adding the student."
@@ -403,7 +464,7 @@ export default function StudentForm({
                                 description="Student information has been checked by the Blood Mate team."
                             />
                         </div>
-                    </FormSection>
+                    </FormSection> */}
 
                     {/* Actions */}
                     <div className="sticky bottom-0 -mx-5 mt-7 flex gap-2 border-t border-neutral-200/70 bg-[#fafaf9]/95 px-5 py-4 backdrop-blur-xl">
@@ -425,8 +486,8 @@ export default function StudentForm({
                         </Button>
                     </div>
 
-                </form>
-            </aside>
+                </form >
+            </aside >
         </>
     )
 }
@@ -465,62 +526,62 @@ function FormSection({
     )
 }
 
-function CheckRow({
-    checked,
-    onChange,
-    title,
-    description,
-    error,
-}: {
-    checked: boolean
-    onChange: (value: boolean) => void
-    title: string
-    description: string
-    error?: string
-}) {
-    return (
-        <div>
-            <button
-                type="button"
-                onClick={() => onChange(!checked)}
-                className={`
-          flex w-full items-start gap-3 rounded-xl border p-3 text-left transition
-          ${checked
-                        ? 'border-emerald-200 bg-emerald-50/50'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300'
-                    }
-        `}
-            >
-                <div
-                    className={`
-            mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-md border
-            ${checked
-                            ? 'border-emerald-500 bg-emerald-500'
-                            : 'border-neutral-300 bg-white'
-                        }
-          `}
-                >
-                    {checked && (
-                        <CheckCircle2 className="h-3 w-3 text-white" />
-                    )}
-                </div>
+// function CheckRow({
+//     checked,
+//     onChange,
+//     title,
+//     description,
+//     error,
+// }: {
+//     checked: boolean
+//     onChange: (value: boolean) => void
+//     title: string
+//     description: string
+//     error?: string
+// }) {
+//     return (
+//         <div>
+//             <button
+//                 type="button"
+//                 onClick={() => onChange(!checked)}
+//                 className={`
+//           flex w-full items-start gap-3 rounded-xl border p-3 text-left transition
+//           ${checked
+//                         ? 'border-emerald-200 bg-emerald-50/50'
+//                         : 'border-neutral-200 bg-white hover:border-neutral-300'
+//                     }
+//         `}
+//             >
+//                 <div
+//                     className={`
+//             mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-md border
+//             ${checked
+//                             ? 'border-emerald-500 bg-emerald-500'
+//                             : 'border-neutral-300 bg-white'
+//                         }
+//           `}
+//                 >
+//                     {checked && (
+//                         <CheckCircle2 className="h-3 w-3 text-white" />
+//                     )}
+//                 </div>
 
-                <div>
-                    <p className="text-[10px] font-bold text-neutral-700">
-                        {title}
-                    </p>
+//                 <div>
+//                     <p className="text-[10px] font-bold text-neutral-700">
+//                         {title}
+//                     </p>
 
-                    <p className="mt-0.5 text-[9px] leading-relaxed text-neutral-400">
-                        {description}
-                    </p>
-                </div>
-            </button>
+//                     <p className="mt-0.5 text-[9px] leading-relaxed text-neutral-400">
+//                         {description}
+//                     </p>
+//                 </div>
+//             </button>
 
-            {error && (
-                <p className="mt-1 text-[9px] font-medium text-red-500">
-                    {error}
-                </p>
-            )}
-        </div>
-    )
-}
+//             {error && (
+//                 <p className="mt-1 text-[9px] font-medium text-red-500">
+//                     {error}
+//                 </p>
+//             )}
+//         </div>
+//     )
+// }

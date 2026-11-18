@@ -775,7 +775,6 @@ export const StudentScalarFieldEnum = {
   age: 'age',
   bloodGroup: 'bloodGroup',
   phone: 'phone',
-  whatsapp: 'whatsapp',
   address: 'address',
   weightCategory: 'weightCategory',
   gender: 'gender',

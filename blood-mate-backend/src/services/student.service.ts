@@ -97,6 +97,24 @@ export async function getStudentById(id: string) {
     });
 }
 
+export async function addStudent(data: {
+    name: string;
+    department?: string | null;
+    age?: number | null;
+    bloodGroup?: BloodGroup | null;
+    phone?: string | null;
+    whatsapp?: string | null;
+    address?: string | null;
+    academicYear?: string | null;
+    willingToDonate?: boolean;
+    isDonor?: boolean;
+    donorStatus?: DonorStatus;
+}) {
+    return prisma.student.create({
+        data,
+    });
+}
+
 export async function updateStudent(
     id: string,
     data: {
