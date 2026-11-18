@@ -1,11 +1,13 @@
 {
   "name": "blood-mate-backend",
+  "engines": { "node": ">=24 <25" },
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
+    "test": "npm run build && node --test --test-isolation=none",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

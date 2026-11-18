@@ -1,24 +1,15 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import DashboardLayout from './layouts/DashboardLayout'
 
 import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import Students from './pages/Students'
-import BloodRequests from './pages/BloodRequests'
-import DonorMatching from './pages/DonorMatching'
-import Notifications from './pages/Notifications'
-
-function Placeholder({ title }: { title: string }) {
-  return (
-    <div className="p-6">
-      <h1 className="font-['Manrope'] text-2xl font-bold text-neutral-950">
-        {title}
-      </h1>
-    </div>
-  )
-}
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Students = lazy(() => import('./pages/Students'))
+const BloodRequests = lazy(() => import('./pages/BloodRequests'))
+const DonorMatching = lazy(() => import('./pages/DonorMatching'))
+const Notifications = lazy(() => import('./pages/Notifications'))
 
 function NotFound() {
   return (
@@ -35,6 +26,7 @@ function NotFound() {
         <p className="mt-2 text-sm text-neutral-500">
           The page you are looking for does not exist.
         </p>
+        <Link to="/" className="mt-4 inline-block font-bold text-red-700 underline">Back to dashboard</Link>
       </div>
     </div>
   )
@@ -43,6 +35,7 @@ function NotFound() {
 export default function App() {
   return (
     <BrowserRouter>
+      <Suspense fallback={<p className="p-6 text-sm text-neutral-500" role="status">Loading page…</p>}>
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
@@ -56,21 +49,14 @@ export default function App() {
             <Route path="/donors" element={<DonorMatching />} />
             <Route path="/notifications" element={<Notifications />} />
 
-            <Route
-              path="/reports"
-              element={<Placeholder title="Reports" />}
-            />
-
-            <Route
-              path="/settings"
-              element={<Placeholder title="Settings" />}
-            />
+            <Route path="/donors/:requestId" element={<DonorMatching />} />
           </Route>
         </Route>
 
         {/* Unknown routes */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

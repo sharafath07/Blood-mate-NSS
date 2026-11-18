@@ -1,8 +1,6 @@
 import prisma from "../config/database.js";
-
-function normalizeWhatsAppNumber(phone: string): string {
-    return phone.replace(/\D/g, "");
-}
+import { getContactableDonor } from "./notification.service.js";
+import { RequestError } from "../utils/request-error.js";
 
 function buildWhatsAppMessage(
     request: {
@@ -32,7 +30,7 @@ If you are available to donate, please contact the Blood Mate volunteer.
 Thank you for helping save a life. ❤️`;
 }
 
-export async function generateWhatsAppLink(
+export async function getWhatsAppContact(
     requestId: string,
     donorId: string
 ) {
@@ -43,43 +41,28 @@ export async function generateWhatsAppLink(
     });
 
     if (!request) {
-        throw new Error("REQUEST_NOT_FOUND");
+        throw new RequestError(404, "Blood request not found");
     }
 
-    const donor = await prisma.student.findUnique({
-        where: {
-            id: donorId,
-        },
-        select: {
-            id: true,
-            name: true,
-            phone: true,
-            whatsapp: true,
-            bloodGroup: true,
-            donorStatus: true,
-        },
-    });
-
-    if (!donor) {
-        throw new Error("DONOR_NOT_FOUND");
+    if (request.status === "CANCELLED" || request.status === "FULFILLED") {
+        throw new RequestError(409, "This request is closed");
     }
 
-    const phone = donor.whatsapp ?? donor.phone;
+    const donor = await getContactableDonor(prisma, donorId, request.bloodGroup);
+    return { request, donor };
+}
 
-    if (!phone) {
-        throw new Error("DONOR_PHONE_NOT_FOUND");
-    }
-
-    const number = normalizeWhatsAppNumber(phone);
+export async function generateWhatsAppLink(requestId: string, donorId: string) {
+    const { request, donor } = await getWhatsAppContact(requestId, donorId);
     const message = buildWhatsAppMessage(request);
 
-    const url = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/${donor.phone}?text=${encodeURIComponent(message)}`;
 
     return {
         donor: {
             id: donor.id,
             name: donor.name,
-            phone,
+            phone: donor.phone,
         },
         message,
         whatsappUrl: url,

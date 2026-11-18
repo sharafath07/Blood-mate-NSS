@@ -1,33 +1,33 @@
+import { useDialog } from '../lib/useDialog'
 import {
     AlertCircle,
     ChevronDown,
-    ChevronLeft,
-    ChevronRight,
-    // Clock3,
+
     FileHeart,
-    Filter,
     MoreHorizontal,
     Plus,
     Search,
     X,
 } from 'lucide-react'
 import { useMemo, useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
-// import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
 import { api } from '../services/api'
+import type { DashboardStats } from '../types/api'
+import axios from 'axios'
 
 import { motion } from 'motion/react'
 import { pageMotion } from '../lib/motion'
 
 import {
-    // bloodRequests,
+
+    type BloodRequestInput,
+    type RequestStatus,
     type BloodRequest,
-    // type RequestStatus,
-    // type Urgency,
+
 } from '../data/bloodRequests'
 
 import {
@@ -38,19 +38,17 @@ import BloodRequestForm from '../components/requests/BloodRequestForm'
 
 const statuses = [
     'All statuses',
-    'New',
-    'Searching',
-    'Donors Contacted',
-    'Partially Fulfilled',
-    'Fulfilled',
-    'Cancelled',
+    'PENDING',
+    'MATCHING',
+    'FULFILLED',
+    'CANCELLED',
 ]
 
 const urgencies = [
     'All urgency',
-    'Critical',
-    'Urgent',
-    'Normal',
+    'CRITICAL',
+    'URGENT',
+    'NORMAL',
 ]
 
 const bloodGroups = [
@@ -65,82 +63,71 @@ const bloodGroups = [
     'O-',
 ]
 
+function matchCount(request: BloodRequest) {
+    return request.matchedDonorCount ?? request.matchedDonors.length
+}
+
 export default function BloodRequests() {
     const [requests, setRequests] = useState<BloodRequest[]>([])
     const [loading, setLoading] = useState(true)
+    const [hasMore, setHasMore] = useState(true)
+    const [offset, setOffset] = useState(0)
     const [apiError, setApiError] = useState<string | null>(null)
-    const [formOpen, setFormOpen] = useState(false)
     const [editingRequest, setEditingRequest] = useState<BloodRequest | null>(null)
+    const [params, setParams] = useSearchParams()
+    const formOpen = params.get('new') === '1' || (params.get('edit') === '1' && editingRequest !== null)
     const [search, setSearch] = useState('')
     const [status, setStatus] = useState('All statuses')
     const [urgency, setUrgency] = useState('All urgency')
     const [bloodGroup, setBloodGroup] = useState('All blood groups')
     const [selectedRequest, setSelectedRequest] = useState<BloodRequest | null>(null)
 
+    const [stats, setStats] = useState<DashboardStats['bloodRequests'] | null>(null)
+    const [revision, setRevision] = useState(0)
+    const filters = useMemo(() => ({
+        search: search.trim() || undefined,
+        status: status === 'All statuses' ? undefined : status,
+        urgency: urgency === 'All urgency' ? undefined : urgency,
+        bloodGroup: bloodGroup.endsWith('+') ? bloodGroup.slice(0, -1) + '_POSITIVE'
+            : bloodGroup.endsWith('-') ? bloodGroup.slice(0, -1) + '_NEGATIVE' : undefined,
+    }), [search, status, urgency, bloodGroup])
+    const isAdmin = api.auth.getUser()?.role === 'ADMIN'
+
     useEffect(() => {
-        const loadRequests = async () => {
+        let active = true
+        api.dashboard.getStats().then(({ bloodRequests }) => {
+            if (active) setStats(bloodRequests)
+        }, () => { if (active) setStats(null) })
+        return () => { active = false }
+    }, [revision])
+
+    useEffect(() => {
+        let active = true
+        const timeout = window.setTimeout(async () => {
+            setLoading(true)
+            setApiError(null)
             try {
-                setLoading(true)
-                setApiError(null)
-
-                const data = await api.requests.getAll()
-                console.log('Loaded blood requests:', data)
+                const data = await api.requests.getAll(100, 0, filters)
+                if (!active) return
                 setRequests(data)
-            } catch (error) {
-                console.error('Failed to load blood requests:', error)
-                setApiError('Unable to load blood requests from the server.')
+                setOffset(data.length)
+                setHasMore(data.length === 100)
+            } catch {
+                if (active) setApiError('Unable to load blood requests.')
             } finally {
-                setLoading(false)
+                if (active) setLoading(false)
             }
+        }, 150)
+        return () => {
+            active = false
+            window.clearTimeout(timeout)
         }
+    }, [filters, revision])
 
-        loadRequests()
-    }, [])
-
-    const filteredRequests = useMemo(() => {
-        const query = search.toLowerCase().trim()
-
-        return requests.filter((request) => {
-            const matchesSearch =
-                !query ||
-                request.patientName.toLowerCase().includes(query) ||
-                request.id.toLowerCase().includes(query) ||
-                request.hospital.toLowerCase().includes(query)
-
-            const matchesStatus =
-                status === 'All statuses' ||
-                request.status === status
-
-            const matchesUrgency =
-                urgency === 'All urgency' ||
-                request.urgency === urgency
-
-            const matchesBlood =
-                bloodGroup === 'All blood groups' ||
-                request.bloodGroup === bloodGroup
-
-            return (
-                matchesSearch &&
-                matchesStatus &&
-                matchesUrgency &&
-                matchesBlood
-            )
-        })
-    }, [requests, search, status, urgency, bloodGroup])
-
-    const criticalCount = requests.filter(
-        (request) => request.urgency === 'Critical',
-    ).length
-
-    const searchingCount = requests.filter(
-        (request) =>
-            request.status === 'PENDING' ||
-            request.status === 'MATCHING',
-    ).length
-
-    const fulfilledCount = requests.filter(
-        (request) => request.status === 'FULFILLED',
-    ).length
+    const filteredRequests = requests
+    const criticalCount = stats?.critical ?? 0
+    const searchingCount = stats ? stats.pending + stats.matching : 0
+    const fulfilledCount = stats?.fulfilled ?? 0
 
     const hasFilters =
         search ||
@@ -155,34 +142,31 @@ export default function BloodRequests() {
         setBloodGroup('All blood groups')
     }
 
-    const handleSaveRequest = async (request: BloodRequest) => {
-        console.log('Saving request:', request)
+    async function removeRequest(id: string) {
         try {
-            setApiError(null)
-
-            const exists = requests.some((item) => item.id === request.id)
-
-            if (exists) {
-                const updated = await api.requests.update(request.id, request.status)
-
-                setRequests((current) =>
-                    current.map((item) =>
-                        item.id === request.id ? updated : item,
-                    ),
-                )
-            } else {
-                console.log('Creating new request:', request)
-                const created = await api.requests.create(request)
-                console.log('Created request:', request)
-                setRequests((current) => [created, ...current])
-            }
-
-            setFormOpen(false)
-            setEditingRequest(null)
+            await api.requests.delete(id)
+            setSelectedRequest(null)
+            setRevision((current) => current + 1)
         } catch (error) {
-            console.error('Failed to save blood request:', error)
-            setApiError('Unable to save the blood request.')
+            throw new Error(axios.isAxiosError(error) ? error.response?.data?.message ?? 'Unable to delete request.' : 'Unable to delete request.')
         }
+    }
+
+    const handleSaveRequest = async (input: BloodRequestInput & { status?: RequestStatus }) => {
+        let saved: BloodRequest
+        try {
+            saved = editingRequest
+                ? await api.requests.update(editingRequest.id, input)
+                : await api.requests.create(input)
+        } catch (error) {
+            throw new Error(axios.isAxiosError(error) ? error.response?.data?.message ?? 'Unable to save request.' : 'Unable to save request.')
+        }
+        setRequests((current) => editingRequest
+            ? current.map((item) => item.id === saved.id ? saved : item)
+            : [saved, ...current])
+        setParams({}, { replace: true })
+        setEditingRequest(null)
+        setRevision((current) => current + 1)
     }
 
     return (
@@ -212,7 +196,7 @@ export default function BloodRequests() {
                     icon={<Plus size={16} />}
                     onClick={() => {
                         setEditingRequest(null)
-                        setFormOpen(true)
+                        setParams({ new: '1' })
                     }}
                 >
                     Create Request
@@ -239,7 +223,7 @@ export default function BloodRequests() {
                     </div>
 
                     <button
-                        onClick={() => setUrgency('Critical')}
+                        onClick={() => setUrgency('CRITICAL')}
                         className="rounded-lg bg-red-600 px-3 py-2 text-[9px] font-bold text-white transition hover:bg-red-700"
                     >
                         View critical
@@ -252,7 +236,7 @@ export default function BloodRequests() {
 
                 <SummaryCard
                     label="Total requests"
-                    value={requests.length}
+                    value={stats?.total ?? 0}
                     description="All requests"
                 />
 
@@ -343,10 +327,7 @@ export default function BloodRequests() {
                         </p>
                     </div>
 
-                    <button className="flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-2 text-[9px] font-bold text-neutral-500 hover:bg-neutral-50">
-                        <Filter className="h-3 w-3" />
-                        More filters
-                    </button>
+
                 </div>
 
                 {loading && (
@@ -441,17 +422,25 @@ export default function BloodRequests() {
                         </p>
 
                         <div className="flex items-center gap-1">
-                            <button className="rounded-lg p-1.5 text-neutral-300 hover:bg-neutral-50">
-                                <ChevronLeft className="h-3.5 w-3.5" />
-                            </button>
-
-                            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-neutral-900 text-[9px] font-bold text-white">
-                                1
-                            </span>
-
-                            <button className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-50">
-                                <ChevronRight className="h-3.5 w-3.5" />
-                            </button>
+                            {requests.length >= 100 && (
+                                <Button
+                                    variant="outline"
+                                    disabled={loading || !hasMore}
+                                    onClick={async () => {
+                                        setLoading(true)
+                                        try {
+                                            const next = await api.requests.getAll(100, offset, filters)
+                                            setHasMore(next.length === 100)
+                                            setOffset(offset + next.length)
+                                            setRequests((current) => [...new Map([...current, ...next].map((item) => [item.id, item])).values()])
+                                        } catch {
+                                            setApiError('Unable to load more requests.')
+                                        } finally {
+                                            setLoading(false)
+                                        }
+                                    }}
+                                >Load more</Button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -462,11 +451,12 @@ export default function BloodRequests() {
             {selectedRequest && (
                 <RequestDetails
                     request={selectedRequest}
+                    onDelete={isAdmin ? removeRequest : undefined}
                     onClose={() => setSelectedRequest(null)}
                     onEdit={(request) => {
                         setSelectedRequest(null)
                         setEditingRequest(request)
-                        setFormOpen(true)
+                        setParams({ edit: '1' })
                     }}
                 />
             )}
@@ -475,7 +465,7 @@ export default function BloodRequests() {
                 <BloodRequestForm
                     request={editingRequest}
                     onClose={() => {
-                        setFormOpen(false)
+                        setParams({}, { replace: true })
                         setEditingRequest(null)
                     }}
                     onSave={handleSaveRequest}
@@ -539,7 +529,7 @@ function RequestRow({
     return (
         <tr
             onClick={() => onSelect(request)}
-            className={`group cursor-pointer border-b border-neutral-50 transition hover:bg-neutral-50/70 ${request.urgency === 'Critical'
+            className={`group cursor-pointer border-b border-neutral-50 transition hover:bg-neutral-50/70 ${request.urgency === 'CRITICAL'
                 ? 'bg-red-50/20'
                 : ''
                 }`}
@@ -558,7 +548,7 @@ function RequestRow({
 
             <td className="px-4 py-4">
                 <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
-                    {request.bloodGroup}
+                    {request.bloodGroup.replace('_', '').replace('POSITIVE', '+').replace('NEGATIVE', '-')}
                 </span>
             </td>
 
@@ -577,13 +567,11 @@ function RequestRow({
             <td className="px-4 py-4">
                 <div>
                     <p className="text-[10px] font-bold text-neutral-700">
-                        {request.unitsRequired} unit
-                        {request.unitsRequired > 1 ? 's' : ''}
+                        {request.units} unit
+                        {request.units > 1 ? 's' : ''}
                     </p>
 
-                    {/* <p className="mt-0.5 text-[9px] text-neutral-400">
-                        {request.requiredDate}
-                    </p> */}
+
                 </div>
             </td>
 
@@ -603,14 +591,14 @@ function RequestRow({
 
                     <span className="text-neutral-400">
                         {' '}
-                        / {request.matchedDonors} matched
+                        {matchCount(request)} matched
                     </span>
                 </div>
             </td>
 
             <td className="px-6 py-4 text-right">
                 <button
-                    onClick={(event) => event.stopPropagation()}
+                    onClick={(event) => { event.stopPropagation(); onSelect(request) }}
                     className="rounded-lg p-1.5 text-neutral-300 opacity-0 transition group-hover:opacity-100 hover:bg-white hover:text-neutral-700"
                 >
                     <MoreHorizontal className="h-4 w-4" />
@@ -630,7 +618,7 @@ function RequestCard({
     return (
         <button
             onClick={() => onSelect(request)}
-            className={`w-full p-4 text-left transition hover:bg-neutral-50 ${request.urgency === 'Critical'
+            className={`w-full p-4 text-left transition hover:bg-neutral-50 ${request.urgency === 'CRITICAL'
                 ? 'bg-red-50/30'
                 : ''
                 }`}
@@ -661,10 +649,7 @@ function RequestCard({
                         {request.hospital}
                     </p>
 
-                    {/* <p className="mt-0.5 flex items-center gap-1 text-[8px] text-neutral-400">
-                        <Clock3 className="h-2.5 w-2.5" />
-                        {request.requiredDate} • {request.requiredTime}
-                    </p> */}
+
                 </div>
 
                 <RequestStatusBadge status={request.status} />
@@ -677,12 +662,33 @@ function RequestDetails({
     request,
     onClose,
     onEdit,
+    onDelete,
 }: {
     request: BloodRequest
     onClose: () => void
     onEdit: (request: BloodRequest) => void
+    onDelete?: (id: string) => Promise<void>
 }) {
     const navigate = useNavigate()
+
+    const [confirmDelete, setConfirmDelete] = useState(false)
+    const [deleting, setDeleting] = useState(false)
+    const [error, setError] = useState('')
+
+    async function deleteRequest() {
+        if (!onDelete) return
+        setDeleting(true)
+        setError('')
+        try {
+            await onDelete(request.id)
+        } catch (failure) {
+            setError(failure instanceof Error ? failure.message : 'Unable to delete request.')
+        } finally {
+            setDeleting(false)
+            setConfirmDelete(false)
+        }
+    }
+    const dialogRef = useDialog<HTMLElement>(onClose)
 
     return (
         <>
@@ -691,7 +697,7 @@ function RequestDetails({
                 onClick={onClose}
             />
 
-            <aside className="fixed inset-y-0 right-0 z-[70] w-full max-w-[480px] overflow-y-auto border-l border-neutral-200 bg-[#fafaf9] shadow-2xl">
+            <aside ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Blood request details" className="fixed inset-y-0 right-0 z-[70] w-full max-w-[480px] overflow-y-auto border-l border-neutral-200 bg-[#fafaf9] shadow-2xl">
 
                 <div className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-200/70 bg-[#fafaf9]/95 px-5 py-4 backdrop-blur-xl">
                     <div>
@@ -716,7 +722,7 @@ function RequestDetails({
 
                     {/* Emergency summary */}
                     <div
-                        className={`rounded-2xl p-5 ${request.urgency === 'Critical'
+                        className={`rounded-2xl p-5 ${request.urgency === 'CRITICAL'
                             ? 'bg-red-600 text-white'
                             : 'bg-neutral-950 text-white'
                             }`}
@@ -732,8 +738,8 @@ function RequestDetails({
                                 </p>
 
                                 <p className="mt-1 text-[10px] text-white/60">
-                                    {request.unitsRequired} unit
-                                    {request.unitsRequired > 1 ? 's' : ''} required
+                                    {request.units} unit
+                                    {request.units > 1 ? 's' : ''} required
                                 </p>
                             </div>
 
@@ -745,9 +751,7 @@ function RequestDetails({
                                 {request.patientName}
                             </p>
 
-                            {/* <p className="mt-1 text-[9px] text-white/50">
-                                {request.patientAge} years • {request.patientGender}
-                            </p> */}
+
                         </div>
                     </div>
 
@@ -760,22 +764,13 @@ function RequestDetails({
                         <Card className="p-4">
                             <ProgressRow
                                 label="Donors matched"
-                                value={request.matchedDonors}
-                                total={Math.max(request.matchedDonors, request.unitsRequired)}
+                                value={matchCount(request)}
+                                total={Math.max(matchCount(request), request.units)}
                             />
 
-                            <ProgressRow
-                                label="Donors contacted"
-                                value={request.contactedDonors}
-                                total={Math.max(request.matchedDonors, 1)}
-                            />
+                            <ProgressRow label="Donors contacted" value={request.contactedDonors} total={Math.max(matchCount(request), 1)} />
+                            <ProgressRow label="Units completed" value={request.donatedUnits ?? 0} total={request.units} last />
 
-                            <ProgressRow
-                                label="Donations confirmed"
-                                value={request.confirmedDonors}
-                                total={request.unitsRequired}
-                                last
-                            />
                         </Card>
                     </div>
 
@@ -826,12 +821,9 @@ function RequestDetails({
                     {/* Actions */}
                     <div className="mt-6 grid grid-cols-2 gap-2">
                         <Button
+                            disabled={request.status === 'CANCELLED' || request.status === 'FULFILLED'}
                             onClick={() => {
-                                navigate('/donors', {
-                                    state: {
-                                        request: request,
-                                    },
-                                })
+                                navigate(`/donors/${encodeURIComponent(request.id)}`)
                             }}
                         >
                             Find donors
@@ -845,6 +837,16 @@ function RequestDetails({
                         </Button>
                     </div>
 
+                    {onDelete && request.contactedDonors === 0 && !request.responses?.length && (
+                        <div className="mt-4">
+                            {confirmDelete ? <div className="space-y-2">
+                                <p className="text-sm">Permanently delete this blood request?</p>
+                                <Button variant="danger" loading={deleting} onClick={() => void deleteRequest()}>Delete permanently</Button>
+                                <Button variant="ghost" disabled={deleting} onClick={() => setConfirmDelete(false)}>Keep request</Button>
+                            </div> : <Button variant="ghost" onClick={() => setConfirmDelete(true)}>Delete request</Button>}
+                        </div>
+                    )}
+                    {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
                 </div>
             </aside>
         </>
@@ -906,7 +908,7 @@ function FilterSelect({
                 className="w-full appearance-none rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 pr-8 text-[10px] font-semibold text-neutral-600 outline-none transition hover:border-neutral-300 focus:border-neutral-400 sm:min-w-[150px]"
             >
                 {options.map((option) => (
-                    <option key={option}>{option}</option>
+                    <option key={option} value={option}>{/^[A-Z]{3,}$/.test(option) ? option.charAt(0) + option.slice(1).toLowerCase() : option}</option>
                 ))}
             </select>
 

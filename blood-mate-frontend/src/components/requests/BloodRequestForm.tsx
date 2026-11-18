@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useDialog } from '../../lib/useDialog'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { AlertTriangle, X } from 'lucide-react'
 
@@ -7,6 +8,7 @@ import Input from '../ui/Input'
 import Select from '../ui/Select'
 import type {
     BloodRequest,
+    BloodRequestInput,
     RequestStatus,
     Urgency,
 } from '../../data/bloodRequests'
@@ -14,7 +16,7 @@ import type {
 interface BloodRequestFormProps {
     request?: BloodRequest | null
     onClose: () => void
-    onSave: (request: BloodRequest) => Promise<void> | void
+    onSave: (request: BloodRequestInput & { status?: RequestStatus }) => Promise<void> | void
 }
 
 const bloodGroups = [
@@ -28,7 +30,6 @@ const bloodGroups = [
     'O_NEGATIVE',
 ]
 
-
 const statuses: RequestStatus[] = [
     'PENDING',
     'MATCHING',
@@ -36,68 +37,31 @@ const statuses: RequestStatus[] = [
     'CANCELLED',
 ]
 
-const urgencies: Urgency[] = ['Critical', 'Urgent', 'Normal']
+const urgencies: Urgency[] = ['CRITICAL', 'URGENT', 'NORMAL']
 
-const emptyRequest: Omit<BloodRequest, 'id' | 'createdAt'> = {
-    patientName: '',
-    // patientAge: 0,
-    // patientGender: 'Male',
-    bloodGroup: '',
-    unitsRequired: 1,
-    hospital: '',
-    location: '',
-    // ward: '',
-    bystanderName: '',
-    bystanderPhone: '',
-    // requiredDate: '',
-    // requiredTime: '',
-    urgency: 'Normal',
-    status: 'PENDING',
-    matchedDonors: 0,
-    contactedDonors: 0,
-    confirmedDonors: 0,
-    notes: '',
+function localDateTime(value?: string | null) {
+    if (!value) return ''
+    const date = new Date(value)
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
 }
 
-export default function BloodRequestForm({
-    request,
-    onClose,
-    onSave,
-}: BloodRequestFormProps) {
-    const [form, setForm] = useState(emptyRequest)
+export default function BloodRequestForm({ request, onClose, onSave }: BloodRequestFormProps) {
+    const isEditing = Boolean(request)
+    const [form, setForm] = useState({
+        patientName: request?.patientName ?? '',
+        hospital: request?.hospital ?? '',
+        location: request?.location ?? '',
+        bloodGroup: request?.bloodGroup ?? '',
+        bystanderName: request?.bystanderName ?? '',
+        bystanderPhone: request?.bystanderPhone ?? '',
+        urgency: request?.urgency ?? 'NORMAL',
+        status: request?.status ?? 'PENDING',
+        units: request?.units ?? 1,
+        notes: request?.notes ?? '',
+        requiredAt: localDateTime(request?.requiredAt),
+    })
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [saving, setSaving] = useState(false)
-
-    const isEditing = Boolean(request)
-
-    useEffect(() => {
-        if (request) {
-            setForm({
-                patientName: request.patientName,
-                // patientAge: request.patientAge,
-                // patientGender: request.patientGender,
-                bloodGroup: request.bloodGroup,
-                unitsRequired: request.unitsRequired,
-                hospital: request.hospital,
-                location: request.location,
-                // ward: request.ward,
-                bystanderName: request.bystanderName,
-                bystanderPhone: request.bystanderPhone,
-                // requiredDate: request.requiredDate,
-                // requiredTime: request.requiredTime,
-                urgency: request.urgency,
-                status: request.status,
-                matchedDonors: request.matchedDonors,
-                contactedDonors: request.contactedDonors,
-                confirmedDonors: request.confirmedDonors,
-                notes: request.notes,
-            })
-        } else {
-            setForm(emptyRequest)
-        }
-
-        setErrors({})
-    }, [request])
 
     const update = <K extends keyof typeof form>(
         field: K,
@@ -117,21 +81,16 @@ export default function BloodRequestForm({
     const validate = () => {
         const nextErrors: Record<string, string> = {}
 
-
         if (!form.patientName.trim()) {
             nextErrors.patientName = 'Patient name is required'
         }
-
-        // if (!form.patientAge || form.patientAge < 1 || form.patientAge > 120) {
-        //     nextErrors.patientAge = 'Enter a valid age'
-        // }
 
         if (!form.bloodGroup) {
             nextErrors.bloodGroup = 'Select a blood group'
         }
 
-        if (!form.unitsRequired || form.unitsRequired < 1) {
-            nextErrors.unitsRequired = 'At least 1 unit is required'
+        if (!Number.isInteger(form.units) || form.units < 1 || form.units > 100) {
+            nextErrors.units = 'Enter an integer from 1 to 100'
         }
 
         if (!form.hospital.trim()) {
@@ -145,17 +104,9 @@ export default function BloodRequestForm({
         const digits = form.bystanderPhone.replace(/\D/g, '')
         if (!form.bystanderPhone.trim()) {
             nextErrors.bystanderPhone = 'Bystander phone is required'
-        } else if (digits.length < 10 || digits.length > 15) {
+        } else if (digits.length < 8 || digits.length > 15) {
             nextErrors.bystanderPhone = 'Enter a valid phone number'
         }
-
-        // if (!form.requiredDate) {
-        //     nextErrors.requiredDate = 'Required date is required'
-        // }
-
-        // if (!form.requiredTime) {
-        //     nextErrors.requiredTime = 'Required time is required'
-        // }
 
         setErrors(nextErrors)
 
@@ -170,26 +121,20 @@ export default function BloodRequestForm({
         setSaving(true)
 
         try {
-            const savedRequest: BloodRequest = {
-                ...form,
-                id:
-                    request?.id ??
-                    `BM-${Math.floor(1000 + Math.random() * 9000)}`,
-                createdAt:
-                    request?.createdAt ??
-                    new Date().toLocaleString('en-IN', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                    }),
-            }
-            console.log('Saved request:', savedRequest)
-            await onSave(savedRequest)
+            const { status, requiredAt, ...details } = form
+            await onSave({
+                ...details,
+                requiredAt: requiredAt ? new Date(requiredAt).toISOString() : null,
+                ...(isEditing && { status }),
+            })
         } catch (error) {
-            console.error('Failed to save blood request:', error)
+            setErrors({ submit: error instanceof Error ? error.message : 'Unable to save request.' })
         } finally {
             setSaving(false)
         }
     }
+
+    const dialogRef = useDialog<HTMLElement>(onClose, !saving)
 
     return (
         <div className="fixed inset-0 z-50">
@@ -200,12 +145,12 @@ export default function BloodRequestForm({
                 className="absolute inset-0 bg-neutral-950/35 backdrop-blur-[2px]"
             />
 
-            <aside className="absolute right-0 top-0 flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl">
+            <aside ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Blood request form" className="absolute right-0 top-0 flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4 sm:px-6">
                     <div>
                         <div className="flex items-center gap-2">
-                            {form.urgency === 'Critical' && (
+                            {form.urgency === 'CRITICAL' && (
                                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-red-600">
                                     <AlertTriangle size={15} />
                                 </span>
@@ -260,32 +205,6 @@ export default function BloodRequestForm({
                                             }
                                         />
                                     </div>
-
-                                    {/* <Input
-                                        label="Age"
-                                        type="number"
-                                        min={1}
-                                        max={120}
-                                        value={form.patientAge || ''}
-                                        error={errors.patientAge}
-                                        placeholder="Age"
-                                        onChange={(event) =>
-                                            update('patientAge', Number(event.target.value))
-                                        }
-                                    /> */}
-
-                                    {/* <Select
-                                        label="Gender"
-                                        value={form.patientGender}
-                                        options={[
-                                            { label: 'Male', value: 'Male' },
-                                            { label: 'Female', value: 'Female' },
-                                            { label: 'Other', value: 'Other' },
-                                        ]}
-                                        onChange={(event) =>
-                                            update('patientGender', event.target.value)
-                                        }
-                                    /> */}
                                 </div>
                             </section>
 
@@ -316,11 +235,11 @@ export default function BloodRequestForm({
                                         label="Units required"
                                         type="number"
                                         min={1}
-                                        max={20}
-                                        value={form.unitsRequired}
-                                        error={errors.unitsRequired}
+                                        max={100}
+                                        value={form.units}
+                                        error={errors.units}
                                         onChange={(event) =>
-                                            update('unitsRequired', Number(event.target.value))
+                                            update('units', Number(event.target.value))
                                         }
                                     />
 
@@ -328,7 +247,7 @@ export default function BloodRequestForm({
                                         label="Urgency"
                                         value={form.urgency}
                                         options={urgencies.map((urgency) => ({
-                                            label: urgency,
+                                            label: urgency.charAt(0) + urgency.slice(1).toLowerCase(),
                                             value: urgency,
                                         }))}
                                         onChange={(event) =>
@@ -336,37 +255,21 @@ export default function BloodRequestForm({
                                         }
                                     />
 
-                                    <Select
-                                        label="Request status"
-                                        value={form.status}
-                                        options={statuses.map((status) => ({
-                                            label: status,
-                                            value: status,
-                                        }))}
-                                        onChange={(event) =>
-                                            update('status', event.target.value as RequestStatus)
-                                        }
-                                    />
-
-                                    {/* <Input
-                                        label="Required date"
-                                        type="date"
-                                        value={form.requiredDate}
-                                        error={errors.requiredDate}
-                                        onChange={(event) =>
-                                            update('requiredDate', event.target.value)
-                                        }
-                                    />
+                                    {isEditing && (
+                                        <Select
+                                            label="Request status"
+                                            value={form.status}
+                                            options={statuses}
+                                            onChange={(event) => update('status', event.target.value as RequestStatus)}
+                                        />
+                                    )}
 
                                     <Input
-                                        label="Required time"
-                                        type="time"
-                                        value={form.requiredTime}
-                                        error={errors.requiredTime}
-                                        onChange={(event) =>
-                                            update('requiredTime', event.target.value)
-                                        }
-                                    /> */}
+                                        label="Required by"
+                                        type="datetime-local"
+                                        value={form.requiredAt}
+                                        onChange={(event) => update('requiredAt', event.target.value)}
+                                    />
                                 </div>
                             </section>
 
@@ -395,20 +298,10 @@ export default function BloodRequestForm({
                                         label="Location"
                                         value={form.location}
                                         placeholder="City / area"
-                                        required
                                         onChange={(event) =>
                                             update('location', event.target.value)
                                         }
                                     />
-
-                                    {/* <Input
-                                        label="Ward / room"
-                                        value={form.ward}
-                                        placeholder="Ward, ICU, room..."
-                                        onChange={(event) =>
-                                            update('ward', event.target.value)
-                                        }
-                                    /> */}
                                 </div>
                             </section>
 
@@ -474,6 +367,7 @@ export default function BloodRequestForm({
                                 Cancel
                             </Button>
 
+                            {errors.submit && <p role="alert" className="text-sm text-red-700">{errors.submit}</p>}
                             <Button
                                 type="submit"
                                 loading={saving}

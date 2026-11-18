@@ -1,7 +1,6 @@
 import axios from 'axios'
 
-import type { BloodRequest, RequestStatus } from '../data/bloodRequests'
-import type { Donor } from '../data/donors'
+import type { BloodRequest, BloodRequestInput, RequestStatus, ResponseStatus } from '../data/bloodRequests'
 import type { NotificationRecord } from '../data/notifications'
 import type { Student } from '../data/students'
 import type { DashboardStats } from '../types/api'
@@ -37,12 +36,12 @@ interface ApiEnvelope<T> {
 interface LoginResponse {
     success: boolean
     token?: string
-    user?: {
+    data?: { user: {
         id: string
         name: string
         email: string
-        role?: string
-    }
+        role: string
+    } }
     message?: string
 }
 
@@ -93,11 +92,12 @@ export const api = {
         getAll: async (
             page = 1,
             limit = 20,
+            filters: { search?: string; department?: string; bloodGroup?: string; donorStatus?: string; semester?: string } = {},
         ): Promise<PaginatedStudents> => {
             const response = await apiClient.get(
                 '/students',
                 {
-                    params: { page, limit },
+                    params: { page, limit, ...filters },
                 },
             )
 
@@ -138,7 +138,7 @@ export const api = {
         },
 
         update: async (id: string, data: Partial<Student>) => {
-            const response = await apiClient.put<
+            const response = await apiClient.patch<
                 Student | ApiEnvelope<Student>
             >(`/students/${id}`, data)
 
@@ -146,12 +146,31 @@ export const api = {
         },
     },
 
+    imports: {
+        upload: async (file: File, mode: 'preview' | 'validate' | 'import') => {
+            const body = new FormData()
+            body.set('file', file)
+            const url = mode === 'import' ? '/import/students' : `/import/students/${mode}`
+            const response = await apiClient.post<ApiEnvelope<{
+                rowCount?: number
+                columns?: string[]
+                readyToImport?: number
+                totalRows?: number
+                imported?: number
+                skipped?: number
+                rows?: { row: number; status: string; errors: string[] }[]
+                errors?: { row: number; message: string }[]
+            }>>(url, body, { headers: { 'Content-Type': undefined } })
+            return unwrap(response.data)
+        },
+    },
+
     requests: {
-        getAll: async (): Promise<BloodRequest[]> => {
+        getAll: async (limit = 100, offset = 0, filters: { search?: string; status?: string; urgency?: string; bloodGroup?: string } = {}): Promise<BloodRequest[]> => {
             const response = await apiClient.get<
                 | BloodRequest[]
                 | ApiEnvelope<BloodRequest[]>
-            >('/blood-requests')
+            >('/blood-requests', { params: { limit, offset, summary: 'true', ...filters } })
 
             return unwrap(response.data)
         },
@@ -164,18 +183,18 @@ export const api = {
             return unwrap(response.data)
         },
 
-        create: async (data: BloodRequest) => {
+        create: async (data: BloodRequestInput) => {
             const response = await apiClient.post<
-                BloodRequest | ApiEnvelope<BloodRequest>
+                ApiEnvelope<{ request: BloodRequest }>
             >('/blood-requests', data)
 
-            return unwrap(response.data)
+            return unwrap(response.data).request
         },
 
-        update: async (id: string, status: RequestStatus) => {
+        update: async (id: string, data: Partial<BloodRequestInput> & { status?: RequestStatus }) => {
             const response = await apiClient.patch<
                 BloodRequest | ApiEnvelope<BloodRequest>
-            >(`/blood-requests/${id}`, status)
+            >(`/blood-requests/${id}`, data)
 
             return unwrap(response.data)
         },
@@ -194,8 +213,8 @@ export const api = {
             const response = await apiClient.get<{
                 success: boolean
                 data: {
-                    request: BloodRequest
-                    donors: Donor[]
+                    request: Pick<BloodRequest, 'id' | 'bloodGroup' | 'units' | 'status'>
+                    donors: BloodRequest['matchedDonors']
                     totalDonors: number
                 }
             }>(`/donor-matching/${requestId}`)
@@ -205,16 +224,24 @@ export const api = {
     },
 
     notifications: {
-        send: async <T>(data: T) => {
-            const response = await apiClient.post('/notifications/send', data)
-
-            return response.data
+        getContactPhone: async (requestId: string, donorId: string) => {
+            const response = await apiClient.get<ApiEnvelope<{ phone: string }>>(
+                `/whatsapp/${encodeURIComponent(requestId)}/${encodeURIComponent(donorId)}`,
+                { params: { format: 'contact' } },
+            )
+            return '+' + unwrap(response.data).phone
+        },
+        recordContact: async (data: { requestId: string; donorId: string; message: string }) => {
+            await apiClient.post('/notifications', data)
+        },
+        recordResponse: async (data: { requestId: string; donorId: string; status: ResponseStatus; donatedUnits: number }) => {
+            await apiClient.post('/donor-responses', data)
         },
 
-        getAll: async () => {
-            const response = await apiClient.get<
-                NotificationRecord[] | ApiEnvelope<NotificationRecord[]>
-            >('/notifications')
+        getAll: async (offset = 0, limit = 50) => {
+            const response = await apiClient.get<ApiEnvelope<NotificationRecord[]>>(
+                '/notifications', { params: { offset, limit } },
+            )
 
             return unwrap(response.data)
         },
@@ -251,8 +278,10 @@ export const api = {
 
             localStorage.setItem('token', data.token)
 
-            if (data.user) {
-                localStorage.setItem('user', JSON.stringify(data.user))
+            if (data.data?.user) {
+                localStorage.setItem('user', JSON.stringify(data.data.user))
+            } else {
+                localStorage.removeItem('user')
             }
 
             return data
@@ -261,6 +290,8 @@ export const api = {
         logout: () => {
             localStorage.removeItem('token')
             localStorage.removeItem('user')
+            Object.keys(sessionStorage).filter((key) => key.startsWith('contact-draft:'))
+                .forEach((key) => sessionStorage.removeItem(key))
         },
 
         getUser: () => {
@@ -278,7 +309,15 @@ export const api = {
         },
 
         isAuthenticated: () => {
-            return Boolean(localStorage.getItem('token'))
+            const token = localStorage.getItem('token')
+            try {
+                const payload = token?.split('.')[1]
+                if (!payload) return false
+                const session = JSON.parse(atob(payload.replaceAll('-', '+').replaceAll('_', '/'))) as { exp?: number }
+                return typeof session.exp === 'number' && session.exp * 1000 > Date.now()
+            } catch {
+                return false
+            }
         },
     },
 }

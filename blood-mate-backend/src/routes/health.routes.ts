@@ -13,7 +13,7 @@ router.get("/", async (_req, res) => {
             database: "OK",
         });
     } catch (error) {
-        console.error(error);
+        console.error("API operation failed:", error instanceof Error ? error.name : "UnknownError");
 
         res.status(500).json({
             success: false,

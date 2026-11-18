@@ -17,8 +17,8 @@
 
 import * as runtime from "@prisma/client/runtime/index-browser"
 
-export type * from '../models.ts'
-export type * from './prismaNamespace.ts'
+export type * from '../models.js'
+export type * from './prismaNamespace.js'
 
 export const Decimal = runtime.Decimal
 
@@ -54,7 +54,8 @@ export const ModelName = {
   User: 'User',
   Student: 'Student',
   BloodRequest: 'BloodRequest',
-  DonorResponse: 'DonorResponse'
+  DonorResponse: 'DonorResponse',
+  DonorContact: 'DonorContact'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -96,7 +97,7 @@ export const StudentScalarFieldEnum = {
   address: 'address',
   weightCategory: 'weightCategory',
   gender: 'gender',
-  academicYear: 'academicYear',
+  semester: 'semester',
   willingToDonate: 'willingToDonate',
   isDonor: 'isDonor',
   donorStatus: 'donorStatus',
@@ -119,6 +120,8 @@ export const BloodRequestScalarFieldEnum = {
   bloodGroup: 'bloodGroup',
   units: 'units',
   requiredAt: 'requiredAt',
+  urgency: 'urgency',
+  notes: 'notes',
   status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -133,11 +136,26 @@ export const DonorResponseScalarFieldEnum = {
   donorId: 'donorId',
   status: 'status',
   respondedAt: 'respondedAt',
+  donatedUnits: 'donatedUnits',
+  recordedBy: 'recordedBy',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type DonorResponseScalarFieldEnum = (typeof DonorResponseScalarFieldEnum)[keyof typeof DonorResponseScalarFieldEnum]
+
+
+export const DonorContactScalarFieldEnum = {
+  id: 'id',
+  requestId: 'requestId',
+  donorId: 'donorId',
+  recordedBy: 'recordedBy',
+  phone: 'phone',
+  message: 'message',
+  createdAt: 'createdAt'
+} as const
+
+export type DonorContactScalarFieldEnum = (typeof DonorContactScalarFieldEnum)[keyof typeof DonorContactScalarFieldEnum]
 
 
 export const SortOrder = {

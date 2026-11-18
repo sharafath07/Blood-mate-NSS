@@ -1,0 +1,53 @@
+name: Project checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-password
+          POSTGRES_DB: blood_mate_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://postgres:test-password@127.0.0.1:5432/blood_mate_test
+      BLOOD_MATE_TEST_DATABASE_URL: postgresql://postgres:test-password@127.0.0.1:5432/blood_mate_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            blood-mate-backend/package-lock.json
+            blood-mate-frontend/package-lock.json
+      - run: npm ci
+        working-directory: blood-mate-backend
+      - run: npm exec -- prisma validate
+        working-directory: blood-mate-backend
+      - run: npm run prisma:generate
+        working-directory: blood-mate-backend
+      - run: npm exec -- prisma migrate deploy
+        working-directory: blood-mate-backend
+      - run: npm exec -- prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+        working-directory: blood-mate-backend
+      - run: npm test
+        working-directory: blood-mate-backend
+      - run: npm ci
+        working-directory: blood-mate-frontend
+      - run: npm run lint
+        working-directory: blood-mate-frontend
+      - run: npm run build
+        working-directory: blood-mate-frontend

@@ -9,8 +9,8 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.ts"
-import type * as Prisma from "../internal/prismaNamespace.ts"
+import type * as $Enums from "../enums.js"
+import type * as Prisma from "../internal/prismaNamespace.js"
 
 /**
  * Model DonorResponse
@@ -20,8 +20,18 @@ export type DonorResponseModel = runtime.Types.Result.DefaultSelection<Prisma.$D
 
 export type AggregateDonorResponse = {
   _count: DonorResponseCountAggregateOutputType | null
+  _avg: DonorResponseAvgAggregateOutputType | null
+  _sum: DonorResponseSumAggregateOutputType | null
   _min: DonorResponseMinAggregateOutputType | null
   _max: DonorResponseMaxAggregateOutputType | null
+}
+
+export type DonorResponseAvgAggregateOutputType = {
+  donatedUnits: number | null
+}
+
+export type DonorResponseSumAggregateOutputType = {
+  donatedUnits: number | null
 }
 
 export type DonorResponseMinAggregateOutputType = {
@@ -30,6 +40,8 @@ export type DonorResponseMinAggregateOutputType = {
   donorId: string | null
   status: $Enums.ResponseStatus | null
   respondedAt: Date | null
+  donatedUnits: number | null
+  recordedBy: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -40,6 +52,8 @@ export type DonorResponseMaxAggregateOutputType = {
   donorId: string | null
   status: $Enums.ResponseStatus | null
   respondedAt: Date | null
+  donatedUnits: number | null
+  recordedBy: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -50,11 +64,21 @@ export type DonorResponseCountAggregateOutputType = {
   donorId: number
   status: number
   respondedAt: number
+  donatedUnits: number
+  recordedBy: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
+
+export type DonorResponseAvgAggregateInputType = {
+  donatedUnits?: true
+}
+
+export type DonorResponseSumAggregateInputType = {
+  donatedUnits?: true
+}
 
 export type DonorResponseMinAggregateInputType = {
   id?: true
@@ -62,6 +86,8 @@ export type DonorResponseMinAggregateInputType = {
   donorId?: true
   status?: true
   respondedAt?: true
+  donatedUnits?: true
+  recordedBy?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -72,6 +98,8 @@ export type DonorResponseMaxAggregateInputType = {
   donorId?: true
   status?: true
   respondedAt?: true
+  donatedUnits?: true
+  recordedBy?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -82,6 +110,8 @@ export type DonorResponseCountAggregateInputType = {
   donorId?: true
   status?: true
   respondedAt?: true
+  donatedUnits?: true
+  recordedBy?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -125,6 +155,18 @@ export type DonorResponseAggregateArgs<ExtArgs extends runtime.Types.Extensions.
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: DonorResponseAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: DonorResponseSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: DonorResponseMinAggregateInputType
@@ -155,6 +197,8 @@ export type DonorResponseGroupByArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   _count?: DonorResponseCountAggregateInputType | true
+  _avg?: DonorResponseAvgAggregateInputType
+  _sum?: DonorResponseSumAggregateInputType
   _min?: DonorResponseMinAggregateInputType
   _max?: DonorResponseMaxAggregateInputType
 }
@@ -165,9 +209,13 @@ export type DonorResponseGroupByOutputType = {
   donorId: string
   status: $Enums.ResponseStatus
   respondedAt: Date | null
+  donatedUnits: number
+  recordedBy: string | null
   createdAt: Date
   updatedAt: Date
   _count: DonorResponseCountAggregateOutputType | null
+  _avg: DonorResponseAvgAggregateOutputType | null
+  _sum: DonorResponseSumAggregateOutputType | null
   _min: DonorResponseMinAggregateOutputType | null
   _max: DonorResponseMaxAggregateOutputType | null
 }
@@ -196,10 +244,13 @@ export type DonorResponseWhereInput = {
   donorId?: Prisma.StringFilter<"DonorResponse"> | string
   status?: Prisma.EnumResponseStatusFilter<"DonorResponse"> | $Enums.ResponseStatus
   respondedAt?: Prisma.DateTimeNullableFilter<"DonorResponse"> | Date | string | null
+  donatedUnits?: Prisma.IntFilter<"DonorResponse"> | number
+  recordedBy?: Prisma.StringNullableFilter<"DonorResponse"> | string | null
   createdAt?: Prisma.DateTimeFilter<"DonorResponse"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DonorResponse"> | Date | string
   request?: Prisma.XOR<Prisma.BloodRequestScalarRelationFilter, Prisma.BloodRequestWhereInput>
   donor?: Prisma.XOR<Prisma.StudentScalarRelationFilter, Prisma.StudentWhereInput>
+  actor?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }
 
 export type DonorResponseOrderByWithRelationInput = {
@@ -208,10 +259,13 @@ export type DonorResponseOrderByWithRelationInput = {
   donorId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   respondedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  donatedUnits?: Prisma.SortOrder
+  recordedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   request?: Prisma.BloodRequestOrderByWithRelationInput
   donor?: Prisma.StudentOrderByWithRelationInput
+  actor?: Prisma.UserOrderByWithRelationInput
 }
 
 export type DonorResponseWhereUniqueInput = Prisma.AtLeast<{
@@ -224,10 +278,13 @@ export type DonorResponseWhereUniqueInput = Prisma.AtLeast<{
   donorId?: Prisma.StringFilter<"DonorResponse"> | string
   status?: Prisma.EnumResponseStatusFilter<"DonorResponse"> | $Enums.ResponseStatus
   respondedAt?: Prisma.DateTimeNullableFilter<"DonorResponse"> | Date | string | null
+  donatedUnits?: Prisma.IntFilter<"DonorResponse"> | number
+  recordedBy?: Prisma.StringNullableFilter<"DonorResponse"> | string | null
   createdAt?: Prisma.DateTimeFilter<"DonorResponse"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DonorResponse"> | Date | string
   request?: Prisma.XOR<Prisma.BloodRequestScalarRelationFilter, Prisma.BloodRequestWhereInput>
   donor?: Prisma.XOR<Prisma.StudentScalarRelationFilter, Prisma.StudentWhereInput>
+  actor?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }, "id" | "requestId_donorId">
 
 export type DonorResponseOrderByWithAggregationInput = {
@@ -236,11 +293,15 @@ export type DonorResponseOrderByWithAggregationInput = {
   donorId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   respondedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  donatedUnits?: Prisma.SortOrder
+  recordedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.DonorResponseCountOrderByAggregateInput
+  _avg?: Prisma.DonorResponseAvgOrderByAggregateInput
   _max?: Prisma.DonorResponseMaxOrderByAggregateInput
   _min?: Prisma.DonorResponseMinOrderByAggregateInput
+  _sum?: Prisma.DonorResponseSumOrderByAggregateInput
 }
 
 export type DonorResponseScalarWhereWithAggregatesInput = {
@@ -252,6 +313,8 @@ export type DonorResponseScalarWhereWithAggregatesInput = {
   donorId?: Prisma.StringWithAggregatesFilter<"DonorResponse"> | string
   status?: Prisma.EnumResponseStatusWithAggregatesFilter<"DonorResponse"> | $Enums.ResponseStatus
   respondedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"DonorResponse"> | Date | string | null
+  donatedUnits?: Prisma.IntWithAggregatesFilter<"DonorResponse"> | number
+  recordedBy?: Prisma.StringNullableWithAggregatesFilter<"DonorResponse"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"DonorResponse"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"DonorResponse"> | Date | string
 }
@@ -260,10 +323,12 @@ export type DonorResponseCreateInput = {
   id?: string
   status?: $Enums.ResponseStatus
   respondedAt?: Date | string | null
+  donatedUnits?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   request: Prisma.BloodRequestCreateNestedOneWithoutResponsesInput
   donor: Prisma.StudentCreateNestedOneWithoutDonorResponsesInput
+  actor?: Prisma.UserCreateNestedOneWithoutRecordedResponsesInput
 }
 
 export type DonorResponseUncheckedCreateInput = {
@@ -272,6 +337,8 @@ export type DonorResponseUncheckedCreateInput = {
   donorId: string
   status?: $Enums.ResponseStatus
   respondedAt?: Date | string | null
+  donatedUnits?: number
+  recordedBy?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -280,10 +347,12 @@ export type DonorResponseUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   request?: Prisma.BloodRequestUpdateOneRequiredWithoutResponsesNestedInput
   donor?: Prisma.StudentUpdateOneRequiredWithoutDonorResponsesNestedInput
+  actor?: Prisma.UserUpdateOneWithoutRecordedResponsesNestedInput
 }
 
 export type DonorResponseUncheckedUpdateInput = {
@@ -292,6 +361,8 @@ export type DonorResponseUncheckedUpdateInput = {
   donorId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
+  recordedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -302,6 +373,8 @@ export type DonorResponseCreateManyInput = {
   donorId: string
   status?: $Enums.ResponseStatus
   respondedAt?: Date | string | null
+  donatedUnits?: number
+  recordedBy?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -310,6 +383,7 @@ export type DonorResponseUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -320,6 +394,8 @@ export type DonorResponseUncheckedUpdateManyInput = {
   donorId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
+  recordedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -345,8 +421,14 @@ export type DonorResponseCountOrderByAggregateInput = {
   donorId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   respondedAt?: Prisma.SortOrder
+  donatedUnits?: Prisma.SortOrder
+  recordedBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type DonorResponseAvgOrderByAggregateInput = {
+  donatedUnits?: Prisma.SortOrder
 }
 
 export type DonorResponseMaxOrderByAggregateInput = {
@@ -355,6 +437,8 @@ export type DonorResponseMaxOrderByAggregateInput = {
   donorId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   respondedAt?: Prisma.SortOrder
+  donatedUnits?: Prisma.SortOrder
+  recordedBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -365,8 +449,56 @@ export type DonorResponseMinOrderByAggregateInput = {
   donorId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   respondedAt?: Prisma.SortOrder
+  donatedUnits?: Prisma.SortOrder
+  recordedBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type DonorResponseSumOrderByAggregateInput = {
+  donatedUnits?: Prisma.SortOrder
+}
+
+export type DonorResponseCreateNestedManyWithoutActorInput = {
+  create?: Prisma.XOR<Prisma.DonorResponseCreateWithoutActorInput, Prisma.DonorResponseUncheckedCreateWithoutActorInput> | Prisma.DonorResponseCreateWithoutActorInput[] | Prisma.DonorResponseUncheckedCreateWithoutActorInput[]
+  connectOrCreate?: Prisma.DonorResponseCreateOrConnectWithoutActorInput | Prisma.DonorResponseCreateOrConnectWithoutActorInput[]
+  createMany?: Prisma.DonorResponseCreateManyActorInputEnvelope
+  connect?: Prisma.DonorResponseWhereUniqueInput | Prisma.DonorResponseWhereUniqueInput[]
+}
+
+export type DonorResponseUncheckedCreateNestedManyWithoutActorInput = {
+  create?: Prisma.XOR<Prisma.DonorResponseCreateWithoutActorInput, Prisma.DonorResponseUncheckedCreateWithoutActorInput> | Prisma.DonorResponseCreateWithoutActorInput[] | Prisma.DonorResponseUncheckedCreateWithoutActorInput[]
+  connectOrCreate?: Prisma.DonorResponseCreateOrConnectWithoutActorInput | Prisma.DonorResponseCreateOrConnectWithoutActorInput[]
+  createMany?: Prisma.DonorResponseCreateManyActorInputEnvelope
+  connect?: Prisma.DonorResponseWhereUniqueInput | Prisma.DonorResponseWhereUniqueInput[]
+}
+
+export type DonorResponseUpdateManyWithoutActorNestedInput = {
+  create?: Prisma.XOR<Prisma.DonorResponseCreateWithoutActorInput, Prisma.DonorResponseUncheckedCreateWithoutActorInput> | Prisma.DonorResponseCreateWithoutActorInput[] | Prisma.DonorResponseUncheckedCreateWithoutActorInput[]
+  connectOrCreate?: Prisma.DonorResponseCreateOrConnectWithoutActorInput | Prisma.DonorResponseCreateOrConnectWithoutActorInput[]
+  upsert?: Prisma.DonorResponseUpsertWithWhereUniqueWithoutActorInput | Prisma.DonorResponseUpsertWithWhereUniqueWithoutActorInput[]
+  createMany?: Prisma.DonorResponseCreateManyActorInputEnvelope
+  set?: Prisma.DonorResponseWhereUniqueInput | Prisma.DonorResponseWhereUniqueInput[]
+  disconnect?: Prisma.DonorResponseWhereUniqueInput | Prisma.DonorResponseWhereUniqueInput[]
+  delete?: Prisma.DonorResponseWhereUniqueInput | Prisma.DonorResponseWhereUniqueInput[]
+  connect?: Prisma.DonorResponseWhereUniqueInput | Prisma.DonorResponseWhereUniqueInput[]
+  update?: Prisma.DonorResponseUpdateWithWhereUniqueWithoutActorInput | Prisma.DonorResponseUpdateWithWhereUniqueWithoutActorInput[]
+  updateMany?: Prisma.DonorResponseUpdateManyWithWhereWithoutActorInput | Prisma.DonorResponseUpdateManyWithWhereWithoutActorInput[]
+  deleteMany?: Prisma.DonorResponseScalarWhereInput | Prisma.DonorResponseScalarWhereInput[]
+}
+
+export type DonorResponseUncheckedUpdateManyWithoutActorNestedInput = {
+  create?: Prisma.XOR<Prisma.DonorResponseCreateWithoutActorInput, Prisma.DonorResponseUncheckedCreateWithoutActorInput> | Prisma.DonorResponseCreateWithoutActorInput[] | Prisma.DonorResponseUncheckedCreateWithoutActorInput[]
+  connectOrCreate?: Prisma.DonorResponseCreateOrConnectWithoutActorInput | Prisma.DonorResponseCreateOrConnectWithoutActorInput[]
+  upsert?: Prisma.DonorResponseUpsertWithWhereUniqueWithoutActorInput | Prisma.DonorResponseUpsertWithWhereUniqueWithoutActorInput[]
+  createMany?: Prisma.DonorResponseCreateManyActorInputEnvelope
+  set?: Prisma.DonorResponseWhereUniqueInput | Prisma.DonorResponseWhereUniqueInput[]
+  disconnect?: Prisma.DonorResponseWhereUniqueInput | Prisma.DonorResponseWhereUniqueInput[]
+  delete?: Prisma.DonorResponseWhereUniqueInput | Prisma.DonorResponseWhereUniqueInput[]
+  connect?: Prisma.DonorResponseWhereUniqueInput | Prisma.DonorResponseWhereUniqueInput[]
+  update?: Prisma.DonorResponseUpdateWithWhereUniqueWithoutActorInput | Prisma.DonorResponseUpdateWithWhereUniqueWithoutActorInput[]
+  updateMany?: Prisma.DonorResponseUpdateManyWithWhereWithoutActorInput | Prisma.DonorResponseUpdateManyWithWhereWithoutActorInput[]
+  deleteMany?: Prisma.DonorResponseScalarWhereInput | Prisma.DonorResponseScalarWhereInput[]
 }
 
 export type DonorResponseCreateNestedManyWithoutDonorInput = {
@@ -457,13 +589,78 @@ export type EnumResponseStatusFieldUpdateOperationsInput = {
   set?: $Enums.ResponseStatus
 }
 
+export type DonorResponseCreateWithoutActorInput = {
+  id?: string
+  status?: $Enums.ResponseStatus
+  respondedAt?: Date | string | null
+  donatedUnits?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  request: Prisma.BloodRequestCreateNestedOneWithoutResponsesInput
+  donor: Prisma.StudentCreateNestedOneWithoutDonorResponsesInput
+}
+
+export type DonorResponseUncheckedCreateWithoutActorInput = {
+  id?: string
+  requestId: string
+  donorId: string
+  status?: $Enums.ResponseStatus
+  respondedAt?: Date | string | null
+  donatedUnits?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type DonorResponseCreateOrConnectWithoutActorInput = {
+  where: Prisma.DonorResponseWhereUniqueInput
+  create: Prisma.XOR<Prisma.DonorResponseCreateWithoutActorInput, Prisma.DonorResponseUncheckedCreateWithoutActorInput>
+}
+
+export type DonorResponseCreateManyActorInputEnvelope = {
+  data: Prisma.DonorResponseCreateManyActorInput | Prisma.DonorResponseCreateManyActorInput[]
+  skipDuplicates?: boolean
+}
+
+export type DonorResponseUpsertWithWhereUniqueWithoutActorInput = {
+  where: Prisma.DonorResponseWhereUniqueInput
+  update: Prisma.XOR<Prisma.DonorResponseUpdateWithoutActorInput, Prisma.DonorResponseUncheckedUpdateWithoutActorInput>
+  create: Prisma.XOR<Prisma.DonorResponseCreateWithoutActorInput, Prisma.DonorResponseUncheckedCreateWithoutActorInput>
+}
+
+export type DonorResponseUpdateWithWhereUniqueWithoutActorInput = {
+  where: Prisma.DonorResponseWhereUniqueInput
+  data: Prisma.XOR<Prisma.DonorResponseUpdateWithoutActorInput, Prisma.DonorResponseUncheckedUpdateWithoutActorInput>
+}
+
+export type DonorResponseUpdateManyWithWhereWithoutActorInput = {
+  where: Prisma.DonorResponseScalarWhereInput
+  data: Prisma.XOR<Prisma.DonorResponseUpdateManyMutationInput, Prisma.DonorResponseUncheckedUpdateManyWithoutActorInput>
+}
+
+export type DonorResponseScalarWhereInput = {
+  AND?: Prisma.DonorResponseScalarWhereInput | Prisma.DonorResponseScalarWhereInput[]
+  OR?: Prisma.DonorResponseScalarWhereInput[]
+  NOT?: Prisma.DonorResponseScalarWhereInput | Prisma.DonorResponseScalarWhereInput[]
+  id?: Prisma.StringFilter<"DonorResponse"> | string
+  requestId?: Prisma.StringFilter<"DonorResponse"> | string
+  donorId?: Prisma.StringFilter<"DonorResponse"> | string
+  status?: Prisma.EnumResponseStatusFilter<"DonorResponse"> | $Enums.ResponseStatus
+  respondedAt?: Prisma.DateTimeNullableFilter<"DonorResponse"> | Date | string | null
+  donatedUnits?: Prisma.IntFilter<"DonorResponse"> | number
+  recordedBy?: Prisma.StringNullableFilter<"DonorResponse"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"DonorResponse"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"DonorResponse"> | Date | string
+}
+
 export type DonorResponseCreateWithoutDonorInput = {
   id?: string
   status?: $Enums.ResponseStatus
   respondedAt?: Date | string | null
+  donatedUnits?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   request: Prisma.BloodRequestCreateNestedOneWithoutResponsesInput
+  actor?: Prisma.UserCreateNestedOneWithoutRecordedResponsesInput
 }
 
 export type DonorResponseUncheckedCreateWithoutDonorInput = {
@@ -471,6 +668,8 @@ export type DonorResponseUncheckedCreateWithoutDonorInput = {
   requestId: string
   status?: $Enums.ResponseStatus
   respondedAt?: Date | string | null
+  donatedUnits?: number
+  recordedBy?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -501,26 +700,15 @@ export type DonorResponseUpdateManyWithWhereWithoutDonorInput = {
   data: Prisma.XOR<Prisma.DonorResponseUpdateManyMutationInput, Prisma.DonorResponseUncheckedUpdateManyWithoutDonorInput>
 }
 
-export type DonorResponseScalarWhereInput = {
-  AND?: Prisma.DonorResponseScalarWhereInput | Prisma.DonorResponseScalarWhereInput[]
-  OR?: Prisma.DonorResponseScalarWhereInput[]
-  NOT?: Prisma.DonorResponseScalarWhereInput | Prisma.DonorResponseScalarWhereInput[]
-  id?: Prisma.StringFilter<"DonorResponse"> | string
-  requestId?: Prisma.StringFilter<"DonorResponse"> | string
-  donorId?: Prisma.StringFilter<"DonorResponse"> | string
-  status?: Prisma.EnumResponseStatusFilter<"DonorResponse"> | $Enums.ResponseStatus
-  respondedAt?: Prisma.DateTimeNullableFilter<"DonorResponse"> | Date | string | null
-  createdAt?: Prisma.DateTimeFilter<"DonorResponse"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"DonorResponse"> | Date | string
-}
-
 export type DonorResponseCreateWithoutRequestInput = {
   id?: string
   status?: $Enums.ResponseStatus
   respondedAt?: Date | string | null
+  donatedUnits?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   donor: Prisma.StudentCreateNestedOneWithoutDonorResponsesInput
+  actor?: Prisma.UserCreateNestedOneWithoutRecordedResponsesInput
 }
 
 export type DonorResponseUncheckedCreateWithoutRequestInput = {
@@ -528,6 +716,8 @@ export type DonorResponseUncheckedCreateWithoutRequestInput = {
   donorId: string
   status?: $Enums.ResponseStatus
   respondedAt?: Date | string | null
+  donatedUnits?: number
+  recordedBy?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -558,11 +748,57 @@ export type DonorResponseUpdateManyWithWhereWithoutRequestInput = {
   data: Prisma.XOR<Prisma.DonorResponseUpdateManyMutationInput, Prisma.DonorResponseUncheckedUpdateManyWithoutRequestInput>
 }
 
+export type DonorResponseCreateManyActorInput = {
+  id?: string
+  requestId: string
+  donorId: string
+  status?: $Enums.ResponseStatus
+  respondedAt?: Date | string | null
+  donatedUnits?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type DonorResponseUpdateWithoutActorInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
+  respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  request?: Prisma.BloodRequestUpdateOneRequiredWithoutResponsesNestedInput
+  donor?: Prisma.StudentUpdateOneRequiredWithoutDonorResponsesNestedInput
+}
+
+export type DonorResponseUncheckedUpdateWithoutActorInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.StringFieldUpdateOperationsInput | string
+  donorId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
+  respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type DonorResponseUncheckedUpdateManyWithoutActorInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.StringFieldUpdateOperationsInput | string
+  donorId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
+  respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type DonorResponseCreateManyDonorInput = {
   id?: string
   requestId: string
   status?: $Enums.ResponseStatus
   respondedAt?: Date | string | null
+  donatedUnits?: number
+  recordedBy?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -571,9 +807,11 @@ export type DonorResponseUpdateWithoutDonorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   request?: Prisma.BloodRequestUpdateOneRequiredWithoutResponsesNestedInput
+  actor?: Prisma.UserUpdateOneWithoutRecordedResponsesNestedInput
 }
 
 export type DonorResponseUncheckedUpdateWithoutDonorInput = {
@@ -581,6 +819,8 @@ export type DonorResponseUncheckedUpdateWithoutDonorInput = {
   requestId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
+  recordedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -590,6 +830,8 @@ export type DonorResponseUncheckedUpdateManyWithoutDonorInput = {
   requestId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
+  recordedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -599,6 +841,8 @@ export type DonorResponseCreateManyRequestInput = {
   donorId: string
   status?: $Enums.ResponseStatus
   respondedAt?: Date | string | null
+  donatedUnits?: number
+  recordedBy?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -607,9 +851,11 @@ export type DonorResponseUpdateWithoutRequestInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   donor?: Prisma.StudentUpdateOneRequiredWithoutDonorResponsesNestedInput
+  actor?: Prisma.UserUpdateOneWithoutRecordedResponsesNestedInput
 }
 
 export type DonorResponseUncheckedUpdateWithoutRequestInput = {
@@ -617,6 +863,8 @@ export type DonorResponseUncheckedUpdateWithoutRequestInput = {
   donorId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
+  recordedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -626,6 +874,8 @@ export type DonorResponseUncheckedUpdateManyWithoutRequestInput = {
   donorId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResponseStatusFieldUpdateOperationsInput | $Enums.ResponseStatus
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  donatedUnits?: Prisma.IntFieldUpdateOperationsInput | number
+  recordedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -638,10 +888,13 @@ export type DonorResponseSelect<ExtArgs extends runtime.Types.Extensions.Interna
   donorId?: boolean
   status?: boolean
   respondedAt?: boolean
+  donatedUnits?: boolean
+  recordedBy?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   request?: boolean | Prisma.BloodRequestDefaultArgs<ExtArgs>
   donor?: boolean | Prisma.StudentDefaultArgs<ExtArgs>
+  actor?: boolean | Prisma.DonorResponse$actorArgs<ExtArgs>
 }, ExtArgs["result"]["donorResponse"]>
 
 export type DonorResponseSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -650,10 +903,13 @@ export type DonorResponseSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   donorId?: boolean
   status?: boolean
   respondedAt?: boolean
+  donatedUnits?: boolean
+  recordedBy?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   request?: boolean | Prisma.BloodRequestDefaultArgs<ExtArgs>
   donor?: boolean | Prisma.StudentDefaultArgs<ExtArgs>
+  actor?: boolean | Prisma.DonorResponse$actorArgs<ExtArgs>
 }, ExtArgs["result"]["donorResponse"]>
 
 export type DonorResponseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -662,10 +918,13 @@ export type DonorResponseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   donorId?: boolean
   status?: boolean
   respondedAt?: boolean
+  donatedUnits?: boolean
+  recordedBy?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   request?: boolean | Prisma.BloodRequestDefaultArgs<ExtArgs>
   donor?: boolean | Prisma.StudentDefaultArgs<ExtArgs>
+  actor?: boolean | Prisma.DonorResponse$actorArgs<ExtArgs>
 }, ExtArgs["result"]["donorResponse"]>
 
 export type DonorResponseSelectScalar = {
@@ -674,22 +933,27 @@ export type DonorResponseSelectScalar = {
   donorId?: boolean
   status?: boolean
   respondedAt?: boolean
+  donatedUnits?: boolean
+  recordedBy?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DonorResponseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "requestId" | "donorId" | "status" | "respondedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["donorResponse"]>
+export type DonorResponseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "requestId" | "donorId" | "status" | "respondedAt" | "donatedUnits" | "recordedBy" | "createdAt" | "updatedAt", ExtArgs["result"]["donorResponse"]>
 export type DonorResponseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   request?: boolean | Prisma.BloodRequestDefaultArgs<ExtArgs>
   donor?: boolean | Prisma.StudentDefaultArgs<ExtArgs>
+  actor?: boolean | Prisma.DonorResponse$actorArgs<ExtArgs>
 }
 export type DonorResponseIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   request?: boolean | Prisma.BloodRequestDefaultArgs<ExtArgs>
   donor?: boolean | Prisma.StudentDefaultArgs<ExtArgs>
+  actor?: boolean | Prisma.DonorResponse$actorArgs<ExtArgs>
 }
 export type DonorResponseIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   request?: boolean | Prisma.BloodRequestDefaultArgs<ExtArgs>
   donor?: boolean | Prisma.StudentDefaultArgs<ExtArgs>
+  actor?: boolean | Prisma.DonorResponse$actorArgs<ExtArgs>
 }
 
 export type $DonorResponsePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -697,6 +961,7 @@ export type $DonorResponsePayload<ExtArgs extends runtime.Types.Extensions.Inter
   objects: {
     request: Prisma.$BloodRequestPayload<ExtArgs>
     donor: Prisma.$StudentPayload<ExtArgs>
+    actor: Prisma.$UserPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -704,6 +969,8 @@ export type $DonorResponsePayload<ExtArgs extends runtime.Types.Extensions.Inter
     donorId: string
     status: $Enums.ResponseStatus
     respondedAt: Date | null
+    donatedUnits: number
+    recordedBy: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["donorResponse"]>
@@ -1102,6 +1369,7 @@ export interface Prisma__DonorResponseClient<T, Null = never, ExtArgs extends ru
   readonly [Symbol.toStringTag]: "PrismaPromise"
   request<T extends Prisma.BloodRequestDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BloodRequestDefaultArgs<ExtArgs>>): Prisma.Prisma__BloodRequestClient<runtime.Types.Result.GetResult<Prisma.$BloodRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   donor<T extends Prisma.StudentDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentDefaultArgs<ExtArgs>>): Prisma.Prisma__StudentClient<runtime.Types.Result.GetResult<Prisma.$StudentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  actor<T extends Prisma.DonorResponse$actorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DonorResponse$actorArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1136,6 +1404,8 @@ export interface DonorResponseFieldRefs {
   readonly donorId: Prisma.FieldRef<"DonorResponse", 'String'>
   readonly status: Prisma.FieldRef<"DonorResponse", 'ResponseStatus'>
   readonly respondedAt: Prisma.FieldRef<"DonorResponse", 'DateTime'>
+  readonly donatedUnits: Prisma.FieldRef<"DonorResponse", 'Int'>
+  readonly recordedBy: Prisma.FieldRef<"DonorResponse", 'String'>
   readonly createdAt: Prisma.FieldRef<"DonorResponse", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"DonorResponse", 'DateTime'>
 }
@@ -1536,6 +1806,25 @@ export type DonorResponseDeleteManyArgs<ExtArgs extends runtime.Types.Extensions
    * Limit how many DonorResponses to delete.
    */
   limit?: number
+}
+
+/**
+ * DonorResponse.actor
+ */
+export type DonorResponse$actorArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**

@@ -1,724 +1,290 @@
-import { useMemo, useState, useEffect } from 'react'
-import type { ReactNode } from 'react'
-import {
-    Bell,
-    Check,
-    CheckCheck,
-    Clock3,
-    MessageCircle,
-    MoreHorizontal,
-    // Phone,
-    Search,
-    Send,
-    // UserRound,
-    // Users,
-    X,
-    AlertCircle,
-    ShieldCheck,
-} from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
-
-import { motion, AnimatePresence } from 'motion/react'
-import { pageMotion } from '../lib/motion'
-
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { MessageCircle } from 'lucide-react'
+import axios from 'axios'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
-import Badge from '../components/ui/Badge'
-import Avatar from '../components/ui/Avatar'
+import Input from '../components/ui/Input'
+import Select from '../components/ui/Select'
+import type { ResponseStatus } from '../data/bloodRequests'
+import type { NotificationRecord } from '../data/notifications'
 import { api } from '../services/api'
+import { whatsAppLink } from '../lib/contactLinks'
+import CallLink from '../components/ui/CallLink'
 
-import type { Donor } from '../data/donors'
+interface Recipient {
+    id: string
+    name: string
+}
 
-import {
-    // notifications as initialNotifications,
-    type NotificationRecord,
-    type NotificationStatus,
-} from '../data/notifications'
-
-const statusConfig: Record<
-    NotificationStatus,
-    {
-        variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info'
-        icon: typeof Check
-    }
-> = {
-    Sent: { variant: 'info', icon: Send },
-    Delivered: { variant: 'success', icon: Check },
-    Read: { variant: 'success', icon: CheckCheck },
-    Responded: { variant: 'success', icon: MessageCircle },
-    Pending: { variant: 'warning', icon: Clock3 },
-    Failed: { variant: 'danger', icon: X },
+interface ComposerState {
+    requestId?: string
+    bloodGroup?: string
+    hospital?: string
+    donors?: Recipient[]
 }
 
 const defaultMessage =
-    'Hello [Name], an [Blood Group] blood donation is urgently needed at [Hospital]. Please confirm if you are available to donate. Your help could make a real difference. Thank you — Blood Mate.'
+    'Hello [Name], a blood donation for [Blood Group] is needed at [Hospital]. Please let the Blood Mate coordinator know if you are available. Thank you.'
 
-function StatusBadge({ status }: { status: NotificationStatus }) {
-    const config = statusConfig[status]
-    const Icon = config.icon
+const responseOptions: { label: string; value: ResponseStatus }[] = [
+    { label: 'Pending', value: 'PENDING' },
+    { label: 'Accepted', value: 'ACCEPTED' },
+    { label: 'Declined', value: 'DECLINED' },
+    { label: 'No response', value: 'NO_RESPONSE' },
+]
 
-    return (
-        <Badge variant={config.variant}>
-            <span className="inline-flex items-center gap-1">
-                <Icon size={12} />
-                {status}
-            </span>
-        </Badge>
-    )
+function errorMessage(error: unknown, fallback: string) {
+    return axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
+        ? error.response.data.message
+        : fallback
 }
 
 export default function Notifications() {
-    const [records, setRecords] =
-        useState<NotificationRecord[]>([])
+    const [params] = useSearchParams()
+    const requestId = params.get('request')
+    const draftId = params.get('draft')
+    return <ContactDraft key={`${requestId}:${draftId}`} requestId={requestId} draftId={draftId} />
+}
 
-    const [search, setSearch] = useState('')
-
-    const location = useLocation()
-
-    const notificationState = location.state as {
-        requestId?: string
-        bloodGroup?: string
-        hospital?: string
-        donors?: Donor[]
-    } | null
-
-    const [selectedDonors, setSelectedDonors] = useState<Donor[]>(
-        notificationState?.donors ?? [],
-    )
-    const [message, setMessage] = useState(defaultMessage)
-    const [sending, setSending] = useState(false)
-    const [sent, setSent] = useState(false)
-    const [apiError, setApiError] = useState<string | null>(null)
-    const navigate = useNavigate()
-    const [loadingHistory, setLoadingHistory] = useState(true)
-    const [historyError, setHistoryError] = useState<string | null>(null)
-
+function ContactDraft({ requestId, draftId }: { requestId: string | null; draftId: string | null }) {
+    const [context, setContext] = useState<ComposerState | null>(null)
+    const [draftError, setDraftError] = useState('')
     useEffect(() => {
-        const loadNotifications = async () => {
+        if (!requestId || !draftId) return
+        const currentRequestId = requestId
+        const currentDraftId = draftId
+        let active = true
+        async function load() {
             try {
-                setLoadingHistory(true)
-                setHistoryError(null)
-
-                const data = await api.notifications.getAll()
-
-                setRecords(data)
-            } catch (error) {
-                console.error('Failed to load notification history:', error)
-                setHistoryError('Unable to load notification history from the server.')
-            } finally {
-                setLoadingHistory(false)
+                const saved: unknown = JSON.parse(sessionStorage.getItem(`contact-draft:${currentDraftId}`) ?? '[]')
+                if (!Array.isArray(saved) || saved.length === 0) throw new Error('Draft unavailable')
+                const [request, donors] = await Promise.all([
+                    api.requests.getById(currentRequestId),
+                    api.donors.getMatches(currentRequestId),
+                ])
+                const recipients = donors.filter((donor) => saved.includes(donor.id) && donor.phone)
+                if (!recipients.length) throw new Error('No eligible recipients')
+                if (active) {
+                    setContext({
+                        requestId: request.id,
+                        bloodGroup: request.bloodGroup.replace('_POSITIVE', '+').replace('_NEGATIVE', '-'),
+                        hospital: request.hospital ?? undefined,
+                        donors: recipients.map(({ id, name }) => ({ id, name })),
+                    })
+                }
+            } catch {
+                if (active) setDraftError('This contact draft is no longer available. Choose donors from the request again.')
             }
         }
+        void load()
+        return () => { active = false }
+    }, [requestId, draftId])
+    if (requestId && draftId && !context && !draftError) return <p role="status" className="p-5">Loading contact draft…</p>
+    return <ContactPage context={context} draftId={draftId} draftError={draftError} />
+}
 
-        loadNotifications()
+function ContactPage({ context, draftId, draftError }: { context: ComposerState | null; draftId: string | null; draftError: string }) {
+    const navigate = useNavigate()
+    const [message, setMessage] = useState(defaultMessage)
+    const [recipients, setRecipients] = useState(context?.donors ?? [])
+    const [prepared, setPrepared] = useState<{ donorId: string; message: string; url: string; phone: string } | null>(null)
+    const [opened, setOpened] = useState(false)
+    const [busy, setBusy] = useState(false)
+    const [history, setHistory] = useState<NotificationRecord[] | null>(null)
+    const [historyError, setHistoryError] = useState('')
+    const [composerError, setComposerError] = useState('')
+    const [notice, setNotice] = useState('')
+    const [search, setSearch] = useState('')
+    const [hasMore, setHasMore] = useState(false)
+
+    useEffect(() => {
+        let active = true
+        api.notifications.getAll().then((items) => {
+            if (!active) return
+            setHistory(items)
+            setHasMore(items.length === 50)
+        }, () => {
+            if (active) setHistoryError('Unable to load contact history.')
+        })
+        return () => { active = false }
     }, [])
 
-    const filteredRecords = useMemo(() => {
-        const query = search.toLowerCase().trim()
-
-        if (!query) return records
-
-        return records.filter(
-            (record) =>
-                record.donorName.toLowerCase().includes(query) ||
-                record.requestId.toLowerCase().includes(query) ||
-                record.phone.includes(query) ||
-                record.hospital.toLowerCase().includes(query),
-        )
-    }, [records, search])
-
-    const stats = {
-        sent: records.filter((r) =>
-            ['Sent', 'Delivered', 'Read', 'Responded'].includes(r.status),
-        ).length,
-        delivered: records.filter((r) =>
-            ['Delivered', 'Read', 'Responded'].includes(r.status),
-        ).length,
-        pending: records.filter((r) => r.status === 'Pending').length,
-        failed: records.filter((r) => r.status === 'Failed').length,
-        responses: records.filter((r) => r.status === 'Responded').length,
-    }
-
-    const previewDonor = selectedDonors[0]
-
-    const previewMessage = message
-        .replace('[Name]', previewDonor?.name ?? 'Donor')
-        .replace(
-            '[Blood Group]',
-            notificationState?.bloodGroup ?? 'blood',
-        )
-        .replace(
-            '[Hospital]',
-            notificationState?.hospital ?? 'the hospital',
-        )
-
-    const handleRemoveDonor = (id: string) => {
-        setSelectedDonors((current) => current.filter((donor) => donor.id !== id))
-    }
-
-    const handleSend = async () => {
-        if (selectedDonors.length === 0) return
-
-        setSending(true)
-
+    async function loadHistory(offset = 0) {
         try {
-            setApiError(null)
+            const items = await api.notifications.getAll(offset)
+            setHistory((current) => offset ? [...(current ?? []), ...items] : items)
+            setHasMore(items.length === 50)
+            setHistoryError('')
+        } catch {
+            setHistoryError('Unable to refresh contact history.')
+        }
+    }
 
-            const notifications = selectedDonors.map((donor) => ({
-                requestId: notificationState?.requestId ?? '',
-                donorId: donor.id,
-                donorName: donor.name,
-                phone: donor.phone,
-                bloodGroup:
-                    notificationState?.bloodGroup ?? donor.bloodGroup,
-                hospital: notificationState?.hospital ?? '',
-                message: message
-                    .replace('[Name]', donor.name)
-                    .replace(
-                        '[Blood Group]',
-                        notificationState?.bloodGroup ?? donor.bloodGroup,
-                    )
-                    .replace(
-                        '[Hospital]',
-                        notificationState?.hospital ?? '',
-                    ),
-            }))
-
-            await api.notifications.send({
-                notifications,
-            })
-
-            const updatedRecords = await api.notifications.getAll()
-
-            setRecords(updatedRecords)
-
-            setSent(true)
+    async function prepare(recipient: Recipient) {
+        const requestId = context?.requestId
+        if (!requestId || !message.trim()) return
+        setBusy(true)
+        setComposerError('')
+        setPrepared(null)
+        setOpened(false)
+        try {
+            const phone = await api.notifications.getContactPhone(requestId, recipient.id)
+            const text = message.trim()
+                .replaceAll('[Name]', recipient.name)
+                .replaceAll('[Blood Group]', context?.bloodGroup ?? 'the requested blood group')
+                .replaceAll('[Hospital]', context?.hospital || 'the hospital')
+            const url = whatsAppLink(phone, text)
+            if (!url) {
+                setComposerError('This donor does not have a valid WhatsApp number.')
+                return
+            }
+            setPrepared({ donorId: recipient.id, message: text, url, phone })
         } catch (error) {
-            console.error('Failed to send notifications:', error)
-            setApiError('Unable to send notifications. Please try again.')
+            setComposerError(errorMessage(error, 'Unable to prepare this contact.'))
         } finally {
-            setSending(false)
+            setBusy(false)
+        }
+    }
+
+    async function confirmContact() {
+        const requestId = context?.requestId
+        if (!requestId || !prepared || !opened) return
+        setBusy(true)
+        setComposerError('')
+        try {
+            const { donorId, message: sentMessage } = prepared
+            await api.notifications.recordContact({ requestId, donorId, message: sentMessage })
+            setPrepared(null)
+            setOpened(false)
+            const remaining = recipients.filter(({ id }) => id !== donorId)
+            setRecipients(remaining)
+            if (draftId) {
+                if (remaining.length) sessionStorage.setItem(`contact-draft:${draftId}`, JSON.stringify(remaining.map(({ id }) => id)))
+                else sessionStorage.removeItem(`contact-draft:${draftId}`)
+            }
+            setNotice('Contact recorded.')
+            await loadHistory()
+        } catch (error) {
+            setComposerError(errorMessage(error, 'Unable to record this contact.'))
+        } finally {
+            setBusy(false)
+        }
+    }
+
+    const query = search.toLowerCase().trim()
+    const results = (history ?? []).filter((entry) =>
+        [entry.donorName, entry.requestId, entry.phone, entry.hospital].some((value) =>
+            value.toLowerCase().includes(query),
+        ),
+    )
+
+    return (
+        <div className="mx-auto max-w-[1200px] space-y-5 pb-10">
+            <header>
+                <h1 className="font-['Manrope'] text-3xl font-extrabold">Donor contacts</h1>
+                <p className="mt-1 text-sm text-neutral-500">Open a draft in WhatsApp, send it there, then record the contact here.</p>
+            </header>
+            {notice && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</p>}
+            {draftError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{draftError}</p>}
+            {recipients.length > 0 ? (
+                <Card className="space-y-4 p-5">
+                    <h2 className="text-lg font-bold">Prepare WhatsApp messages</h2>
+                    <label className="block text-sm font-semibold" htmlFor="message">Message</label>
+                    <textarea id="message" rows={4} maxLength={500} value={message} onChange={(event) => {
+                        setMessage(event.target.value)
+                        setPrepared(null)
+                        setOpened(false)
+                    }} className="w-full rounded-xl border border-neutral-200 p-3 text-sm" />
+                    <ul className="divide-y divide-neutral-100">
+                        {recipients.map((recipient) => (
+                            <li key={recipient.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                                <span className="text-sm font-semibold">{recipient.name}</span>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button variant="outline" disabled={busy || !message.trim()} onClick={() => void prepare(recipient)}>
+                                        Prepare
+                                    </Button>
+                                    {prepared?.donorId === recipient.id && (
+                                        <>
+                                            <CallLink phone={prepared.phone} label="Call donor" />
+                                            <a className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-bold text-white"
+                                                href={prepared.url} target="_blank" rel="noopener noreferrer"
+                                                onClick={() => setOpened(true)}>
+                                                Open WhatsApp
+                                            </a>
+                                            <Button disabled={!opened || busy} onClick={() => void confirmContact()}>Mark as sent</Button>
+                                        </>
+                                    )}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                    {composerError && <p role="alert" className="text-sm text-red-700">{composerError}</p>}
+                </Card>
+            ) : (
+                <Button icon={<MessageCircle size={16} />} onClick={() => navigate('/requests')}>Choose a blood request</Button>
+            )}
+            <Card className="space-y-4 p-5">
+                <h2 className="text-lg font-bold">Contact and response history</h2>
+                <Input aria-label="Search contact history" placeholder="Search contacts or requests" value={search}
+                    onChange={(event) => setSearch(event.target.value)} />
+                {historyError && <p role="alert" className="text-sm text-red-700">{historyError} <button className="underline" onClick={() => void loadHistory()}>Retry</button></p>}
+                {!history && !historyError && <p role="status" className="text-sm text-neutral-500">Loading history…</p>}
+                {history && results.length === 0 && <p className="text-sm text-neutral-500">No matching contact records.</p>}
+                <ul className="divide-y divide-neutral-100">
+                    {results.map((entry) => (
+                        <ResponseRow key={entry.id + ':' + entry.responseStatus + ':' + entry.donatedUnits}
+                            entry={entry} onSaved={async () => { setNotice('Response saved.'); await loadHistory() }} />
+                    ))}
+                </ul>
+                {hasMore && <Button variant="outline" disabled={busy} onClick={async () => {
+                    setBusy(true)
+                    try { await loadHistory(history?.length) } finally { setBusy(false) }
+                }}>Load more history</Button>}
+            </Card>
+        </div>
+    )
+}
+
+function ResponseRow({ entry, onSaved }: { entry: NotificationRecord; onSaved: () => Promise<void> }) {
+    const [status, setStatus] = useState(entry.responseStatus)
+    const [units, setUnits] = useState(entry.donatedUnits)
+    const [saving, setSaving] = useState(false)
+    const [error, setError] = useState('')
+
+    async function save() {
+        setSaving(true)
+        setError('')
+        try {
+            await api.notifications.recordResponse({
+                requestId: entry.requestId,
+                donorId: entry.donorId,
+                status,
+                donatedUnits: status === 'ACCEPTED' ? units : 0,
+            })
+            await onSaved()
+        } catch (failure) {
+            setError(errorMessage(failure, 'Unable to save response.'))
+        } finally {
+            setSaving(false)
         }
     }
 
     return (
-        <motion.div {...pageMotion} className="space-y-6 pb-10">
-            {/* Header */}
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                    <div className="mb-2 flex items-center gap-2 text-sm font-medium text-red-600">
-                        <MessageCircle size={16} />
-                        Donor communication
-                    </div>
-
-                    <h1 className="font-['Manrope'] text-3xl font-bold tracking-tight text-neutral-950">
-                        Notifications
-                    </h1>
-
-                    <p className="mt-1 text-sm text-neutral-500">
-                        Contact matched donors and track notification responses.
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-600 shadow-sm">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                    WhatsApp integration ready
-                </div>
+        <li className="py-4">
+            <p className="text-sm font-semibold">{entry.donorName} · {entry.phone}</p>
+            <p className="mt-1 text-xs text-neutral-500">{entry.hospital || 'Blood request'} · {new Date(entry.sentAt).toLocaleString()}</p>
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+                <Select label="Response" id={`response-${entry.id}`} value={status} options={responseOptions}
+                    onChange={(event) => setStatus(event.target.value as ResponseStatus)} />
+                {status === 'ACCEPTED' && (
+                    <Input label="Completed units" id={`units-${entry.id}`} type="number" min={0} max={100} value={units}
+                        onChange={(event) => setUnits(Number(event.target.value))} />
+                )}
+                <Button variant="outline" loading={saving} disabled={!Number.isInteger(units) || units < 0 || units > 100}
+                    onClick={() => void save()}>Save response</Button>
             </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-                <StatCard
-                    label="Sent"
-                    value={stats.sent}
-                    icon={<Send size={17} />}
-                />
-                <StatCard
-                    label="Delivered"
-                    value={stats.delivered}
-                    icon={<CheckCheck size={17} />}
-                />
-                <StatCard
-                    label="Pending"
-                    value={stats.pending}
-                    icon={<Clock3 size={17} />}
-                />
-                <StatCard
-                    label="Failed"
-                    value={stats.failed}
-                    icon={<AlertCircle size={17} />}
-                />
-                <StatCard
-                    label="Responses"
-                    value={stats.responses}
-                    icon={<MessageCircle size={17} />}
-                />
-            </div>
-
-            {/* Composer */}
-            {selectedDonors.length === 0 ? (
-                <Card className="p-8">
-                    <div className="text-center">
-                        <h3 className="font-['Manrope'] text-lg font-bold text-neutral-900">
-                            No donors selected
-                        </h3>
-
-                        <p className="mt-2 text-sm text-neutral-500">
-                            Select compatible donors from Donor Matching before sending
-                            notifications.
-                        </p>
-
-                        <Button
-                            className="mt-5"
-                            onClick={() => navigate('/donors')}
-                        >
-                            Find donors
-                        </Button>
-                    </div>
-                </Card>
-            ) : (
-                <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-                    <Card className="overflow-hidden">
-                        <div className="border-b border-neutral-100 px-5 py-4">
-                            <div className="flex items-center justify-between gap-3">
-                                <div>
-                                    <h2 className="font-['Manrope'] text-lg font-bold text-neutral-900">
-                                        Send notification
-                                    </h2>
-                                    <p className="mt-1 text-xs text-neutral-500">
-                                        {notificationState?.requestId ?? 'Request'} ·{' '}
-                                        {notificationState?.bloodGroup ?? 'Blood group'} ·{' '}
-                                        Donor notification
-                                    </p>
-                                </div>
-
-                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                                    <MessageCircle size={18} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-5 p-5">
-                            {/* Recipients */}
-                            <div>
-                                <div className="mb-2 flex items-center justify-between">
-                                    <label className="text-sm font-semibold text-neutral-800">
-                                        Recipients
-                                    </label>
-
-                                    <span className="text-xs font-medium text-neutral-400">
-                                        {selectedDonors.length} selected
-                                    </span>
-                                </div>
-
-                                <div className="flex min-h-16 flex-wrap gap-2 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
-                                    {selectedDonors.length ? (
-                                        selectedDonors.map((donor) => (
-                                            <div
-                                                key={donor.id}
-                                                className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-2 py-2"
-                                            >
-                                                <Avatar name={donor.name} size="sm" />
-
-                                                <div className="min-w-0">
-                                                    <p className="max-w-32 truncate text-xs font-semibold text-neutral-800">
-                                                        {donor.name}
-                                                    </p>
-                                                    <p className="text-[11px] text-neutral-400">
-                                                        {donor.bloodGroup}
-                                                    </p>
-                                                </div>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveDonor(donor.id)}
-                                                    className="ml-1 rounded-lg p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700"
-                                                    aria-label={`Remove ${donor.name}`}
-                                                >
-                                                    <X size={14} />
-                                                </button>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="flex w-full items-center justify-center py-2 text-xs text-neutral-400">
-                                            No donors selected
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Message */}
-                            <div>
-                                <div className="mb-2 flex items-center justify-between">
-                                    <label
-                                        htmlFor="notification-message"
-                                        className="text-sm font-semibold text-neutral-800"
-                                    >
-                                        Message
-                                    </label>
-
-                                    <span className="text-xs text-neutral-400">
-                                        {message.length}/500
-                                    </span>
-                                </div>
-
-                                <textarea
-                                    id="notification-message"
-                                    value={message}
-                                    maxLength={500}
-                                    onChange={(event) => setMessage(event.target.value)}
-                                    rows={7}
-                                    className="w-full resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm leading-6 text-neutral-800 outline-none transition placeholder:text-neutral-400 focus:border-red-400 focus:ring-4 focus:ring-red-50"
-                                />
-
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {['[Name]', '[Blood Group]', '[Hospital]'].map((variable) => (
-                                        <button
-                                            key={variable}
-                                            type="button"
-                                            onClick={() =>
-                                                setMessage((current) => `${current} ${variable}`)
-                                            }
-                                            className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[11px] font-medium text-neutral-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                                        >
-                                            {variable}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {sent && (
-                                <div className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700">
-                                    <Check size={16} />
-                                    Notification queued successfully. Backend delivery will be connected later.
-                                </div>
-                            )}
-                            <AnimatePresence>
-                                {sent && (
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.96, y: 8 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.96, y: 8 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5"
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                                                <ShieldCheck size={18} />
-                                            </div>
-
-                                            <div>
-                                                <h3 className="font-semibold text-emerald-900">
-                                                    Notifications sent successfully
-                                                </h3>
-
-                                                <p className="mt-1 text-sm text-emerald-700">
-                                                    The selected donors have been notified.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            <div className="flex flex-col gap-3 border-t border-neutral-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                                <p className="text-xs text-neutral-400">
-                                    Messages are simulated in the frontend.
-                                </p>
-
-                                <Button
-                                    variant="primary"
-                                    icon={<Send size={16} />}
-                                    loading={sending}
-                                    disabled={!selectedDonors.length || !message.trim()}
-                                    onClick={handleSend}
-                                >
-                                    Send WhatsApp
-                                </Button>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* WhatsApp preview */}
-                    <Card className="overflow-hidden">
-                        <div className="border-b border-neutral-100 px-5 py-4">
-                            <h2 className="font-['Manrope'] text-lg font-bold text-neutral-900">
-                                Message preview
-                            </h2>
-                            <p className="mt-1 text-xs text-neutral-500">
-                                Preview how the donor notification will appear.
-                            </p>
-                        </div>
-
-                        <div className="min-h-[390px] bg-[#efeae2] p-5">
-                            <div className="mx-auto max-w-sm">
-                                <div className="mb-3 flex items-center gap-3 rounded-xl bg-white px-3 py-2 shadow-sm">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-red-600">
-                                        <HeartIcon />
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs font-bold text-neutral-800">
-                                            Blood Mate
-                                        </p>
-                                        <p className="text-[10px] text-neutral-400">
-                                            Official donor notification
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="relative rounded-2xl rounded-tl-sm bg-white px-4 py-3 shadow-sm">
-                                    <p className="whitespace-pre-wrap text-sm leading-6 text-neutral-700">
-                                        {previewMessage}
-                                    </p>
-
-                                    <div className="mt-2 flex justify-end text-[10px] text-neutral-400">
-                                        5:45 PM
-                                        <CheckCheck
-                                            size={13}
-                                            className="ml-1 text-emerald-500"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            )}
-
-            {/* History */}
-            <Card className="overflow-hidden">
-                <div className="flex flex-col gap-4 border-b border-neutral-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                        <h2 className="font-['Manrope'] text-lg font-bold text-neutral-900">
-                            Notification history
-                        </h2>
-                        <p className="mt-1 text-xs text-neutral-500">
-                            Track donor communication across active requests.
-                        </p>
-                    </div>
-
-                    <div className="relative w-full lg:w-72">
-                        <Search
-                            size={16}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
-                        />
-                        <input
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Search notifications..."
-                            className="h-10 w-full rounded-xl border border-neutral-200 bg-neutral-50 pl-9 pr-3 text-sm outline-none transition focus:border-red-300 focus:ring-4 focus:ring-red-50"
-                        />
-                    </div>
-                </div>
-
-                {historyError && (
-                    <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {historyError}
-                    </div>
-                )}
-
-                {loadingHistory && (
-                    <div className="mb-5 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-500">
-                        Loading notification history...
-                    </div>
-                )}
-
-                {/* Desktop table */}
-                <div className="hidden overflow-x-auto md:block">
-                    <table className="w-full min-w-[850px]">
-                        <thead>
-                            <tr className="border-b border-neutral-100 bg-neutral-50/70 text-left">
-                                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Donor
-                                </th>
-                                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Request
-                                </th>
-                                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Hospital
-                                </th>
-                                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Status
-                                </th>
-                                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                                    Sent
-                                </th>
-                                <th className="w-12 px-3" />
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {filteredRecords.map((record) => (
-                                <NotificationRow
-                                    key={record.id}
-                                    record={record}
-                                />
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Mobile */}
-                <div className="divide-y divide-neutral-100 md:hidden">
-                    {filteredRecords.map((record) => (
-                        <div key={record.id} className="space-y-3 p-4">
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="flex min-w-0 items-center gap-3">
-                                    <Avatar name={record.donorName} size="md" />
-
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-bold text-neutral-800">
-                                            {record.donorName}
-                                        </p>
-                                        <p className="text-xs text-neutral-400">
-                                            {record.phone}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <StatusBadge status={record.status} />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 rounded-xl bg-neutral-50 p-3 text-xs">
-                                <div>
-                                    <p className="text-neutral-400">Request</p>
-                                    <p className="mt-1 font-semibold text-neutral-700">
-                                        {record.requestId}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <p className="text-neutral-400">Blood group</p>
-                                    <p className="mt-1 font-semibold text-neutral-700">
-                                        {record.bloodGroup}
-                                    </p>
-                                </div>
-
-                                <div className="col-span-2">
-                                    <p className="text-neutral-400">Hospital</p>
-                                    <p className="mt-1 font-semibold text-neutral-700">
-                                        {record.hospital}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {!filteredRecords.length && (
-                    <div className="px-6 py-16 text-center">
-                        <Bell className="mx-auto text-neutral-300" size={30} />
-                        <p className="mt-3 text-sm font-semibold text-neutral-700">
-                            No notifications found
-                        </p>
-                        <p className="mt-1 text-xs text-neutral-400">
-                            Try a different search term.
-                        </p>
-                    </div>
-                )}
-
-                {apiError && (
-                    <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {apiError}
-                    </div>
-                )}
-            </Card>
-        </motion.div>
-    )
-}
-
-function StatCard({
-    label,
-    value,
-    icon,
-}: {
-    label: string
-    value: number
-    icon: ReactNode
-}) {
-    return (
-        <Card className="p-4">
-            <div className="flex items-center justify-between">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
-                    {icon}
-                </div>
-                <span className="text-2xl font-bold text-neutral-900">{value}</span>
-            </div>
-
-            <p className="mt-3 text-xs font-medium text-neutral-500">{label}</p>
-        </Card>
-    )
-}
-
-function NotificationRow({
-    record,
-}: {
-    record: NotificationRecord
-}) {
-    return (
-        <tr className="border-b border-neutral-100 last:border-0">
-            <td className="px-5 py-4">
-                <div className="flex items-center gap-3">
-                    <Avatar name={record.donorName} size="md" />
-
-                    <div>
-                        <p className="text-sm font-semibold text-neutral-800">
-                            {record.donorName}
-                        </p>
-                        <p className="mt-0.5 text-xs text-neutral-400">
-                            {record.phone}
-                        </p>
-                    </div>
-                </div>
-            </td>
-
-            <td className="px-5 py-4">
-                <span className="rounded-lg bg-neutral-100 px-2 py-1 text-xs font-semibold text-neutral-600">
-                    {record.requestId}
-                </span>
-            </td>
-
-            <td className="max-w-48 px-5 py-4">
-                <p className="truncate text-sm text-neutral-600">
-                    {record.hospital}
-                </p>
-            </td>
-
-            <td className="px-5 py-4">
-                <StatusBadge status={record.status} />
-            </td>
-
-            <td className="whitespace-nowrap px-5 py-4 text-xs text-neutral-400">
-                {record.sentAt}
-            </td>
-
-            <td className="px-3 py-4">
-                <button
-                    type="button"
-                    className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
-                    aria-label="More options"
-                >
-                    <MoreHorizontal size={17} />
-                </button>
-            </td>
-        </tr>
-    )
-}
-
-function HeartIcon() {
-    return (
-        <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" />
-        </svg>
+            {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
+        </li>
     )
 }

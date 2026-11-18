@@ -42,7 +42,7 @@ export async function login(
             });
         }
 
-        console.error(error);
+        console.error("API operation failed:", error instanceof Error ? error.name : "UnknownError");
 
         return res.status(500).json({
             success: false,

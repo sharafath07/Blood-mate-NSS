@@ -50,6 +50,15 @@ export const RequestStatus = {
 export type RequestStatus = (typeof RequestStatus)[keyof typeof RequestStatus]
 
 
+export const RequestUrgency = {
+  NORMAL: 'NORMAL',
+  URGENT: 'URGENT',
+  CRITICAL: 'CRITICAL'
+} as const
+
+export type RequestUrgency = (typeof RequestUrgency)[keyof typeof RequestUrgency]
+
+
 export const ResponseStatus = {
   PENDING: 'PENDING',
   ACCEPTED: 'ACCEPTED',

@@ -1,8 +1,8 @@
 generator client {
   provider            = "prisma-client"
   output              = "../src/generated/prisma"
-  moduleFormat        = "esm"
-  importFileExtension = "ts"
+  moduleFormat        = "cjs"
+  importFileExtension = "js"
 }
 
 datasource db {
@@ -38,6 +38,12 @@ enum RequestStatus {
   CANCELLED
 }
 
+enum RequestUrgency {
+  NORMAL
+  URGENT
+  CRITICAL
+}
+
 enum ResponseStatus {
   PENDING
   ACCEPTED
@@ -65,6 +71,9 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  recordedContacts DonorContact[]
+  recordedResponses DonorResponse[]
 }
 
 model Student {
@@ -81,12 +90,12 @@ model Student {
 
   weightCategory WeightCategory?
   gender         Gender?
-  academicYear   String?
+  semester       Int?
 
-  willingToDonate Boolean @default(false)
-  isDonor         Boolean @default(false)
+  willingToDonate Boolean @default(true)
+  isDonor         Boolean @default(true)
 
-  donorStatus DonorStatus @default(INACTIVE)
+  donorStatus DonorStatus @default(AVAILABLE)
 
   registeredAt   DateTime?
   lastDonationAt DateTime?
@@ -94,7 +103,7 @@ model Student {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  donorResponses DonorResponse[]
+  matchedRequests BloodRequest[] @relation("BloodRequestMatchedDonors")
 
   @@index([bloodGroup])
   @@index([donorStatus])
@@ -115,35 +124,16 @@ model BloodRequest {
   units      Int        @default(1)
 
   requiredAt DateTime?
+  urgency    RequestUrgency @default(NORMAL)
+  notes      String?
+
+  matchedDonors Student[] @relation("BloodRequestMatchedDonors")
 
   status RequestStatus @default(PENDING)
-
-  responses DonorResponse[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([bloodGroup])
-  @@index([status])
-}
-
-model DonorResponse {
-  id String @id @default(cuid())
-
-  requestId String
-  donorId   String
-
-  status ResponseStatus @default(PENDING)
-
-  respondedAt DateTime?
-
-  request BloodRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  donor   Student      @relation(fields: [donorId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([requestId, donorId])
-  @@index([donorId])
   @@index([status])
 }

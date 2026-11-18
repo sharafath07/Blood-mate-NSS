@@ -1,6 +1,3 @@
-import type { BloodRequest } from '../data/bloodRequests'
-import type { Donor } from '../data/donors'
-
 export interface DonorDistribution {
     group: string
     count: number
@@ -22,21 +19,14 @@ export interface DashboardStats {
         matching: number
         fulfilled: number
         cancelled: number
+        critical: number
     }
     donorResponses: {
         pending: number
         accepted: number
         declined: number
+        noResponse: number
+        donatedUnits: number
     }
     donorDistribution: DonorDistribution[]
-}
-
-export interface DonorMatchResponse {
-    request: BloodRequest
-    donors: Donor[]
-}
-
-export interface ApiResponse<T> {
-    data: T
-    message?: string
 }

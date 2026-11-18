@@ -1,6 +1,7 @@
+import { useDialog } from '../../lib/useDialog'
 import { useState, type FormEvent } from 'react'
 import {
-    // CheckCircle2,
+
     UserRound, X
 } from 'lucide-react'
 
@@ -18,20 +19,19 @@ interface StudentFormProps {
 
 interface FormData {
     name: string
-    // studentId: string
+
     department: string
-    // course: string
+
     semester: string
     bloodGroup: string
     phone: string
-    // email: string
+
     age: number
+    willingToDonate: boolean
     donorStatus: DonorStatus
+    gender: string
     address: string
-    // lastDonation: string
-    // donations: string
-    // consent: boolean
-    // verified: boolean
+
 }
 
 const bloodGroups = [
@@ -45,7 +45,7 @@ const bloodGroups = [
     'O_NEGATIVE',
 ]
 
-const semesters = ['All semesters', '1', '2', '3', '4', '5', '6']
+const semesters = Array.from({ length: 12 }, (_, index) => String(index + 1))
 
 const departments = [
     "BA Arabic",
@@ -102,20 +102,19 @@ export default function StudentForm({
 
     const [form, setForm] = useState<FormData>({
         name: student?.name ?? '',
-        // studentId: student?.studentId ?? '',
-        department: student?.department ?? '',
         age: student?.age ?? 18,
-        // course: student?.course ?? '',
-        semester: student?.semester ?? '',
+        gender: student?.gender ?? '',
+
+        department: student?.department ?? '',
+
+        semester: String(student?.semester ?? ''),
         bloodGroup: student?.bloodGroup ?? '',
         phone: student?.phone ?? '',
         address: student?.address ?? '',
-        // email: student?.email ?? '',
+
+        willingToDonate: student?.willingToDonate ?? false,
         donorStatus: student?.donorStatus ?? 'AVAILABLE',
-        // lastDonation: student?.lastDonation ?? '',
-        // donations: String(student?.donations ?? 0),
-        // consent: student?.consent ?? false,
-        // verified: student?.verified ?? false,
+
     })
 
     const [errors, setErrors] = useState<Record<string, string>>({})
@@ -145,17 +144,9 @@ export default function StudentForm({
             nextErrors.name = 'Full name is required'
         }
 
-        // if (!form.studentId.trim()) {
-        //     nextErrors.studentId = 'Student ID is required'
-        // }
-
         if (!form.department) {
             nextErrors.department = 'Select a department'
         }
-
-        // if (!form.course) {
-        //     nextErrors.course = 'Select a course'
-        // }
 
         if (!form.semester) {
             nextErrors.semester = 'Select a semester'
@@ -171,16 +162,7 @@ export default function StudentForm({
             nextErrors.phone = 'Enter a valid phone number'
         }
 
-        // if (
-        //     form.email.trim() &&
-        //     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
         // ) {
-        //     nextErrors.email = 'Enter a valid email address'
-        // }
-
-        // if (!form.consent) {
-        //     nextErrors.consent = 'Donor consent must be confirmed'
-        // }
 
         setErrors(nextErrors)
 
@@ -196,31 +178,32 @@ export default function StudentForm({
 
         try {
             const savedStudent: Student = {
-                id: crypto.randomUUID(),
+                id: student?.id ?? '',
                 name: form.name.trim(),
-                // studentId: form.studentId.trim(),
+
                 department: form.department,
                 age: form.age,
-                // course: form.course,
-                semester: form.semester,
+                gender: form.gender || null,
+
+                semester: Number(form.semester),
                 bloodGroup: form.bloodGroup,
                 phone: form.phone.trim(),
                 address: form.address.trim(),
-                // email: form.email.trim(),
-                donorStatus: form.donorStatus,
-                // lastDonation: form.lastDonation || '—',
-                // donations: Number(form.donations) || 0,
-                // consent: form.consent,
-                // verified: form.verified,
+
+                willingToDonate: form.willingToDonate,
+                donorStatus: form.willingToDonate ? form.donorStatus : 'INACTIVE',
+
             }
 
             await onSave(savedStudent)
         } catch (error) {
-            console.error('Failed to save student:', error)
+            setErrors({ submit: error instanceof Error ? error.message : 'Unable to save student.' })
         } finally {
             setSaving(false)
         }
     }
+
+    const dialogRef = useDialog<HTMLElement>(onClose, !saving)
 
     return (
         <>
@@ -229,7 +212,7 @@ export default function StudentForm({
                 onClick={onClose}
             />
 
-            <aside className="fixed inset-y-0 right-0 z-[70] w-full max-w-[560px] overflow-y-auto border-l border-neutral-200 bg-[#fafaf9] shadow-2xl">
+            <aside ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Student form" className="fixed inset-y-0 right-0 z-[70] w-full max-w-[560px] overflow-y-auto border-l border-neutral-200 bg-[#fafaf9] shadow-2xl">
 
                 {/* Header */}
                 <div className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-200/70 bg-[#fafaf9]/95 px-5 py-4 backdrop-blur-xl">
@@ -277,15 +260,7 @@ export default function StudentForm({
                                 />
                             </div>
 
-                            {/* <Input
-                                label="Student ID *"
-                                placeholder="FC2024XXX"
-                                value={form.studentId}
-                                onChange={(e) =>
-                                    update('studentId', e.target.value)
-                                }
-                                error={errors.studentId}
-                            /> */}
+
 
                             <Input
                                 label="Age *"
@@ -307,6 +282,20 @@ export default function StudentForm({
                                 error={errors.phone}
                             />
 
+                            <Select
+                                label="Gender *"
+                                value={form.gender}
+                                onChange={(e) => update('gender', e.target.value)}
+                                error={errors.gender}
+                                placeholder='Select gender'
+                                required
+                                options={[
+                                    { label: 'Male', value: 'Male' },
+                                    { label: 'Female', value: 'Female' }
+                                ]}
+                            >
+                            </Select>
+
                             <div className="w-full col-span-2">
                                 <label className="mb-1.5 block  text-[10px] font-bold text-neutral-600">
                                     Address *
@@ -324,16 +313,6 @@ export default function StudentForm({
                             </div>
 
 
-                            {/* <div className="sm:col-span-2">
-                                <Input
-                                    label="Email address"
-                                    type="email"
-                                    placeholder="student@example.com"
-                                    value={form.email}
-                                    onChange={(e) => update('email', e.target.value)}
-                                    error={errors.email}
-                                />
-                            </div> */}
                         </div>
                     </FormSection>
 
@@ -351,20 +330,12 @@ export default function StudentForm({
                                     update('department', e.target.value)
                                 }
                                 options={departments}
+                                required
                                 placeholder="Select department"
                                 error={errors.department}
                             />
 
-                            {/* <Select
-                                label="Course *"
-                                value={form.course}
-                                onChange={(e) =>
-                                    update('course', e.target.value)
-                                }
-                                options={courses}
-                                placeholder="Select course"
-                                error={errors.course}
-                            /> */}
+
 
                             <Select
                                 label="Semester *"
@@ -373,6 +344,7 @@ export default function StudentForm({
                                     update('semester', e.target.value)
                                 }
                                 options={semesters}
+                                required
                                 placeholder="Select semester"
                                 error={errors.semester}
                             />
@@ -401,8 +373,25 @@ export default function StudentForm({
                                 }
                             />
 
+                            <label className="flex items-center gap-2 text-sm text-neutral-700">
+                                <input
+                                    type="checkbox"
+                                    checked={form.willingToDonate}
+                                    onChange={(event) => {
+                                        const willing = event.target.checked
+                                        setForm((current) => ({
+                                            ...current,
+                                            willingToDonate: willing,
+                                            donorStatus: willing ? 'AVAILABLE' : 'INACTIVE',
+                                        }))
+                                    }}
+                                />
+                                Student has agreed to be contacted about donating
+                            </label>
+
                             <Select
-                                label="Donor status *"
+                                label="Donor status"
+                                disabled={!form.willingToDonate}
                                 value={form.donorStatus}
                                 onChange={(e) =>
                                     update(
@@ -413,58 +402,12 @@ export default function StudentForm({
                                 options={donorStatuses}
                             />
 
-                            {/* <Input
-                                label="Last donation"
-                                type="date"
-                                value={
-                                    form.lastDonation === '—'
-                                        ? ''
-                                        : form.lastDonation
-                                }
-                                onChange={(e) =>
-                                    update('lastDonation', e.target.value)
-                                }
-                            />
 
-                            <Input
-                                label="Previous donations"
-                                type="number"
-                                min="0"
-                                value={form.donations}
-                                onChange={(e) =>
-                                    update('donations', e.target.value)
-                                }
-                            /> */}
                         </div>
                     </FormSection>
 
                     {/* Verification */}
-                    {/* <FormSection
-                        number="04"
-                        title="Consent & verification"
-                        description="Confirm the information before adding the student."
-                    >
-                        <div className="space-y-3">
-                            <CheckRow
-                                checked={form.consent}
-                                onChange={(checked) =>
-                                    update('consent', checked)
-                                }
-                                title="Donor consent"
-                                description="Student has agreed to be contacted for blood donation requests."
-                                error={errors.consent}
-                            />
 
-                            <CheckRow
-                                checked={form.verified}
-                                onChange={(checked) =>
-                                    update('verified', checked)
-                                }
-                                title="Information verified"
-                                description="Student information has been checked by the Blood Mate team."
-                            />
-                        </div>
-                    </FormSection> */}
 
                     {/* Actions */}
                     <div className="sticky bottom-0 -mx-5 mt-7 flex gap-2 border-t border-neutral-200/70 bg-[#fafaf9]/95 px-5 py-4 backdrop-blur-xl">
@@ -477,6 +420,7 @@ export default function StudentForm({
                             Cancel
                         </Button>
 
+                        {errors.submit && <p role="alert" className="text-sm text-red-700">{errors.submit}</p>}
                         <Button
                             type="submit"
                             loading={saving}
@@ -549,7 +493,7 @@ function FormSection({
 //           ${checked
 //                         ? 'border-emerald-200 bg-emerald-50/50'
 //                         : 'border-neutral-200 bg-white hover:border-neutral-300'
-//                     }
+
 //         `}
 //             >
 //                 <div
@@ -558,7 +502,7 @@ function FormSection({
 //             ${checked
 //                             ? 'border-emerald-500 bg-emerald-500'
 //                             : 'border-neutral-300 bg-white'
-//                         }
+
 //           `}
 //                 >
 //                     {checked && (

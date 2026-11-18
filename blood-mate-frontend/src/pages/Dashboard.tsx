@@ -1,15 +1,12 @@
 import {
     ArrowUpRight,
-    CalendarDays,
     ChevronRight,
     Clock3,
     Droplets,
     HeartPulse,
-    MoreHorizontal,
     Plus,
     Search,
     ShieldCheck,
-    TrendingUp,
     Users,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -17,8 +14,8 @@ import { api } from '../services/api'
 import { motion } from 'motion/react'
 import { pageMotion } from '../lib/motion'
 import type { BloodRequest } from '../data/bloodRequests'
-import type { DonorDistribution, DashboardStats } from '../types/api'
-// import { useNavigate } from 'react-router-dom'
+import type { DashboardStats } from '../types/api'
+import { useNavigate } from 'react-router-dom'
 
 function StatCard({
     label,
@@ -48,10 +45,6 @@ function StatCard({
                         strokeWidth={1.8}
                     />
                 </div>
-
-                <button className="rounded-lg p-1 text-neutral-300 opacity-0 transition group-hover:opacity-100 hover:bg-neutral-50 hover:text-neutral-600">
-                    <MoreHorizontal className="h-4 w-4" />
-                </button>
             </div>
 
             <div className="mt-5">
@@ -119,28 +112,28 @@ function BloodGroupRow({
 
 function UrgencyBadge({ urgency }: { urgency: string }) {
     const styles = {
-        Critical: 'bg-red-50 text-red-600 ring-red-100',
-        Urgent: 'bg-orange-50 text-orange-600 ring-orange-100',
-        Normal: 'bg-neutral-50 text-neutral-500 ring-neutral-100',
+        CRITICAL: 'bg-red-50 text-red-600 ring-red-100',
+        URGENT: 'bg-orange-50 text-orange-600 ring-orange-100',
+        NORMAL: 'bg-neutral-50 text-neutral-500 ring-neutral-100',
     }
 
     return (
         <span
-            className={`inline-flex rounded-full px-2 py-1 text-[9px] font-bold ring-1 ${styles[urgency as keyof typeof styles]
+            className={`inline-flex rounded-full px-2 py-1 text-[9px] font-bold ring-1 ${styles[urgency as keyof typeof styles] ?? styles.NORMAL
                 }`}
         >
-            {urgency}
+            {urgency ? urgency.charAt(0) + urgency.slice(1).toLowerCase() : "Normal"}
         </span>
     )
 }
 
 export default function Dashboard() {
-    const [dashboardStats, setDashboardStats] = useState<DashboardStats>(null as unknown as DashboardStats)
+    const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
 
-    // const navigate = useNavigate()
+    const navigate = useNavigate()
 
     const [recentRequests, setRecentRequests] = useState<BloodRequest[]>([])
-    const [bloodGroups, setBloodGroups] = useState<DonorDistribution[]>([])
+    const bloodGroups = dashboardStats?.donorDistribution ?? []
     const [requestsLoading, setRequestsLoading] = useState(true)
 
     const [loading, setLoading] = useState(true)
@@ -160,7 +153,7 @@ export default function Dashboard() {
         },
         {
             label: 'Active Requests',
-            value: dashboardStats?.bloodRequests.pending ?? 0,
+            value: (dashboardStats?.bloodRequests.pending ?? 0) + (dashboardStats?.bloodRequests.matching ?? 0),
             description: `${dashboardStats?.bloodRequests.pending ?? 0} pending`,
             icon: Droplets,
             urgent: true,
@@ -174,14 +167,6 @@ export default function Dashboard() {
     ]
 
     useEffect(() => {
-        console.log(dashboardStats)
-        for (const group of bloodGroups) {
-            group.percentage = Math.round((group.count / dashboardStats?.donors?.total) * 100 * 100) / 100
-        }
-        console.log(bloodGroups)
-    }, [bloodGroups, dashboardStats])
-
-    useEffect(() => {
         let cancelled = false
 
         async function loadDashboard() {
@@ -191,17 +176,15 @@ export default function Dashboard() {
 
             const [statsResult, requestsResult] = await Promise.allSettled([
                 api.dashboard.getStats(),
-                api.requests.getAll(),
+                api.requests.getAll(5),
             ])
 
             if (cancelled) return
 
             if (statsResult.status === 'fulfilled') {
                 const data = statsResult.value
-                console.log(data);
 
                 setDashboardStats(data)
-                setBloodGroups(data.donorDistribution ?? [])
             } else {
                 console.error(
                     'Failed to load dashboard statistics:',
@@ -257,13 +240,10 @@ export default function Dashboard() {
                 <div>
                     <div className="mb-2 flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">
-                            System operational
-                        </span>
                     </div>
 
                     <h1 className="font-['Manrope'] text-[30px] font-extrabold tracking-[-0.045em] text-neutral-950 sm:text-[34px]">
-                        Good evening, Coordinator.
+                        Blood donation dashboard
                     </h1>
 
                     <p className="mt-1.5 text-[13px] text-neutral-400">
@@ -272,12 +252,8 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex gap-2">
-                    <button className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-[11px] font-bold text-neutral-600 shadow-sm transition hover:border-neutral-300 hover:text-neutral-900">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                        This month
-                    </button>
 
-                    <button className="flex items-center gap-2 rounded-xl bg-[#b91c1c] px-4 py-2.5 text-[11px] font-bold text-white shadow-[0_8px_20px_rgba(185,28,28,0.2)] transition hover:bg-[#991b1b]">
+                    <button type="button" onClick={() => navigate('/requests?new=1')} className="flex items-center gap-2 rounded-xl bg-[#b91c1c] px-4 py-2.5 text-[11px] font-bold text-white shadow-[0_8px_20px_rgba(185,28,28,0.2)] transition hover:bg-[#991b1b]">
                         <Plus className="h-3.5 w-3.5" />
                         New request
                     </button>
@@ -319,7 +295,7 @@ export default function Dashboard() {
                             </p>
                         </div>
 
-                        <button className="flex items-center gap-1 text-[10px] font-bold text-red-600 hover:text-red-700">
+                        <button type="button" onClick={() => navigate('/students?available=1')} className="flex items-center gap-1 text-[10px] font-bold text-red-600 hover:text-red-700">
                             View all
                             <ChevronRight className="h-3 w-3" />
                         </button>
@@ -362,7 +338,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="mt-7 grid gap-2 sm:grid-cols-2">
-                        <button className="group flex items-center justify-between rounded-xl bg-white px-4 py-3 text-left transition hover:bg-neutral-100">
+                        <button type="button" onClick={() => navigate('/requests?new=1')} className="group flex items-center justify-between rounded-xl bg-white px-4 py-3 text-left transition hover:bg-neutral-100">
                             <div>
                                 <p className="text-[11px] font-bold text-neutral-900">
                                     Create request
@@ -375,7 +351,7 @@ export default function Dashboard() {
                             <ArrowUpRight className="h-4 w-4 text-neutral-400 transition group-hover:text-neutral-900" />
                         </button>
 
-                        <button className="group flex items-center justify-between rounded-xl bg-white/10 px-4 py-3 text-left transition hover:bg-white/15">
+                        <button type="button" onClick={() => navigate('/requests')} className="group flex items-center justify-between rounded-xl bg-white/10 px-4 py-3 text-left transition hover:bg-white/15">
                             <div>
                                 <p className="text-[11px] font-bold text-white">
                                     Find donors
@@ -412,12 +388,12 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <button className="hidden items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-[10px] font-semibold text-neutral-500 sm:flex">
+                        <button type="button" onClick={() => navigate('/requests')} className="hidden items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-[10px] font-semibold text-neutral-500 sm:flex">
                             <Search className="h-3 w-3" />
                             Search
                         </button>
 
-                        <button className="flex items-center gap-1 text-[10px] font-bold text-red-600">
+                        <button type="button" onClick={() => navigate('/requests')} className="flex items-center gap-1 text-[10px] font-bold text-red-600">
                             View all
                             <ChevronRight className="h-3 w-3" />
                         </button>
@@ -492,7 +468,7 @@ export default function Dashboard() {
 
                                             <td className="px-4 py-4">
                                                 <span className="text-[10px] font-semibold text-neutral-700">
-                                                    {request.unitsRequired} unit{request.unitsRequired > 1 ? 's' : ''}
+                                                    {request.units} unit{request.units > 1 ? 's' : ''}
                                                 </span>
                                             </td>
 
@@ -503,7 +479,7 @@ export default function Dashboard() {
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-1.5 text-[9px] text-neutral-400">
                                                     <Clock3 className="h-3 w-3" />
-                                                    {request.createdAt}
+                                                    {new Date(request.updatedAt ?? request.createdAt).toLocaleString()}
                                                 </div>
                                             </td>
                                         </tr>
@@ -541,7 +517,7 @@ export default function Dashboard() {
                                         </span>
 
                                         <span className="text-[9px] font-semibold text-neutral-500">
-                                            {request.unitsRequired} unit{request.unitsRequired > 1 ? 's' : ''}
+                                            {request.units} unit{request.units > 1 ? 's' : ''}
                                         </span>
                                     </div>
                                 </div>
@@ -551,29 +527,6 @@ export default function Dashboard() {
                 )}
 
             </section>
-
-            {/* Footer insight */}
-            <div className="mt-5 flex items-center justify-between rounded-2xl border border-neutral-200/60 bg-white/60 px-5 py-4">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50">
-                        <TrendingUp className="h-4 w-4 text-emerald-600" />
-                    </div>
-
-                    <div>
-                        <p className="text-[10px] font-bold text-neutral-700">
-                            Donation activity is up this month
-                        </p>
-
-                        <p className="mt-0.5 text-[9px] text-neutral-400">
-                            18 more successful donations compared with last month.
-                        </p>
-                    </div>
-                </div>
-
-                <button className="hidden text-[10px] font-bold text-neutral-500 hover:text-neutral-900 sm:block">
-                    View report →
-                </button>
-            </div>
 
         </motion.div >
     )

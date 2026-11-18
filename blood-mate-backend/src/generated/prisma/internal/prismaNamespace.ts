@@ -16,10 +16,10 @@
  */
 
 import * as runtime from "@prisma/client/runtime/client"
-import type * as Prisma from "../models.ts"
-import { type PrismaClient } from "./class.ts"
+import type * as Prisma from "../models.js"
+import { type PrismaClient } from "./class.js"
 
-export type * from '../models.ts'
+export type * from '../models.js'
 
 export type DMMF = typeof runtime.DMMF
 
@@ -400,7 +400,8 @@ export const ModelName = {
   User: 'User',
   Student: 'Student',
   BloodRequest: 'BloodRequest',
-  DonorResponse: 'DonorResponse'
+  DonorResponse: 'DonorResponse',
+  DonorContact: 'DonorContact'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -416,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "student" | "bloodRequest" | "donorResponse"
+    modelProps: "user" | "student" | "bloodRequest" | "donorResponse" | "donorContact"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -716,6 +717,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    DonorContact: {
+      payload: Prisma.$DonorContactPayload<ExtArgs>
+      fields: Prisma.DonorContactFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DonorContactFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DonorContactFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload>
+        }
+        findFirst: {
+          args: Prisma.DonorContactFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DonorContactFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload>
+        }
+        findMany: {
+          args: Prisma.DonorContactFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload>[]
+        }
+        create: {
+          args: Prisma.DonorContactCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload>
+        }
+        createMany: {
+          args: Prisma.DonorContactCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DonorContactCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload>[]
+        }
+        delete: {
+          args: Prisma.DonorContactDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload>
+        }
+        update: {
+          args: Prisma.DonorContactUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload>
+        }
+        deleteMany: {
+          args: Prisma.DonorContactDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DonorContactUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DonorContactUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload>[]
+        }
+        upsert: {
+          args: Prisma.DonorContactUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DonorContactPayload>
+        }
+        aggregate: {
+          args: Prisma.DonorContactAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDonorContact>
+        }
+        groupBy: {
+          args: Prisma.DonorContactGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DonorContactGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DonorContactCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DonorContactCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -778,7 +853,7 @@ export const StudentScalarFieldEnum = {
   address: 'address',
   weightCategory: 'weightCategory',
   gender: 'gender',
-  academicYear: 'academicYear',
+  semester: 'semester',
   willingToDonate: 'willingToDonate',
   isDonor: 'isDonor',
   donorStatus: 'donorStatus',
@@ -801,6 +876,8 @@ export const BloodRequestScalarFieldEnum = {
   bloodGroup: 'bloodGroup',
   units: 'units',
   requiredAt: 'requiredAt',
+  urgency: 'urgency',
+  notes: 'notes',
   status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -815,11 +892,26 @@ export const DonorResponseScalarFieldEnum = {
   donorId: 'donorId',
   status: 'status',
   respondedAt: 'respondedAt',
+  donatedUnits: 'donatedUnits',
+  recordedBy: 'recordedBy',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type DonorResponseScalarFieldEnum = (typeof DonorResponseScalarFieldEnum)[keyof typeof DonorResponseScalarFieldEnum]
+
+
+export const DonorContactScalarFieldEnum = {
+  id: 'id',
+  requestId: 'requestId',
+  donorId: 'donorId',
+  recordedBy: 'recordedBy',
+  phone: 'phone',
+  message: 'message',
+  createdAt: 'createdAt'
+} as const
+
+export type DonorContactScalarFieldEnum = (typeof DonorContactScalarFieldEnum)[keyof typeof DonorContactScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -968,6 +1060,20 @@ export type EnumDonorStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'DonorStatus[]'
  */
 export type ListEnumDonorStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DonorStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'RequestUrgency'
+ */
+export type EnumRequestUrgencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RequestUrgency'>
+    
+
+
+/**
+ * Reference to a field of type 'RequestUrgency[]'
+ */
+export type ListEnumRequestUrgencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RequestUrgency[]'>
     
 
 
@@ -1167,6 +1273,7 @@ export type GlobalOmitConfig = {
   student?: Prisma.StudentOmit
   bloodRequest?: Prisma.BloodRequestOmit
   donorResponse?: Prisma.DonorResponseOmit
+  donorContact?: Prisma.DonorContactOmit
 }
 
 /* Types for Logging */

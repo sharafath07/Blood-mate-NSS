@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { BloodGroup } from "../generated/prisma/client.js";
 import prisma from "../config/database.js";
 import { findDonorsByBloodGroup } from "../services/donor-matching.service.js";
 
@@ -38,9 +37,11 @@ export async function getMatchedDonors(
             return;
         }
 
-        const donors = await findDonorsByBloodGroup(
-            request.bloodGroup as BloodGroup
-        );
+        if (request.status === "CANCELLED" || request.status === "FULFILLED") {
+            return res.status(409).json({ success: false, message: "This request is closed" });
+        }
+
+        const donors = await findDonorsByBloodGroup(request.bloodGroup);
 
         res.json({
             success: true,
@@ -51,14 +52,12 @@ export async function getMatchedDonors(
             },
         });
     } catch (error) {
-        console.error("Donor matching error:", error);
+        console.error("Donor matching failed:", error instanceof Error ? error.name : "UnknownError");
 
         res.status(500).json({
             success: false,
             message:
-                error instanceof Error
-                    ? error.message
-                    : "Failed to find matching donors",
+                "Failed to find matching donors",
         });
     }
 }

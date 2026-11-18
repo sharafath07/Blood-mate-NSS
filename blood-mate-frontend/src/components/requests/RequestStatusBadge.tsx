@@ -10,13 +10,11 @@ export function RequestStatusBadge({
     status: RequestStatus
 }) {
     const variant =
-        status === 'Fulfilled'
+        status === 'FULFILLED'
             ? 'success'
-            : status === 'Cancelled'
+            : status === 'CANCELLED'
                 ? 'danger'
-                : status === 'Searching' ||
-                    status === 'Donors Contacted' ||
-                    status === 'Partially Fulfilled'
+                : status === 'MATCHING'
                     ? 'warning'
                     : 'neutral'
 
@@ -33,15 +31,15 @@ export function UrgencyBadge({
     urgency: Urgency
 }) {
     const variant =
-        urgency === 'Critical'
+        urgency === 'CRITICAL'
             ? 'danger'
-            : urgency === 'Urgent'
+            : urgency === 'URGENT'
                 ? 'warning'
                 : 'neutral'
 
     return (
         <Badge variant={variant} dot>
-            {urgency}
+            {urgency ? urgency.charAt(0) + urgency.slice(1).toLowerCase() : "Normal"}
         </Badge>
     )
 }

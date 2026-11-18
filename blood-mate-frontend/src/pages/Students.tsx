@@ -1,14 +1,15 @@
+import CallLink from '../components/ui/CallLink'
+import { useDialog } from '../lib/useDialog'
 import {
     ChevronDown,
     Filter,
     MoreHorizontal,
     Plus,
     Search,
-    SlidersHorizontal,
     Users,
     X,
 } from 'lucide-react'
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 import Avatar from '../components/ui/Avatar'
 import Badge from '../components/ui/Badge'
@@ -16,13 +17,15 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
 import StudentForm from '../components/students/StudentForm'
+import StudentImport from '../components/students/StudentImport'
 import { motion } from 'motion/react'
+import { useSearchParams } from 'react-router-dom'
 import { pageMotion } from '../lib/motion'
 
 import { api } from '../services/api'
 
 import {
-    // students as initialStudents,
+
     type DonorStatus,
     type Student,
 } from '../data/students'
@@ -87,6 +90,10 @@ const donorStatuses = [
     'INACTIVE',
 ]
 
+function formatBloodGroup(group: string | null) {
+    return group?.replace('_POSITIVE', '+').replace('_NEGATIVE', '-') ?? 'Unknown'
+}
+
 function statusVariant(status: DonorStatus) {
     switch (status) {
         case 'AVAILABLE':
@@ -134,7 +141,7 @@ function statusVariant(status: DonorStatus) {
 
 //             <td className="px-4 py-4">
 //                 <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
-//                     {student.bloodGroup}
+//                     {formatBloodGroup(student.bloodGroup)}
 //                 </span>
 //             </td>
 
@@ -174,7 +181,6 @@ function statusVariant(status: DonorStatus) {
 //             </td>
 //         </tr>
 //     )
-// }
 
 function StudentCard({
     student,
@@ -197,14 +203,12 @@ function StudentCard({
                             {student.name}
                         </p>
 
-                        {/* <p className="mt-0.5 text-[9px] text-neutral-400">
-                            {student.studentId}
-                        </p> */}
+
                     </div>
                 </div>
 
                 <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
-                    {student.bloodGroup}
+                    {formatBloodGroup(student.bloodGroup)}
                 </span>
             </div>
 
@@ -230,6 +234,8 @@ function StudentDetails({
     onClose: () => void
     onEdit: (student: Student) => void
 }) {
+    const dialogRef = useDialog<HTMLElement>(onClose)
+
     return (
         <>
             <div
@@ -237,7 +243,7 @@ function StudentDetails({
                 onClick={onClose}
             />
 
-            <aside className="fixed inset-y-0 right-0 z-[70] w-full max-w-[440px] overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl">
+            <aside ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Student details" className="fixed inset-y-0 right-0 z-[70] w-full max-w-[440px] overflow-y-auto border-l border-neutral-200 bg-white shadow-2xl">
 
                 <div className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-100 bg-white/95 px-5 py-4 backdrop-blur">
                     <div>
@@ -287,19 +293,11 @@ function StudentDetails({
                             </p>
 
                             <p className="mt-1 font-['Manrope'] text-xl font-extrabold text-red-600">
-                                {student.bloodGroup}
+                                {formatBloodGroup(student.bloodGroup)}
                             </p>
                         </div>
 
-                        {/* <div className="rounded-xl bg-neutral-50 p-4">
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-400">
-                                Donations
-                            </p>
 
-                            <p className="mt-1 font-['Manrope'] text-xl font-extrabold text-neutral-900">
-                                {student.donations}
-                            </p>
-                        </div> */}
                     </div>
 
                     <div className="mt-7">
@@ -310,8 +308,11 @@ function StudentDetails({
                         <Card className="divide-y divide-neutral-100">
                             {[
                                 ['Phone', student.phone],
+                                ['Age', student.age],
+                                ['Gender', student.gender],
                                 // ['Email', student.email],
                                 ['Department', student.department],
+                                ['Semester', student.semester],
                                 // ['Course', student.course],
                                 // ['Last donation', student.lastDonation],
                             ].map(([label, value]) => (
@@ -339,12 +340,7 @@ function StudentDetails({
                             Edit student
                         </Button>
 
-                        <Button
-                            variant="outline"
-                            className="flex-1"
-                        >
-                            Contact
-                        </Button>
+                        <CallLink phone={student.phone} label="Call" className="flex-1" />
                     </div>
 
                 </div>
@@ -358,7 +354,8 @@ export default function Students() {
     const [search, setSearch] = useState('')
     const [department, setDepartment] = useState('All departments')
     const [bloodGroup, setBloodGroup] = useState('All blood groups')
-    const [status, setStatus] = useState('All statuses')
+    const [params] = useSearchParams()
+    const [status, setStatus] = useState(params.get('available') === '1' ? 'AVAILABLE' : 'All statuses')
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
     const [formOpen, setFormOpen] = useState(false)
     const [editingStudent, setEditingStudent] = useState<Student | null>(null)
@@ -366,142 +363,83 @@ export default function Students() {
     const [apiError, setApiError] = useState<string | null>(null)
 
     const resultsRef = useRef<HTMLDivElement>(null)
+    const [semester, setSemester] = useState('All semesters')
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(0)
+    const [total, setTotal] = useState(0)
+    const [revision, setRevision] = useState(0)
+    const [summary, setSummary] = useState<{ students: number; available: number } | null>(null)
+    const [importOpen, setImportOpen] = useState(false)
 
-    const availableDonors = studentList.filter(
-        (student) =>
-            student.donorStatus === 'AVAILABLE'
-    ).length
-
-    useEffect(() => {
-        let cancelled = false
-
-        const loadStudents = async () => {
-            try {
-                setLoading(true)
-                setApiError(null)
-
-                const pageSize = 500
-                const firstPage = await api.students.getAll(1, pageSize)
-                const students = [...firstPage.students]
-
-                for (let page = 2; page <= firstPage.pagination.totalPages; page += 1) {
-                    if (cancelled) return
-                    const result = await api.students.getAll(page, pageSize)
-                    students.push(...result.students)
-                }
-
-                if (!cancelled) {
-                    setStudentList((current) => {
-                        const studentsById = new Map(students.map((student) => [student.id, student]))
-                        for (const student of current) {
-                            studentsById.set(student.id, student)
-                        }
-                        return [...studentsById.values()]
-                    })
-                }
-            } catch (error) {
-                if (!cancelled) {
-                    setApiError(
-                        error instanceof Error
-                            ? error.message
-                            : 'Unable to load students.',
-                    )
-                }
-            } finally {
-                if (!cancelled) {
-                    setLoading(false)
-                }
-            }
-        }
-
-        void loadStudents()
-
-        return () => {
-            cancelled = true
-        }
-    }, [])
-
-    useEffect(() => {
-        if (resultsRef.current) {
-            resultsRef.current.scrollTop = 0
-        }
-    }, [search, department, bloodGroup, status])
-
-    const handleSaveStudent = async (student: Student) => {
-        try {
-            if (editingStudent) {
-                const updated = await api.students.update(
-                    student.id,
-                    student,
-                )
-
-                setStudentList((current) =>
-                    current.map((item) =>
-                        item.id === student.id
-                            ? (updated as Student)
-                            : item,
-                    ),
-                )
-            } else {
-                const created = await api.students.create(student)
-
-                setStudentList((current) => [
-                    created as Student,
-                    ...current,
-                ])
-            }
-
-            setFormOpen(false)
-            setEditingStudent(null)
-        } catch (error) {
-            console.error('Failed to save student:', error)
-
-            setApiError(
-                error instanceof Error
-                    ? error.message
-                    : 'Unable to save student.',
-            )
-        }
+    function resetResults() {
+        setPage(1)
+        setStudentList([])
+        setTotalPages(0)
+        if (resultsRef.current) resultsRef.current.scrollTop = 0
     }
 
-    const filteredStudents = useMemo(() => {
-        const query = search.toLowerCase().trim()
+    function refresh() {
+        resetResults()
+        setRevision((current) => current + 1)
+    }
 
-        return studentList.filter((student) => {
-            const matchesSearch =
-                !query ||
-                student.name.toLowerCase().includes(query) ||
-                // student.studentId.toLowerCase().includes(query) ||
-                student.phone.toLowerCase().includes(query)
+    useEffect(() => {
+        let active = true
+        api.dashboard.getStats().then((stats) => {
+            if (active) setSummary({ students: stats.students.total, available: stats.donors.available })
+        }, () => { if (active) setSummary(null) })
+        return () => { active = false }
+    }, [revision])
 
-            const matchesDepartment =
-                department === 'All departments' ||
-                student.department === department
+    useEffect(() => {
+        let active = true
+        const timer = window.setTimeout(async () => {
+            setLoading(true)
+            setApiError(null)
+            try {
+                const code = bloodGroup.endsWith('+') ? bloodGroup.slice(0, -1) + '_POSITIVE'
+                    : bloodGroup.endsWith('-') ? bloodGroup.slice(0, -1) + '_NEGATIVE' : undefined
+                const result = await api.students.getAll(page, 50, {
+                    search: search.trim() || undefined,
+                    department: department === 'All departments' ? undefined : department,
+                    bloodGroup: code,
+                    donorStatus: status === 'All statuses' ? undefined : status,
+                    semester: semester === 'All semesters' ? undefined : semester,
+                })
+                if (!active) return
+                setTotal(result.pagination.total)
+                setTotalPages(result.pagination.totalPages)
+                setStudentList((current) => page === 1 ? result.students
+                    : [...new Map([...current, ...result.students].map((student) => [student.id, student])).values()])
+            } catch {
+                if (active) setApiError('Unable to load students.')
+            } finally {
+                if (active) setLoading(false)
+            }
+        }, page === 1 ? 150 : 0)
+        return () => {
+            active = false
+            window.clearTimeout(timer)
+        }
+    }, [page, search, department, bloodGroup, status, semester, revision])
 
-            const matchesBlood =
-                bloodGroup === 'All blood groups' ||
-                student.bloodGroup === bloodGroup
-
-            const matchesStatus =
-                status === 'All statuses' ||
-                student.donorStatus === status
-
-            return (
-                matchesSearch &&
-                matchesDepartment &&
-                matchesBlood &&
-                matchesStatus
-            )
-        })
-    }, [studentList, search, department, bloodGroup, status])
+    const handleSaveStudent = async (student: Student) => {
+        if (editingStudent) await api.students.update(editingStudent.id, student)
+        else await api.students.create(student)
+        setFormOpen(false)
+        setEditingStudent(null)
+        refresh()
+    }
 
     const hasFilters =
         search ||
         department !== 'All departments' ||
         bloodGroup !== 'All blood groups' ||
-        status !== 'All statuses'
+        status !== 'All statuses' || semester !== 'All semesters'
 
     function clearFilters() {
+        resetResults()
+        setSemester('All semesters')
         setSearch('')
         setDepartment('All departments')
         setBloodGroup('All blood groups')
@@ -531,15 +469,18 @@ export default function Students() {
                     </p>
                 </div>
 
-                <Button
-                    icon={<Plus className="h-3.5 w-3.5" />}
-                    onClick={() => {
-                        setEditingStudent(null)
-                        setFormOpen(true)
-                    }}
-                >
-                    Add student
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setImportOpen(true)}>Import Excel</Button>
+                    <Button
+                        icon={<Plus className="h-3.5 w-3.5" />}
+                        onClick={() => {
+                            setEditingStudent(null)
+                            setFormOpen(true)
+                        }}
+                    >
+                        Add student
+                    </Button>
+                </div>
             </div>
 
             {loading && (
@@ -550,7 +491,7 @@ export default function Students() {
 
             {apiError && (
                 <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    Unable to load students from the server. Please check the backend connection and try again.
+                    {apiError} <button className="underline" onClick={refresh}>Retry</button>
                 </div>
             )}
 
@@ -564,12 +505,10 @@ export default function Students() {
 
                     <div className="mt-1 flex items-end gap-2">
                         <span className="font-['Manrope'] text-2xl font-extrabold tracking-tight">
-                            {studentList.length}
+                            {summary?.students ?? total}
                         </span>
 
-                        {/* <span className="mb-1 text-[9px] font-bold text-emerald-600">
-                            +8.2%
-                        </span> */}
+
                     </div>
                 </Card>
 
@@ -580,30 +519,14 @@ export default function Students() {
 
                     <div className="mt-1 flex items-end gap-2">
                         <span className="font-['Manrope'] text-2xl font-extrabold tracking-tight">
-                            {availableDonors}
+                            {summary?.available ?? '—'}
                         </span>
 
-                        {/* <span className="mb-1 text-[9px] font-bold text-emerald-600">
-                            30.9%
-                        </span> */}
+
                     </div>
                 </Card>
 
-                {/* <Card className="p-4">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-400">
-                        New this month
-                    </p>
 
-                    <div className="mt-1 flex items-end gap-2">
-                        <span className="font-['Manrope'] text-2xl font-extrabold tracking-tight">
-                            42
-                        </span>
-
-                        <span className="mb-1 text-[9px] font-bold text-emerald-600">
-                            +14.5%
-                        </span>
-                    </div>
-                </Card> */}
 
             </div>
 
@@ -615,9 +538,9 @@ export default function Students() {
                         <Search className="pointer-events-none relative top-[16px] left-7 h-3.5 w-3.5 text-neutral-300" />
 
                         <Input
-                            placeholder="Search by name, ID or phone..."
+                            placeholder="Search by name or phone..."
                             value={search}
-                            onChange={(event) => setSearch(event.target.value)}
+                            onChange={(event) => { resetResults(); setSearch(event.target.value) }}
                             className="pl-10"
                         />
 
@@ -626,21 +549,25 @@ export default function Students() {
                     <div className="grid grid-cols-1 gap-2 pl-2 sm:grid-cols-3 xl:flex">
                         <FilterSelect
                             value={department}
-                            onChange={setDepartment}
+                            onChange={(value) => { resetResults(); setDepartment(value) }}
                             options={departments}
                         />
 
                         <FilterSelect
                             value={bloodGroup}
-                            onChange={setBloodGroup}
+                            onChange={(value) => { resetResults(); setBloodGroup(value) }}
                             options={bloodGroups}
                         />
 
                         <FilterSelect
                             value={status}
-                            onChange={setStatus}
+                            onChange={(value) => { resetResults(); setStatus(value) }}
                             options={donorStatuses}
                         />
+                        <FilterSelect value={semester}
+                            onChange={(value) => { resetResults(); setSemester(value) }}
+                            options={['All semesters', ...Array.from({ length: 12 }, (_, index) => String(index + 1))]} />
+
                     </div>
 
                     {hasFilters && (
@@ -666,17 +593,13 @@ export default function Students() {
                         </h2>
 
                         <p className="mt-1 text-[9px] text-neutral-400">
-                            Showing {filteredStudents.length} of {studentList.length} records
+                            Showing {studentList.length} of {total} records
                         </p>
                     </div>
 
-                    <button className="flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-2 text-[9px] font-bold text-neutral-500 hover:bg-neutral-50">
-                        <SlidersHorizontal className="h-3 w-3" />
-                        Columns
-                    </button>
                 </div>
 
-                {!loading && !apiError && filteredStudents.length === 0 ? (
+                {!loading && !apiError && studentList.length === 0 ? (
                     <div className="flex min-h-[300px] flex-col items-center justify-center p-8 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-50">
                             <Filter className="h-5 w-5 text-neutral-300" />
@@ -697,7 +620,7 @@ export default function Students() {
                             Clear filters
                         </button>
                     </div>
-                ) : filteredStudents.length > 0 && (
+                ) : studentList.length > 0 && (
                     <div
                         ref={resultsRef}
                         role="region"
@@ -728,7 +651,7 @@ export default function Students() {
                                 </thead>
 
                                 <tbody>
-                                    {filteredStudents.map((student) => (
+                                    {studentList.map((student) => (
                                         <tr
                                             key={student.id}
                                             onClick={() => setSelectedStudent(student)}
@@ -741,9 +664,7 @@ export default function Students() {
                                                         <p className="truncate text-[11px] font-bold text-neutral-800">
                                                             {student.name}
                                                         </p>
-                                                        {/* <p className="mt-0.5 text-[9px] text-neutral-400">
-                                                            {student.studentId}
-                                                        </p> */}
+
                                                     </div>
                                                 </div>
                                             </td>
@@ -756,7 +677,7 @@ export default function Students() {
 
                                             <td className="px-4 py-4">
                                                 <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
-                                                    {student.bloodGroup.replace('_', '').replace('positive', '+').replace('negative', '-')}
+                                                    {formatBloodGroup(student.bloodGroup)}
                                                 </span>
                                             </td>
 
@@ -772,23 +693,13 @@ export default function Students() {
                                                 </Badge>
                                             </td>
 
-                                            {/* <td className="px-4 py-4">
-                                                <span className="text-[10px] text-neutral-500">
-                                                    {student.lastDonation}
-                                                </span>
-                                            </td>
 
-                                            <td className="px-4 py-4 text-center">
-                                                <span className="text-[10px] font-bold text-neutral-700">
-                                                    {student.donations}
-                                                </span>
-                                            </td> */}
 
                                             <td className="px-6 py-4 text-right">
                                                 <button
                                                     type="button"
-                                                    aria-label={`More options for ${student.name}`}
-                                                    onClick={(event) => event.stopPropagation()}
+                                                    aria-label={`View ${student.name}`}
+                                                    onClick={(event) => { event.stopPropagation(); setSelectedStudent(student) }}
                                                     className="rounded-lg p-1.5 text-neutral-300 opacity-0 transition group-hover:opacity-100 hover:bg-white hover:text-neutral-700"
                                                 >
                                                     <MoreHorizontal className="h-4 w-4" />
@@ -802,7 +713,7 @@ export default function Students() {
 
                         {/* Mobile/tablet */}
                         <div className="divide-y divide-neutral-100 lg:hidden">
-                            {filteredStudents.map((student) => (
+                            {studentList.map((student) => (
                                 <StudentCard
                                     key={student.id}
                                     student={student}
@@ -810,9 +721,17 @@ export default function Students() {
                                 />
                             ))}
                         </div>
+                        {page < totalPages && <div className="p-4 text-center">
+                            <Button variant="outline" disabled={loading} onClick={() => {
+                                setLoading(true)
+                                setPage((current) => current + 1)
+                            }}>Load more students</Button>
+                        </div>}
                     </div>
                 )}
             </Card>
+
+            {importOpen && <StudentImport onClose={() => setImportOpen(false)} onImported={refresh} />}
 
             {selectedStudent && (
                 <StudentDetails
@@ -844,6 +763,7 @@ function FilterSelect({
     value,
     onChange,
     options,
+    ...props
 }: {
     value: string
     onChange: (value: string) => void
@@ -854,7 +774,8 @@ function FilterSelect({
             <select
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
-                className="w-full appearance-none rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 pr-8 text-[10px] font-semibold text-neutral-600 outline-none transition hover:border-neutral-300 focus:border-neutral-400 sm:min-w-[150px]"
+                {...props}
+                className="w-50 appearance-none rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 pr-8 text-[10px] font-semibold text-neutral-600 outline-none transition hover:border-neutral-300 focus:border-neutral-400 sm:min-w-[150px]"
             >
                 {options.map((option) => (
                     <option key={option}>{option}</option>

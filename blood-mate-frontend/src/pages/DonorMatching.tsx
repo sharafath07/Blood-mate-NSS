@@ -1,23 +1,24 @@
+import CallLink from '../components/ui/CallLink'
+import { callLink, whatsAppLink } from '../lib/contactLinks'
+import { useDialog } from '../lib/useDialog'
 import {
     Check,
     ChevronDown,
     ChevronRight,
-    Clock3,
     Droplets,
     Filter,
-    HeartPulse,
     MapPin,
     MessageCircle,
-    Phone,
     Search,
     Send,
     ShieldCheck,
     UserCheck,
     Users,
+    Phone,
     X,
 } from 'lucide-react'
 import { useMemo, useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 import { motion } from 'motion/react'
 import { pageMotion } from '../lib/motion'
@@ -28,67 +29,71 @@ import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
 import { api } from '../services/api'
 
-import {
-    // donors,
-    type Donor,
-    type DonorAvailability,
-} from '../data/donors'
-import {
-    // bloodRequests, 
-    type BloodRequest
-} from '../data/bloodRequests'
+import type { BloodRequest } from '../data/bloodRequests'
+
+type MatchedDonor = BloodRequest['matchedDonors'][number]
+
+const donorStatusLabels = {
+    AVAILABLE: 'Available',
+    UNAVAILABLE: 'Unavailable',
+    INACTIVE: 'Inactive',
+}
 
 const availabilityOptions = [
     'All availability',
-    'Available now',
-    'Available today',
-    'Unavailable',
-    'Recently contacted',
+    ...Object.values(donorStatusLabels),
 ]
 
 const bloodGroups = [
     'All groups',
     'A+',
-    'A−',
+    'A-',
     'B+',
-    'B−',
+    'B-',
     'AB+',
-    'AB−',
+    'AB-',
     'O+',
-    'O−',
+    'O-',
 ]
 
-function availabilityVariant(
-    availability: DonorAvailability,
-) {
-    if (availability === 'Available now') {
-        return 'success' as const
-    }
-
-    if (availability === 'Available today') {
-        return 'info' as const
-    }
-
-    if (availability === 'Recently contacted') {
-        return 'warning' as const
-    }
-
-    return 'neutral' as const
+function formatBloodGroup(group: string | null) {
+    return group?.replace('_POSITIVE', '+').replace('_NEGATIVE', '-').replace('−', '-') ?? 'Unknown'
 }
 
-function matchVariant(match: Donor['matchLevel']) {
-    if (match === 'Excellent match') {
-        return 'success' as const
-    }
-
-    if (match === 'Compatible') {
-        return 'info' as const
-    }
-
-    return 'warning' as const
+function canContact(donor: MatchedDonor) {
+    return donor.donorStatus === 'AVAILABLE' && callLink(donor.phone) !== null
 }
 
 export default function DonorMatching() {
+    const { requestId } = useParams()
+    return <MatchingRequest key={requestId ?? 'none'} requestId={requestId} />
+}
+
+function MatchingRequest({ requestId }: { requestId?: string }) {
+    const navigate = useNavigate()
+    const [request, setRequest] = useState<BloodRequest | null>(null)
+    const [error, setError] = useState('')
+    useEffect(() => {
+        if (!requestId) return
+        let active = true
+        api.requests.getById(requestId).then((result) => {
+            if (active) setRequest(result)
+        }, () => { if (active) setError('Unable to open this blood request.') })
+        return () => { active = false }
+    }, [requestId])
+
+    if (!requestId) return <DonorMatchingPage />
+    if (error) return <Card className="space-y-4 p-5"><p role="alert">{error}</p>
+        <Button onClick={() => navigate('/requests')}>View blood requests</Button></Card>
+    if (!request) return <p role="status" className="p-5">Loading blood request…</p>
+    if (request.status === 'CANCELLED' || request.status === 'FULFILLED') {
+        return <Card className="space-y-4 p-5"><p>This request is closed.</p>
+            <Button onClick={() => navigate('/requests')}>View blood requests</Button></Card>
+    }
+    return <DonorMatchingPage selectedRequest={request} />
+}
+
+function DonorMatchingPage({ selectedRequest }: { selectedRequest?: BloodRequest }) {
     const [selected, setSelected] = useState<string[]>([])
     const [search, setSearch] = useState('')
     const [availability, setAvailability] =
@@ -97,41 +102,38 @@ export default function DonorMatching() {
         useState('All groups')
 
     const [selectedDonor, setSelectedDonor] =
-        useState<Donor | null>(null)
+        useState<MatchedDonor | null>(null)
 
     const [loading, setLoading] = useState(true)
     const [apiError, setApiError] = useState<string | null>(null)
 
     const navigate = useNavigate()
-    const location = useLocation()
-    const [donorList, setDonorList] = useState<Donor[]>([])
-    const requestFromState = location.state?.request as BloodRequest | undefined
-    const selectedRequest = requestFromState
+    const [donorList, setDonorList] = useState<MatchedDonor[]>([])
+    const requestId = selectedRequest?.id
 
     useEffect(() => {
+        if (!requestId) return
+        let cancelled = false
+
         const loadDonors = async () => {
-            if (!selectedRequest?.id) {
-                setLoading(false)
-                return
-            }
-
             try {
-                setLoading(true)
-                setApiError(null)
+                const data = await api.donors.getMatches(requestId)
 
-                const data = await api.donors.getMatches(selectedRequest.id)
-
-                setDonorList(data)
+                if (!cancelled) setDonorList(data)
             } catch (error) {
+                if (cancelled) return
                 console.error('Failed to load donor matches:', error)
                 setApiError('Unable to load donor matches from the server.')
             } finally {
-                setLoading(false)
+                if (!cancelled) setLoading(false)
             }
         }
 
-        loadDonors()
-    }, [selectedRequest?.id])
+        void loadDonors()
+        return () => {
+            cancelled = true
+        }
+    }, [requestId])
 
     const filteredDonors = useMemo(() => {
         const query = search.toLowerCase().trim()
@@ -140,16 +142,16 @@ export default function DonorMatching() {
             const matchesSearch =
                 !query ||
                 donor.name.toLowerCase().includes(query) ||
-                donor.studentId.toLowerCase().includes(query) ||
-                donor.department.toLowerCase().includes(query)
+                Boolean(donor.department?.toLowerCase().includes(query)) ||
+                Boolean(donor.phone?.includes(query))
 
             const matchesAvailability =
                 availability === 'All availability' ||
-                donor.availability === availability
+                donorStatusLabels[donor.donorStatus] === availability
 
             const matchesBlood =
                 bloodGroup === 'All groups' ||
-                donor.bloodGroup === bloodGroup
+                formatBloodGroup(donor.bloodGroup) === bloodGroup
 
             return (
                 matchesSearch &&
@@ -159,15 +161,11 @@ export default function DonorMatching() {
         })
     }, [donorList, search, availability, bloodGroup])
 
-    const availableCount = donorList.filter(
-        (donor) =>
-            donor.availability === 'Available now' ||
-            donor.availability === 'Available today',
-    ).length
-
-    const excellentMatches = donorList.filter(
-        (donor) => donor.matchLevel === 'Excellent match',
-    ).length
+    const contactableCount = donorList.filter(canContact).length
+    const confirmedCount = selectedRequest?.responses?.filter(
+        (response) => response.status === 'ACCEPTED',
+    ).length ?? selectedRequest?.confirmedDonors ?? 0
+    const selectableDonors = filteredDonors.filter(canContact)
 
     function toggleSelection(id: string) {
         setSelected((current) =>
@@ -178,49 +176,32 @@ export default function DonorMatching() {
     }
 
     function selectAll() {
-        const ids = filteredDonors
-            .filter(
-                (donor) =>
-                    donor.availability !== 'Unavailable',
-            )
-            .map((donor) => donor.id)
-
-        setSelected(ids)
+        setSelected(selectableDonors.map((donor) => donor.id))
     }
 
     function clearSelection() {
         setSelected([])
     }
 
-    const handleNotifySelected = () => {
-        if (selected.length === 0) return
+    function openNotifications(donors: MatchedDonor[]) {
+        if (!selectedRequest) return
 
-        const donorsToNotify = donorList.filter((donor) =>
-            selected.includes(donor.id),
-        )
+        const recipients = donors.filter(canContact).map(({ id }) => id)
+        if (recipients.length === 0) return
 
-        if (!selectedRequest) {
-            setApiError('Please select a blood request first.')
-            return
-        }
+        const draftId = selectedRequest.id
+        sessionStorage.setItem(`contact-draft:${draftId}`, JSON.stringify(recipients))
+        const params = new URLSearchParams({ request: selectedRequest.id, draft: draftId })
+        navigate(`/notifications?${params}`)
+    }
 
-        navigate('/notifications', {
-            state: {
-                requestId: selectedRequest.id,
-                bloodGroup: selectedRequest.bloodGroup,
-                hospital: selectedRequest.hospital,
-                donors: donorsToNotify,
-            },
-        })
+    function handleNotifySelected() {
+        openNotifications(donorList.filter((donor) => selected.includes(donor.id)))
     }
 
     const allSelected =
-        filteredDonors.length > 0 &&
-        filteredDonors
-            .filter(
-                (donor) => donor.availability !== 'Unavailable',
-            )
-            .every((donor) => selected.includes(donor.id))
+        selectableDonors.length > 0 &&
+        selectableDonors.every((donor) => selected.includes(donor.id))
 
     if (!selectedRequest) {
         return (
@@ -282,12 +263,14 @@ export default function DonorMatching() {
                         <div>
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-['Manrope'] text-[23px] font-extrabold tracking-tight">
-                                    {selectedRequest.bloodGroup}
+                                    {formatBloodGroup(selectedRequest.bloodGroup)}
                                 </span>
 
-                                <span className="rounded-full bg-red-500/20 px-2 py-1 text-[9px] font-bold text-red-300">
-                                    {selectedRequest.urgency}
-                                </span>
+                                {selectedRequest.urgency && (
+                                    <span className="rounded-full bg-red-500/20 px-2 py-1 text-[9px] font-bold text-red-300">
+                                        {selectedRequest.urgency}
+                                    </span>
+                                )}
                             </div>
 
                             <p className="mt-1 text-[11px] text-white/50">
@@ -297,43 +280,28 @@ export default function DonorMatching() {
                             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[9px] text-white/45">
                                 <span className="flex items-center gap-1.5">
                                     <Droplets className="h-3 w-3" />
-                                    {selectedRequest.unitsRequired} unit
-                                    {selectedRequest.unitsRequired !== 1 ? 's' : ''} required
+                                    {selectedRequest.units} unit
+                                    {selectedRequest.units !== 1 ? 's' : ''} required
                                 </span>
 
-                                <span className="flex items-center gap-1.5">
-                                    <MapPin className="h-3 w-3" />
-                                    {selectedRequest.hospital}
-                                </span>
-
-                                <span className="flex items-center gap-1.5">
-                                    <Clock3 className="h-3 w-3" />
-                                    {/* Required {selectedRequest.requiredDate} */}
-                                </span>
+                                {selectedRequest.hospital && (
+                                    <span className="flex items-center gap-1.5">
+                                        <MapPin className="h-3 w-3" />
+                                        {selectedRequest.hospital}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
 
                     <div className="flex shrink-0 items-center gap-3 rounded-xl bg-white/5 p-3">
-                        <div className="text-right">
-                            <p className="text-[9px] font-medium text-white/40">
-                                Donation progress
-                            </p>
-
-                            <p className="mt-1 text-[15px] font-bold">
-                                1 / 2
-                            </p>
-                        </div>
-
-                        <div className="h-9 w-px bg-white/10" />
-
                         <div>
                             <p className="text-[9px] font-medium text-white/40">
                                 Confirmed
                             </p>
 
                             <p className="mt-1 text-[11px] font-bold text-emerald-400">
-                                1 donor
+                                {confirmedCount} {confirmedCount === 1 ? 'donor' : 'donors'}
                             </p>
                         </div>
                     </div>
@@ -342,27 +310,20 @@ export default function DonorMatching() {
             </section>
 
             {/* Match summary */}
-            <div className="mb-5 grid gap-3 sm:grid-cols-3">
+            <div className="mb-5 grid gap-3 sm:grid-cols-2">
 
                 <MatchStat
                     icon={<Users />}
                     label="Matched donors"
                     value={donorList.length}
-                    description="Potentially compatible"
-                />
-
-                <MatchStat
-                    icon={<ShieldCheck />}
-                    label="Excellent matches"
-                    value={excellentMatches}
-                    description="Highest compatibility"
+                    description="Same blood group"
                 />
 
                 <MatchStat
                     icon={<Check />}
-                    label="Available"
-                    value={availableCount}
-                    description="Can potentially donate"
+                    label="Ready to contact"
+                    value={contactableCount}
+                    description="Available with a phone number"
                     success
                 />
 
@@ -374,7 +335,7 @@ export default function DonorMatching() {
 
                     <div className="min-w-0 flex-1 xl:max-w-[340px]">
                         <Input
-                            placeholder="Search donor, student ID or department..."
+                            placeholder="Search by name, department or phone..."
                             value={search}
                             onChange={(event) =>
                                 setSearch(event.target.value)
@@ -399,10 +360,20 @@ export default function DonorMatching() {
                         />
                     </div>
 
-                    <button className="flex items-center justify-center gap-1.5 rounded-xl border border-neutral-200 px-3 py-2.5 text-[10px] font-bold text-neutral-500 hover:bg-neutral-50">
-                        <Filter className="h-3 w-3" />
-                        Advanced filters
-                    </button>
+                    {(search || availability !== 'All availability' || bloodGroup !== 'All groups') && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearch('')
+                                setAvailability('All availability')
+                                setBloodGroup('All groups')
+                            }}
+                            className="flex items-center justify-center gap-1.5 rounded-xl border border-neutral-200 px-3 py-2.5 text-[10px] font-bold text-neutral-500 hover:bg-neutral-50"
+                        >
+                            <Filter className="h-3 w-3" />
+                            Clear filters
+                        </button>
+                    )}
                 </div>
             </Card>
 
@@ -465,24 +436,26 @@ export default function DonorMatching() {
                 <div className="flex flex-col gap-3 border-b border-neutral-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div>
                         <h2 className="font-['Manrope'] text-[14px] font-extrabold tracking-tight">
-                            Recommended donors
+                            Matched donors
                         </h2>
 
                         <p className="mt-1 text-[9px] text-neutral-400">
-                            Ranked by compatibility and availability
+                            {filteredDonors.length} of {donorList.length} matches
                         </p>
                     </div>
 
                     <button
+                        type="button"
+                        disabled={selectableDonors.length === 0}
                         onClick={
                             allSelected ? clearSelection : selectAll
                         }
-                        className="flex items-center gap-1.5 self-start rounded-lg border border-neutral-200 px-3 py-2 text-[9px] font-bold text-neutral-500 hover:bg-neutral-50"
+                        className="flex items-center gap-1.5 self-start rounded-lg border border-neutral-200 px-3 py-2 text-[9px] font-bold text-neutral-500 hover:bg-neutral-50 disabled:opacity-50"
                     >
                         <Check className="h-3 w-3" />
                         {allSelected
                             ? 'Clear selection'
-                            : 'Select available'}
+                            : 'Select contactable donors'}
                     </button>
                 </div>
 
@@ -494,11 +467,13 @@ export default function DonorMatching() {
                             selected={selected.includes(donor.id)}
                             onToggle={() => toggleSelection(donor.id)}
                             onOpen={() => setSelectedDonor(donor)}
+                            request={selectedRequest}
+                        // onContact={() => openNotifications([donor])}
                         />
                     ))}
                 </div>
 
-                {filteredDonors.length === 0 && (
+                {!loading && !apiError && filteredDonors.length === 0 && (
                     <div className="flex min-h-[280px] flex-col items-center justify-center p-8 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-50">
                             <Users className="h-5 w-5 text-neutral-300" />
@@ -509,29 +484,14 @@ export default function DonorMatching() {
                         </h3>
 
                         <p className="mt-1 max-w-[280px] text-[10px] leading-relaxed text-neutral-400">
-                            Try changing the blood group, availability or search filters.
+                            {donorList.length > 0
+                                ? 'Try changing the blood group, availability or search filters.'
+                                : 'There are no available donors for this blood group.'}
                         </p>
                     </div>
                 )}
 
             </Card>
-
-            {!loading && !apiError && donorList.length === 0 && (
-                <div className="rounded-2xl border border-neutral-200 bg-white px-6 py-12 text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-[#8f1722]">
-                        <HeartPulse size={22} />
-                    </div>
-
-                    <h3 className="mt-4 font-['Manrope'] text-lg font-bold text-neutral-900">
-                        No matching donors found
-                    </h3>
-
-                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-neutral-500">
-                        We couldn't find available donors matching this request.
-                        Try again later or review the request details.
-                    </p>
-                </div>
-            )}
 
             {/* Bottom notification panel */}
             {selected.length > 0 && (
@@ -555,6 +515,7 @@ export default function DonorMatching() {
                         <Button
                             className="shrink-0"
                             icon={<MessageCircle className="h-3.5 w-3.5" />}
+                            onClick={handleNotifySelected}
                         >
                             Continue
                         </Button>
@@ -628,29 +589,76 @@ function MatchStat({
 }
 
 function DonorRow({
+    request,
     donor,
     selected,
     onToggle,
     onOpen,
+    // onContact,
 }: {
-    donor: Donor
+    request: BloodRequest
+    donor: MatchedDonor
     selected: boolean
     onToggle: () => void
     onOpen: () => void
+    // onContact: () => void
 }) {
-    const unavailable =
-        donor.availability === 'Unavailable'
+    const contactable = canContact(donor)
+    const bloodGroup = formatBloodGroup(donor.bloodGroup)
+
+    function onContact() {
+        if (!contactable) return
+        const link = callLink(donor.phone)
+        if (link) window.open(link, '_blank')
+    }
+
+    function onWhatsapp() {
+        if (!contactable) return
+
+        const message = [
+            '*BLOOD DONATION REQUEST*',
+            '',
+            `Hello ${donor.name},`,
+            '',
+            'We are reaching out from the *NSS Farook College Blood Donation Team* regarding a blood donation request.',
+            '',
+            '*Patient Details*',
+            `Patient: ${request.patientName}`,
+            `Blood Group: ${formatBloodGroup(request.bloodGroup)}`,
+            `Units Required: ${request.units}`,
+            `Hospital: ${request.hospital ?? 'Not specified'}`,
+            '',
+            '*Contact Details*',
+            `Bystander: ${request.bystanderName ?? 'Not provided'}`,
+            `Phone: ${request.bystanderPhone ?? 'Not provided'}`,
+            '',
+            '*Are you available to donate blood and help this patient?*',
+            '',
+            'Please reply if you are available to help.',
+            '',
+            'Thank you for your kindness and support!',
+            '',
+            '*NSS Farook College*',
+            'Blood Donation Team',
+        ].join('\n');
+
+
+        const link = whatsAppLink(donor.phone, message)
+        window.open(link, '_blank')
+    }
 
     return (
         <div
             className={`group flex flex-col gap-4 p-4 transition sm:flex-row sm:items-center sm:px-6 ${selected
                 ? 'bg-red-50/50'
                 : 'hover:bg-neutral-50/60'
-                } ${unavailable ? 'opacity-55' : ''}`}
+                }`}
         >
             {/* Checkbox */}
             <button
-                disabled={unavailable}
+                disabled={!contactable}
+                aria-label={`Select ${donor.name}`}
+                aria-pressed={selected}
                 onClick={onToggle}
                 className={`
           hidden h-5 w-5 shrink-0 items-center justify-center rounded-md border transition sm:flex
@@ -679,86 +687,61 @@ function DonorRow({
                             {donor.name}
                         </p>
 
-                        <Badge variant={matchVariant(donor.matchLevel)}>
-                            {donor.matchLevel}
+                        <Badge variant="success">
+                            Exact blood-group match
                         </Badge>
                     </div>
 
                     <p className="mt-1 truncate text-[9px] text-neutral-400">
-                        {donor.studentId} • {donor.department}
+                        {donor.department}
                     </p>
                 </div>
             </button>
 
             {/* Blood */}
-            <div className="hidden items-center gap-2 sm:flex">
+            <div className="hidden items-center gap-2 md:flex">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-[10px] font-bold text-red-600">
-                    {donor.bloodGroup}
+                    {bloodGroup}
                 </div>
             </div>
 
             {/* Availability */}
             <div className="hidden min-w-[125px] md:block">
-                <Badge
-                    variant={availabilityVariant(
-                        donor.availability,
-                    )}
-                    dot
-                >
-                    {donor.availability}
-                </Badge>
-            </div>
-
-            {/* Distance */}
-            <div className="hidden min-w-[65px] lg:block">
-                <p className="text-[9px] text-neutral-400">
-                    Distance
-                </p>
-
-                <p className="mt-0.5 text-[10px] font-bold text-neutral-700">
-                    {donor.distance} km
-                </p>
-            </div>
-
-            {/* Donation */}
-            <div className="hidden min-w-[90px] xl:block">
-                <p className="text-[9px] text-neutral-400">
-                    Last donation
-                </p>
-
-                <p className="mt-0.5 text-[9px] font-semibold text-neutral-600">
-                    {donor.lastDonation}
-                </p>
+                <DonorStatusBadge status={donor.donorStatus} />
             </div>
 
             {/* Actions */}
             <div className="flex items-center justify-between gap-2 border-t border-neutral-100 pt-3 sm:border-0 sm:pt-0">
                 <div className="flex items-center gap-2 md:hidden">
                     <span className="flex h-7 min-w-7 items-center justify-center rounded-lg bg-red-50 px-2 text-[10px] font-bold text-red-600">
-                        {donor.bloodGroup}
+                        {bloodGroup}
                     </span>
 
-                    <Badge
-                        variant={availabilityVariant(
-                            donor.availability,
-                        )}
-                        dot
-                    >
-                        {donor.availability}
-                    </Badge>
+                    <DonorStatusBadge status={donor.donorStatus} />
                 </div>
 
                 <div className="ml-auto flex gap-1.5">
                     <button
                         onClick={onOpen}
+                        aria-label={`View ${donor.name}`}
                         className="rounded-lg border border-neutral-200 p-2 text-neutral-400 transition hover:bg-white hover:text-neutral-800"
                     >
                         <ChevronRight className="h-3.5 w-3.5" />
                     </button>
 
                     <button
-                        disabled={unavailable}
+                        disabled={!contactable}
+                        onClick={onContact}
+                        aria-label={`Contact ${donor.name}`}
                         className="rounded-lg bg-neutral-950 p-2 text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-200"
+                    >
+                        <Phone className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                        disabled={!contactable}
+                        onClick={onWhatsapp}
+                        aria-label={`Message ${donor.name} on WhatsApp`}
+                        className="rounded-lg bg-green-500 p-2 text-white transition hover:bg-green-400 disabled:cursor-not-allowed disabled:bg-green-200"
                     >
                         <MessageCircle className="h-3.5 w-3.5" />
                     </button>
@@ -768,17 +751,29 @@ function DonorRow({
     )
 }
 
+function DonorStatusBadge({ status }: { status: MatchedDonor['donorStatus'] }) {
+    return (
+        <Badge variant={status === 'AVAILABLE' ? 'success' : 'neutral'} dot>
+            {donorStatusLabels[status]}
+        </Badge>
+    )
+}
+
 function DonorDetails({
     donor,
     onClose,
     onSelect,
     selected,
 }: {
-    donor: Donor
+    donor: MatchedDonor
     onClose: () => void
     onSelect: () => void
     selected: boolean
 }) {
+    const phone = donor.phone?.trim()
+
+    const dialogRef = useDialog<HTMLElement>(onClose)
+
     return (
         <>
             <div
@@ -786,7 +781,7 @@ function DonorDetails({
                 onClick={onClose}
             />
 
-            <aside className="fixed inset-y-0 right-0 z-[70] w-full max-w-[450px] overflow-y-auto border-l border-neutral-200 bg-[#fafaf9] shadow-2xl">
+            <aside ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Donor details" className="fixed inset-y-0 right-0 z-[70] w-full max-w-[450px] overflow-y-auto border-l border-neutral-200 bg-[#fafaf9] shadow-2xl">
 
                 <div className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-200/70 bg-[#fafaf9]/95 px-5 py-4 backdrop-blur-xl">
                     <div>
@@ -817,47 +812,17 @@ function DonorDetails({
                                 {donor.name}
                             </h3>
 
-                            <p className="mt-1 text-[9px] text-neutral-400">
-                                {donor.studentId} • {donor.department}
-                            </p>
-
                             <div className="mt-2 flex gap-2">
-                                <Badge
-                                    variant={matchVariant(
-                                        donor.matchLevel,
-                                    )}
-                                    dot
-                                >
-                                    {donor.matchLevel}
-                                </Badge>
-
-                                <Badge
-                                    variant={availabilityVariant(
-                                        donor.availability,
-                                    )}
-                                    dot
-                                >
-                                    {donor.availability}
-                                </Badge>
+                                <DonorStatusBadge status={donor.donorStatus} />
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-3 gap-2">
+                    <div className="mt-6">
                         <DetailStat
                             label="Blood"
-                            value={donor.bloodGroup}
+                            value={formatBloodGroup(donor.bloodGroup)}
                             red
-                        />
-
-                        <DetailStat
-                            label="Distance"
-                            value={`${donor.distance} km`}
-                        />
-
-                        <DetailStat
-                            label="Donations"
-                            value={String(donor.donationCount)}
                         />
                     </div>
 
@@ -868,10 +833,9 @@ function DonorDetails({
 
                         <Card className="divide-y divide-neutral-100">
                             {[
-                                ['Phone', donor.phone],
+                                ['Phone', phone],
                                 ['Department', donor.department],
-                                ['Last donation', donor.lastDonation],
-                                ['Distance', `${donor.distance} km`],
+                                ['Semester', donor.semester],
                             ].map(([label, value]) => (
                                 <div
                                     key={label}
@@ -882,7 +846,7 @@ function DonorDetails({
                                     </span>
 
                                     <span className="text-right text-[10px] font-semibold text-neutral-700">
-                                        {value}
+                                        {value || 'Not provided'}
                                     </span>
                                 </div>
                             ))}
@@ -902,12 +866,11 @@ function DonorDetails({
 
                                 <div>
                                     <p className="text-[10px] font-bold text-emerald-800">
-                                        {donor.matchLevel}
+                                        Exact blood-group match
                                     </p>
 
                                     <p className="mt-1 text-[9px] leading-relaxed text-emerald-700/70">
-                                        This donor has been identified as a suitable
-                                        candidate for the current blood request.
+                                        This donor has the same blood group as the request.
                                     </p>
                                 </div>
                             </div>
@@ -917,14 +880,13 @@ function DonorDetails({
                     <div className="mt-6 grid grid-cols-2 gap-2">
                         <Button
                             variant={selected ? 'danger' : 'primary'}
+                            disabled={!selected && !canContact(donor)}
                             onClick={onSelect}
                         >
                             {selected ? 'Remove donor' : 'Select donor'}
                         </Button>
 
-                        <Button variant="outline" icon={<Phone className="h-3.5 w-3.5" />}>
-                            Call donor
-                        </Button>
+                        <CallLink phone={phone ?? null} label="Call donor" />
                     </div>
 
                 </div>

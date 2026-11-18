@@ -1,4 +1,4 @@
-import type { ChangeEvent, SelectHTMLAttributes } from 'react'
+import { useId, type ChangeEvent, type SelectHTMLAttributes } from 'react'
 
 interface SelectOption {
     label: string
@@ -27,9 +27,12 @@ export default function Select({
     options,
     placeholder,
     error,
-    id,
+    id: providedId,
     ...props
 }: SelectProps) {
+    const autoId = useId()
+    const id = providedId ?? autoId
+    const errorId = id + "-error"
     return (
         <div className="space-y-2">
             {label && (
@@ -44,6 +47,8 @@ export default function Select({
             <select
                 {...props}
                 id={id}
+                aria-invalid={error ? true : props['aria-invalid']}
+                aria-describedby={[props['aria-describedby'], error && errorId].filter(Boolean).join(' ') || undefined}
                 value={value}
                 onChange={onChange}
                 className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100 ${error ? 'border-red-400' : 'border-neutral-200'
@@ -70,7 +75,7 @@ export default function Select({
             </select>
 
             {error && (
-                <p className="text-xs text-red-600">
+                <p id={errorId} className="text-xs text-red-600">
                     {error}
                 </p>
             )}

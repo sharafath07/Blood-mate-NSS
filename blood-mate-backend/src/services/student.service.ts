@@ -2,6 +2,7 @@ import prisma from "../config/database.js";
 import {
     BloodGroup,
     DonorStatus,
+    Prisma,
 } from "../generated/prisma/client.js";
 
 interface GetStudentsOptions {
@@ -10,6 +11,7 @@ interface GetStudentsOptions {
     search?: string;
     bloodGroup?: BloodGroup;
     department?: string;
+    semester?: number;
     donorStatus?: DonorStatus;
 }
 
@@ -20,6 +22,7 @@ export async function getStudents(options: GetStudentsOptions) {
         search,
         bloodGroup,
         department,
+        semester,
         donorStatus,
     } = options;
 
@@ -40,11 +43,6 @@ export async function getStudents(options: GetStudentsOptions) {
                             contains: search,
                         },
                     },
-                    {
-                        whatsapp: {
-                            contains: search,
-                        },
-                    },
                 ],
             }
             : {}),
@@ -60,15 +58,14 @@ export async function getStudents(options: GetStudentsOptions) {
             }
             : {}),
 
+        ...(semester !== undefined ? { semester } : {}),
         ...(donorStatus ? { donorStatus } : {}),
     };
 
     const [students, total] = await Promise.all([
         prisma.student.findMany({
             where,
-            orderBy: {
-                name: "asc",
-            },
+            orderBy: [{ name: "asc" }, { id: "asc" }],
             skip,
             take: limit,
         }),
@@ -97,45 +94,10 @@ export async function getStudentById(id: string) {
     });
 }
 
-export async function addStudent(data: {
-    name: string;
-    department?: string | null;
-    age?: number | null;
-    bloodGroup?: BloodGroup | null;
-    phone?: string | null;
-    whatsapp?: string | null;
-    address?: string | null;
-    academicYear?: string | null;
-    willingToDonate?: boolean;
-    isDonor?: boolean;
-    donorStatus?: DonorStatus;
-}) {
-    return prisma.student.create({
-        data,
-    });
+export function addStudent(data: Prisma.StudentCreateInput) {
+    return prisma.student.create({ data });
 }
 
-export async function updateStudent(
-    id: string,
-    data: {
-        name?: string;
-        department?: string | null;
-        age?: number | null;
-        bloodGroup?: BloodGroup | null;
-        phone?: string | null;
-        whatsapp?: string | null;
-        address?: string | null;
-        academicYear?: string | null;
-        willingToDonate?: boolean;
-        isDonor?: boolean;
-        donorStatus?: DonorStatus;
-        lastDonationAt?: Date | null;
-    }
-) {
-    return prisma.student.update({
-        where: {
-            id,
-        },
-        data,
-    });
+export function updateStudent(id: string, data: Prisma.StudentUpdateInput) {
+    return prisma.student.update({ where: { id }, data });
 }

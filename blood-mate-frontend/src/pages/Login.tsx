@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import {
     ArrowRight,
@@ -16,6 +16,7 @@ import { api } from '../services/api'
 
 export default function Login() {
     const navigate = useNavigate()
+    const location = useLocation()
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -38,7 +39,8 @@ export default function Login() {
 
             await api.auth.login(email.trim(), password)
 
-            navigate('/', { replace: true })
+            const from = location.state?.from
+            navigate(typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') ? from : '/', { replace: true })
         } catch (error) {
             console.error('Login failed:', error)
 

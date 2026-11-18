@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -20,7 +21,7 @@ const storage = multer.diskStorage({
 
         cb(
             null,
-            `students-${Date.now()}${extension}`
+            `students-${randomUUID()}${extension}`
         );
     },
 });
@@ -36,9 +37,7 @@ const fileFilter: multer.Options["fileFilter"] = (
 
     if (extension !== ".xlsx" && extension !== ".xls") {
         cb(
-            new Error(
-                "Only Excel files (.xlsx or .xls) are allowed"
-            )
+            Object.assign(new Error("Only Excel files (.xlsx or .xls) are allowed"), { status: 400 })
         );
 
         return;

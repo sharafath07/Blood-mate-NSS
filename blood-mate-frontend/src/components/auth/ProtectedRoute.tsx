@@ -1,16 +1,15 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'motion/react'
+import { api } from '../../services/api'
 
 export default function ProtectedRoute() {
     const location = useLocation()
-    const token = localStorage.getItem('token')
-
-    if (!token) {
+    if (!api.auth.isAuthenticated()) {
         return (
             <Navigate
                 to="/login"
                 replace
-                state={{ from: location.pathname }}
+                state={{ from: location.pathname + location.search }}
             />
         )
     }

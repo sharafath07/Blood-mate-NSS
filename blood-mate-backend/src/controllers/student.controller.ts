@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
+import { z } from "zod";
+import { normalizePhone } from "../utils/phone.util.js";
 import {
     BloodGroup,
     DonorStatus,
+    Gender,
 } from "../generated/prisma/client.js";
 
 import {
@@ -55,6 +58,11 @@ export async function listStudents(
                 ? req.query.department.trim()
                 : undefined;
 
+        const semester = req.query.semester === undefined ? undefined
+            : typeof req.query.semester === "string" ? Number(req.query.semester) : NaN;
+        if (semester !== undefined && (!Number.isInteger(semester) || semester < 1 || semester > 12)) {
+            return res.status(400).json({ success: false, message: "Invalid semester" });
+        }
         const result = await getStudents({
             page,
             limit,
@@ -62,6 +70,7 @@ export async function listStudents(
             bloodGroup,
             department,
             donorStatus,
+            semester,
         });
 
         return res.json({
@@ -69,7 +78,7 @@ export async function listStudents(
             data: result,
         });
     } catch (error) {
-        console.error(error);
+        console.error("API operation failed:", error instanceof Error ? error.name : "UnknownError");
 
         return res.status(500).json({
             success: false,
@@ -106,7 +115,7 @@ export async function getStudent(
             data: student,
         });
     } catch (error) {
-        console.error(error);
+        console.error("API operation failed:", error instanceof Error ? error.name : "UnknownError");
 
         return res.status(500).json({
             success: false,
@@ -115,158 +124,64 @@ export async function getStudent(
     }
 }
 
-export async function editStudent(
-    req: Request,
-    res: Response
-) {
+const studentInput = z.object({
+    name: z.string().trim().min(1).max(160),
+    department: z.string().trim().max(160).nullable().optional(),
+    age: z.number().int().min(15).max(100).nullable().optional(),
+    semester: z.number().int().min(1).max(12).nullable().optional(),
+    gender: z.enum(Gender).nullable().optional(),
+    bloodGroup: z.enum(BloodGroup).nullable().optional(),
+    phone: z.string().transform(normalizePhone).refine(
+        (value) => value !== null && /^\+?[0-9]{8,15}$/.test(value),
+        "Invalid phone number",
+    ).nullable().optional(),
+    address: z.string().trim().max(500).nullable().optional(),
+    willingToDonate: z.boolean().optional(),
+    donorStatus: z.enum(DonorStatus).optional(),
+});
+
+export async function editStudent(req: Request, res: Response) {
+    const { id } = req.params;
+    const parsed = studentInput.partial().safeParse(req.body);
+    if (typeof id !== "string" || !parsed.success || Object.keys(parsed.data).length === 0) {
+        return res.status(400).json({ success: false, message: "Invalid student update", issues: parsed.error?.issues });
+    }
+
     try {
-        const { id } = req.params;
+        const existing = await getStudentById(id);
+        if (!existing) return res.status(404).json({ success: false, message: "Student not found" });
 
-        if (typeof id !== "string") {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid student ID",
-            });
-        }
-
-        const existingStudent = await getStudentById(id);
-
-        if (!existingStudent) {
-            return res.status(404).json({
-                success: false,
-                message: "Student not found",
-            });
-        }
-
-        const {
-            name,
-            department,
-            age,
-            bloodGroup,
-            phone,
-            whatsapp,
-            address,
-            academicYear,
-            willingToDonate,
-            isDonor,
-            donorStatus,
-        } = req.body;
-
-        if (
-            bloodGroup !== undefined &&
-            bloodGroup !== null &&
-            !Object.values(BloodGroup).includes(bloodGroup)
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid blood group",
-            });
-        }
-
-        if (
-            donorStatus !== undefined &&
-            !Object.values(DonorStatus).includes(donorStatus)
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid donor status",
-            });
-        }
-
-        const updatedStudent = await updateStudent(id, {
-            ...(name !== undefined && { name }),
-            ...(department !== undefined && { department }),
-            ...(age !== undefined && { age }),
-            ...(bloodGroup !== undefined && { bloodGroup }),
-            ...(phone !== undefined && { phone }),
-            ...(whatsapp !== undefined && { whatsapp }),
-            ...(address !== undefined && { address }),
-            ...(academicYear !== undefined && { academicYear }),
-            ...(willingToDonate !== undefined && { willingToDonate }),
-            ...(isDonor !== undefined && { isDonor }),
-            ...(donorStatus !== undefined && { donorStatus }),
-        });
-
-        return res.json({
-            success: true,
-            message: "Student updated successfully",
-            data: updatedStudent,
-        });
+        const willing = parsed.data.willingToDonate ?? existing.willingToDonate;
+        const data = {
+            ...parsed.data,
+            isDonor: willing,
+            donorStatus: willing ? parsed.data.donorStatus ?? (existing.willingToDonate ? existing.donorStatus : DonorStatus.AVAILABLE) : DonorStatus.INACTIVE,
+        };
+        const student = await updateStudent(id, data);
+        return res.json({ success: true, data: student });
     } catch (error) {
-        console.error(error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Failed to update student",
-        });
+        console.error("Student update failed", error instanceof Error ? error.name : "");
+        return res.status(500).json({ success: false, message: "Failed to update student" });
     }
 }
 
-export async function createStudent(
-    req: Request,
-    res: Response
-) {
+export async function createStudent(req: Request, res: Response) {
+    const parsed = studentInput.safeParse(req.body);
+    if (!parsed.success) {
+        return res.status(400).json({ success: false, message: "Invalid student details", issues: parsed.error.issues });
+    }
+
     try {
-        const {
-            name,
-            department,
-            age,
-            bloodGroup,
-            phone,
-            whatsapp,
-            address,
-            academicYear,
-            willingToDonate,
-            isDonor,
-            donorStatus,
-        } = req.body;
-
-        if (
-            bloodGroup !== undefined &&
-            bloodGroup !== null &&
-            !Object.values(BloodGroup).includes(bloodGroup)
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid blood group",
-            });
-        }
-
-        if (
-            donorStatus !== undefined &&
-            !Object.values(DonorStatus).includes(donorStatus)
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid donor status",
-            });
-        }
-
-        const newStudent = await addStudent({
-            name,
-            department,
-            age,
-            bloodGroup,
-            phone,
-            whatsapp,
-            address,
-            academicYear,
-            willingToDonate,
-            isDonor,
-            donorStatus,
+        const willing = parsed.data.willingToDonate ?? false;
+        const student = await addStudent({
+            ...parsed.data,
+            willingToDonate: willing,
+            isDonor: willing,
+            donorStatus: willing ? parsed.data.donorStatus ?? DonorStatus.AVAILABLE : DonorStatus.INACTIVE,
         });
-
-        return res.json({
-            success: true,
-            message: "Student created successfully",
-            data: newStudent,
-        });
+        return res.status(201).json({ success: true, data: student });
     } catch (error) {
-        console.error(error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Failed to create student",
-        });
+        console.error("Student creation failed", error instanceof Error ? error.name : "");
+        return res.status(500).json({ success: false, message: "Failed to create student" });
     }
 }

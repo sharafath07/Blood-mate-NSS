@@ -1,14 +1,11 @@
 import {
     Bell,
-    ChevronDown,
     FileHeart,
     LayoutDashboard,
     Menu,
     MessageCircle,
-    Settings,
     Users,
     X,
-    BarChart3,
     HeartPulse,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -30,7 +27,6 @@ const navigation = [
         items: [
             { name: 'Donor Matching', path: '/donors', icon: HeartPulse },
             { name: 'Notifications', path: '/notifications', icon: MessageCircle },
-            { name: 'Reports', path: '/reports', icon: BarChart3 },
         ],
     },
 ]
@@ -39,7 +35,8 @@ export default function DashboardLayout() {
     const [mobileOpen, setMobileOpen] = useState(false)
     const user = api.auth.getUser()
     const userName = user?.name || 'Coordinator'
-    const userRole = user?.role || 'Administrator'
+    const userRole = user?.role === 'ADMIN' ? 'Administrator' : user?.role === 'VOLUNTEER' ? 'Volunteer' : 'Coordinator'
+    const initials = userName.trim().split(/\s+/).slice(0, 2).map((name: string) => name[0]).join('').toUpperCase()
     const navigate = useNavigate()
 
     const handleLogout = () => {
@@ -154,17 +151,11 @@ export default function DashboardLayout() {
                     {/* Bottom area */}
                     <div className="border-t border-neutral-100 p-3">
 
-                        <NavLink
-                            to="/settings"
-                            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900"
-                        >
-                            <Settings className="h-[18px] w-[18px] text-neutral-400" />
-                            Settings
-                        </NavLink>
+
 
                         <div className="mt-3 flex items-center gap-3 rounded-xl bg-neutral-50 p-3">
                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">
-                                AK
+                                {initials}
                             </div>
 
                             <div className="min-w-0 flex-1">
@@ -176,7 +167,7 @@ export default function DashboardLayout() {
                                 </p>
                             </div>
 
-                            <ChevronDown className="h-4 w-4 text-neutral-400" />
+
                         </div>
 
                     </div>
@@ -208,19 +199,17 @@ export default function DashboardLayout() {
                     <div className="ml-auto flex items-center gap-2">
 
                         {/* Notifications */}
-                        <button className="relative rounded-xl p-2.5 text-neutral-500 transition hover:bg-white hover:text-neutral-900">
+                        <button type="button" aria-label="Donor contacts" onClick={() => navigate("/notifications")} className="relative rounded-xl p-2.5 text-neutral-500 transition hover:bg-white hover:text-neutral-900">
                             <Bell className="h-[19px] w-[19px]" strokeWidth={1.8} />
-
-                            <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#b91c1c]" />
                         </button>
 
                         <div className="mx-1 hidden h-7 w-px bg-neutral-200 sm:block" />
 
                         {/* User */}
-                        <button className="flex items-center gap-2 rounded-xl p-1.5 pr-2 transition hover:bg-white">
+                        <div className="flex items-center gap-2 rounded-xl p-1.5 pr-2 transition hover:bg-white">
 
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-[10px] font-bold text-white">
-                                AK
+                                {initials}
                             </div>
 
                             <div className="hidden text-left sm:block">
@@ -232,8 +221,8 @@ export default function DashboardLayout() {
                                 </p>
                             </div>
 
-                            <ChevronDown className="hidden h-3.5 w-3.5 text-neutral-400 sm:block" />
-                        </button>
+
+                        </div>
 
                         <button
                             type="button"

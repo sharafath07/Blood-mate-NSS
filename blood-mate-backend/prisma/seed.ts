@@ -9,13 +9,13 @@ async function main() {
     const accounts = [
         {
             name: "Blood Mate Admin",
-            email: process.env.ADMIN_EMAIL,
+            email: process.env.ADMIN_EMAIL?.trim().toLowerCase(),
             password: process.env.ADMIN_PASSWORD,
             role: UserRole.ADMIN,
         },
         {
             name: "Blood Mate Volunteer",
-            email: process.env.VOLUNTEER_EMAIL,
+            email: process.env.VOLUNTEER_EMAIL?.trim().toLowerCase(),
             password: process.env.VOLUNTEER_PASSWORD,
             role: UserRole.VOLUNTEER,
         },
@@ -50,13 +50,12 @@ async function main() {
         });
 
         if (existingUser) {
-            await prisma.user.update({
-                where: { email: account.email! },
-                data: {
-                    name: account.name,
-                    role: account.role,
-                },
-            });
+            if (existingUser.name !== account.name || existingUser.role !== account.role) {
+                await prisma.user.update({
+                    where: { email: account.email! },
+                    data: { name: account.name, role: account.role },
+                });
+            }
 
             console.log(
                 `Updated ${account.role} account: ${account.email} ` +

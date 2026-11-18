@@ -1,3 +1,4 @@
+import { RequestError } from "../utils/request-error.js";
 import * as XLSX from "xlsx";
 
 import prisma from "../config/database.js";
@@ -61,11 +62,10 @@ export interface ValidationRow {
         age: number | null;
         bloodGroup: BloodGroup | null;
         phone: string | null;
-        whatsapp: string | null;
         address: string | null;
         weightCategory: WeightCategory | null;
         gender: Gender | null;
-        academicYear: string | null;
+        semester: number | null;
         willingToDonate: boolean;
         registeredAt: Date | null;
     };
@@ -107,10 +107,15 @@ function normalizeExcelRow(
 }
 
 function readExcel(filePath: string) {
-    const workbook = XLSX.readFile(filePath);
+    let workbook: XLSX.WorkBook;
+    try {
+        workbook = XLSX.readFile(filePath);
+    } catch {
+        throw new RequestError(400, "Unable to read the Excel workbook");
+    }
 
     if (workbook.SheetNames.length === 0) {
-        throw new Error(
+        throw new RequestError(400,
             "Excel file contains no worksheets"
         );
     }
@@ -118,7 +123,7 @@ function readExcel(filePath: string) {
     const sheetName = workbook.SheetNames[0];
 
     if (!sheetName) {
-        throw new Error(
+        throw new RequestError(400,
             "Unable to find first worksheet"
         );
     }
@@ -127,7 +132,7 @@ function readExcel(filePath: string) {
         workbook.Sheets[sheetName];
 
     if (!worksheet) {
-        throw new Error(
+        throw new RequestError(400,
             "Unable to read worksheet"
         );
     }
@@ -138,6 +143,9 @@ function readExcel(filePath: string) {
         >(worksheet, {
             defval: null,
         });
+
+    if (!rows.length) throw new RequestError(400, "The first worksheet has no student rows");
+    if (rows.length > 10000) throw new RequestError(413, "Workbook exceeds the 10,000 row limit");
 
     return {
         workbook,
@@ -267,20 +275,10 @@ function parseStudentRow(
         );
     }
 
-    const phone =
-        normalizePhone(
-            normalizedRow["contact number"]
-        );
-
-    const whatsapp =
-        normalizePhone(
-            normalizedRow["whatsapp number"]
-        );
-
-    if (!phone && !whatsapp) {
-        errors.push(
-            "Contact number and WhatsApp number are missing"
-        );
+    const phone = normalizePhone(normalizedRow["contact number"]) ??
+        normalizePhone(normalizedRow["whatsapp number"]);
+    if (!phone || !/^\+?[0-9]{8,15}$/.test(phone)) {
+        errors.push("A valid contact or WhatsApp number is required");
     }
 
     const address =
@@ -307,12 +305,13 @@ function parseStudentRow(
             ]
         );
 
-    const academicYear =
-        normalizedRow["year"]
-            ? String(
-                normalizedRow["year"]
-            ).trim()
-            : null;
+    const semesterValue = normalizedRow["semester"];
+    const semester = semesterValue == null || semesterValue === ""
+        ? null
+        : Number(semesterValue);
+    if (semester !== null && (!Number.isInteger(semester) || semester < 1 || semester > 12)) {
+        errors.push("Semester must be an integer from 1 to 12");
+    }
 
     const registeredAt =
         parseTimestamp(
@@ -328,11 +327,10 @@ function parseStudentRow(
             age,
             bloodGroup,
             phone,
-            whatsapp,
             address,
             weightCategory,
             gender,
-            academicYear,
+            semester,
             willingToDonate,
             registeredAt,
         },
@@ -403,91 +401,36 @@ export async function importStudentsFromExcel(
      * --------------------------------
      */
 
-    try {
-        await prisma.$transaction(
-            async (tx) => {
-                for (const row of validRows) {
-                    if (!row.data) {
-                        continue;
-                    }
-
-                    await tx.student.create({
-                        data: {
-                            name: row.data.name,
-                            department: row.data.department,
-                            age: row.data.age,
-
-                            bloodGroup:
-                                row.data.bloodGroup,
-
-                            phone:
-                                row.data.phone,
-
-                            whatsapp:
-                                row.data.whatsapp,
-
-                            address:
-                                row.data.address,
-
-                            weightCategory:
-                                row.data.weightCategory,
-
-                            gender:
-                                row.data.gender,
-
-                            academicYear:
-                                row.data.academicYear,
-
-                            willingToDonate:
-                                row.data.willingToDonate,
-
-                            isDonor:
-                                row.data.willingToDonate,
-
-                            donorStatus:
-                                row.data.willingToDonate
-                                    ? "AVAILABLE"
-                                    : "INACTIVE",
-
-                            registeredAt:
-                                row.data.registeredAt,
-                        },
-                    });
+    const duplicates = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(786041)::text`;
+        const skipped: ImportResult["errors"] = [];
+        for (let offset = 0; offset < validRows.length; offset += 500) {
+            const batch = validRows.slice(offset, offset + 500);
+            const phones = batch.flatMap((row) => row.data?.phone ? [row.data.phone] : []);
+            const existing = await tx.student.findMany({
+                where: { phone: { in: phones } },
+                select: { phone: true },
+            });
+            const used = new Set(existing.map(({ phone }) => phone));
+            const students = batch.flatMap((row) => {
+                const data = row.data;
+                if (!data?.phone || used.has(data.phone)) {
+                    skipped.push({ row: row.row, message: "Student was already imported" });
+                    return [];
                 }
-            }
-        );
-
-        /*
-         * Transaction succeeded.
-         */
-        result.imported =
-            validRows.length;
-    } catch (error) {
-        /*
-         * Transaction failed.
-         *
-         * PostgreSQL rolls back all inserts,
-         * so we must not report any rows
-         * as successfully imported.
-         */
-
-        result.imported = 0;
-
-        result.errors.push({
-            row: 0,
-            message:
-                error instanceof Error
-                    ? `Import transaction failed: ${error.message}`
-                    : "Import transaction failed",
-        });
-
-        /*
-         * All rows that were supposed to be
-         * imported were rolled back.
-         */
-        result.skipped +=
-            validRows.length;
-    }
+                return [{
+                    ...data,
+                    isDonor: data.willingToDonate,
+                    donorStatus: data.willingToDonate ? "AVAILABLE" as const : "INACTIVE" as const,
+                }];
+            });
+            if (students.length) await tx.student.createMany({ data: students });
+        }
+        return skipped;
+    }, { timeout: 30000 });
+    result.imported = validRows.length - duplicates.length;
+    result.skipped += duplicates.length;
+    result.errors.push(...duplicates);
 
     return result;
 }
@@ -512,7 +455,20 @@ export async function validateStudentsExcel(
      * numbers already encountered in this Excel file.
      */
     const seenPhones = new Map<string, number>();
-    const seenWhatsapps = new Map<string, number>();
+    const parsedRows = rows.map(parseStudentRow);
+    const existingPhones = new Set<string>();
+    const candidatePhones = [...new Set(parsedRows.flatMap(({ data, errors }) =>
+        data.phone && errors.length === 0 ? [data.phone] : [],
+    ))];
+    for (let offset = 0; offset < candidatePhones.length; offset += 500) {
+        const existingStudents = await prisma.student.findMany({
+            where: { phone: { in: candidatePhones.slice(offset, offset + 500) } },
+            select: { phone: true },
+        });
+        for (const { phone } of existingStudents) {
+            if (phone) existingPhones.add(phone);
+        }
+    }
 
     for (
         let index = 0;
@@ -528,7 +484,7 @@ export async function validateStudentsExcel(
         const excelRow = index + 2;
 
         try {
-            const parsed = parseStudentRow(row);
+            const parsed = parsedRows[index]!;
 
             /*
              * Step 1:
@@ -547,39 +503,8 @@ export async function validateStudentsExcel(
                 continue;
             }
 
-            const {
-                phone,
-                whatsapp,
-            } = parsed.data;
-
-            /*
-             * Step 2:
-             * Detect duplicates inside the Excel file.
-             */
-
-            let duplicateRow: number | null = null;
-
-            if (phone) {
-                const previousPhoneRow =
-                    seenPhones.get(phone);
-
-                if (previousPhoneRow) {
-                    duplicateRow = previousPhoneRow;
-                }
-            }
-
-            if (
-                !duplicateRow &&
-                whatsapp
-            ) {
-                const previousWhatsappRow =
-                    seenWhatsapps.get(whatsapp);
-
-                if (previousWhatsappRow) {
-                    duplicateRow =
-                        previousWhatsappRow;
-                }
-            }
+            const phone = parsed.data.phone;
+            const duplicateRow = phone ? seenPhones.get(phone) : undefined;
 
             if (duplicateRow) {
                 result.duplicateInFileRows++;
@@ -606,48 +531,7 @@ export async function validateStudentsExcel(
                 );
             }
 
-            if (whatsapp) {
-                seenWhatsapps.set(
-                    whatsapp,
-                    excelRow
-                );
-            }
-
-            /*
-             * Step 3:
-             * Check whether the student already exists
-             * in PostgreSQL.
-             */
-            const existingStudent =
-                await prisma.student.findFirst({
-                    where: {
-                        OR: [
-                            ...(phone
-                                ? [
-                                    {
-                                        phone,
-                                    },
-                                    {
-                                        whatsapp: phone,
-                                    },
-                                ]
-                                : []),
-
-                            ...(whatsapp
-                                ? [
-                                    {
-                                        phone: whatsapp,
-                                    },
-                                    {
-                                        whatsapp,
-                                    },
-                                ]
-                                : []),
-                        ],
-                    },
-                });
-
-            if (existingStudent) {
+            if (phone && existingPhones.has(phone)) {
                 result.alreadyInDatabaseRows++;
 
                 result.rows.push({

@@ -5,6 +5,7 @@ import {
     getRequests,
     getRequestById,
     updateRequestStatus,
+    updateRequest,
     deleteRequest,
 } from "../controllers/blood-request.controller.js";
 
@@ -16,6 +17,7 @@ router.post("/", authenticate, createRequest);
 router.get("/", authenticate, getRequests);
 router.get("/:id", authenticate, getRequestById);
 router.patch("/:id/status", authenticate, updateRequestStatus);
+router.patch("/:id", authenticate, updateRequest);
 router.delete(
     "/:id",
     authenticate,

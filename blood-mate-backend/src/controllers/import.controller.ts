@@ -1,126 +1,28 @@
 import type { Request, Response } from "express";
+import { unlink } from "node:fs/promises";
+import { importStudentsFromExcel, previewExcelFile, validateStudentsExcel } from "../services/excel-import.service.js";
+import { RequestError } from "../utils/request-error.js";
 
-import {
-    previewExcelFile,
-    validateStudentsExcel,
-    importStudentsFromExcel,
-} from "../services/excel-import.service.js";
+function workbookAction(processWorkbook: (path: string) => unknown | Promise<unknown>) {
+    return async (req: Request, res: Response) => {
+        const file = req.file;
+        if (!file) return res.status(400).json({ success: false, message: "Excel file is required" });
 
-export async function previewStudentsExcel(
-    req: Request,
-    res: Response
-) {
-    try {
-        if (!req.file) {
-            res.status(400).json({
-                success: false,
-                message: "Excel file is required",
-            });
-
-            return;
+        try {
+            const data = await processWorkbook(file.path);
+            return res.json({ success: true, data });
+        } catch (error) {
+            if (error instanceof RequestError) {
+                return res.status(error.status).json({ success: false, message: error.message });
+            }
+            console.error("Excel operation failed", error instanceof Error ? error.name : "UnknownError");
+            return res.status(500).json({ success: false, message: "Unable to process the workbook" });
+        } finally {
+            await unlink(file.path).catch(() => undefined);
         }
-
-        const preview =
-            previewExcelFile(req.file.path);
-
-        res.status(200).json({
-            success: true,
-            data: preview,
-        });
-    } catch (error) {
-        console.error(
-            "Excel preview error:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            message:
-                error instanceof Error
-                    ? error.message
-                    : "Failed to read Excel file",
-        });
-    }
+    };
 }
 
-export async function importStudents(
-    req: Request,
-    res: Response
-) {
-    try {
-        if (!req.file) {
-            res.status(400).json({
-                success: false,
-                message: "Excel file is required",
-            });
-
-            return;
-        }
-
-        const result =
-            await importStudentsFromExcel(
-                req.file.path
-            );
-
-        res.status(200).json({
-            success: true,
-            message:
-                "Student import completed",
-            data: result,
-        });
-    } catch (error) {
-        console.error(
-            "Excel import error:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            message:
-                error instanceof Error
-                    ? error.message
-                    : "Failed to import students",
-        });
-    }
-}
-
-export async function validateStudents(
-    req: Request,
-    res: Response
-) {
-    try {
-        if (!req.file) {
-            res.status(400).json({
-                success: false,
-                message: "Excel file is required",
-            });
-
-            return;
-        }
-
-        const result =
-            await validateStudentsExcel(
-                req.file.path
-            );
-
-        res.status(200).json({
-            success: true,
-            message:
-                "Excel validation completed",
-            data: result,
-        });
-    } catch (error) {
-        console.error(
-            "Excel validation error:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            message:
-                error instanceof Error
-                    ? error.message
-                    : "Failed to validate Excel file",
-        });
-    }
-}
+export const previewStudentsExcel = workbookAction(previewExcelFile);
+export const validateStudents = workbookAction(validateStudentsExcel);
+export const importStudents = workbookAction(importStudentsFromExcel);

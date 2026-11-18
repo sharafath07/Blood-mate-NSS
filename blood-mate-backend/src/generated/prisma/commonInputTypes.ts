@@ -10,8 +10,8 @@
  */
 
 import type * as runtime from "@prisma/client/runtime/client"
-import * as $Enums from "./enums.ts"
-import type * as Prisma from "./internal/prismaNamespace.ts"
+import * as $Enums from "./enums.js"
+import type * as Prisma from "./internal/prismaNamespace.js"
 
 
 export type StringFilter<$PrismaModel = never> = {
@@ -278,6 +278,13 @@ export type IntFilter<$PrismaModel = never> = {
   not?: Prisma.NestedIntFilter<$PrismaModel> | number
 }
 
+export type EnumRequestUrgencyFilter<$PrismaModel = never> = {
+  equals?: $Enums.RequestUrgency | Prisma.EnumRequestUrgencyFieldRefInput<$PrismaModel>
+  in?: $Enums.RequestUrgency[] | Prisma.ListEnumRequestUrgencyFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RequestUrgency[] | Prisma.ListEnumRequestUrgencyFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRequestUrgencyFilter<$PrismaModel> | $Enums.RequestUrgency
+}
+
 export type EnumRequestStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.RequestStatus | Prisma.EnumRequestStatusFieldRefInput<$PrismaModel>
   in?: $Enums.RequestStatus[] | Prisma.ListEnumRequestStatusFieldRefInput<$PrismaModel>
@@ -309,6 +316,16 @@ export type IntWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedIntFilter<$PrismaModel>
   _max?: Prisma.NestedIntFilter<$PrismaModel>
+}
+
+export type EnumRequestUrgencyWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RequestUrgency | Prisma.EnumRequestUrgencyFieldRefInput<$PrismaModel>
+  in?: $Enums.RequestUrgency[] | Prisma.ListEnumRequestUrgencyFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RequestUrgency[] | Prisma.ListEnumRequestUrgencyFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRequestUrgencyWithAggregatesFilter<$PrismaModel> | $Enums.RequestUrgency
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRequestUrgencyFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRequestUrgencyFilter<$PrismaModel>
 }
 
 export type EnumRequestStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -604,6 +621,13 @@ export type NestedEnumBloodGroupFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumBloodGroupFilter<$PrismaModel> | $Enums.BloodGroup
 }
 
+export type NestedEnumRequestUrgencyFilter<$PrismaModel = never> = {
+  equals?: $Enums.RequestUrgency | Prisma.EnumRequestUrgencyFieldRefInput<$PrismaModel>
+  in?: $Enums.RequestUrgency[] | Prisma.ListEnumRequestUrgencyFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RequestUrgency[] | Prisma.ListEnumRequestUrgencyFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRequestUrgencyFilter<$PrismaModel> | $Enums.RequestUrgency
+}
+
 export type NestedEnumRequestStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.RequestStatus | Prisma.EnumRequestStatusFieldRefInput<$PrismaModel>
   in?: $Enums.RequestStatus[] | Prisma.ListEnumRequestStatusFieldRefInput<$PrismaModel>
@@ -646,6 +670,16 @@ export type NestedFloatFilter<$PrismaModel = never> = {
   gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   not?: Prisma.NestedFloatFilter<$PrismaModel> | number
+}
+
+export type NestedEnumRequestUrgencyWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RequestUrgency | Prisma.EnumRequestUrgencyFieldRefInput<$PrismaModel>
+  in?: $Enums.RequestUrgency[] | Prisma.ListEnumRequestUrgencyFieldRefInput<$PrismaModel>
+  notIn?: $Enums.RequestUrgency[] | Prisma.ListEnumRequestUrgencyFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumRequestUrgencyWithAggregatesFilter<$PrismaModel> | $Enums.RequestUrgency
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRequestUrgencyFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRequestUrgencyFilter<$PrismaModel>
 }
 
 export type NestedEnumRequestStatusWithAggregatesFilter<$PrismaModel = never> = {

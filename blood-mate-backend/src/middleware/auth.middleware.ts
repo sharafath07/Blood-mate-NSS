@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { UserRole } from "../generated/prisma/client.js";
+import prisma from "../config/database.js";
 
 export interface AuthenticatedRequest extends Request {
     user?: {
@@ -9,57 +10,38 @@ export interface AuthenticatedRequest extends Request {
     };
 }
 
-export function authenticate(
+export async function authenticate(
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
 ) {
-    try {
-        const authorization = req.headers.authorization;
-
-        if (!authorization?.startsWith("Bearer ")) {
-            return res.status(401).json({
-                success: false,
-                message: "Authentication required",
-            });
-        }
-
-        const token = authorization.substring(7);
-        const secret = process.env.JWT_SECRET;
-
-        if (!secret) {
-            return res.status(500).json({
-                success: false,
-                message: "JWT_SECRET is not configured",
-            });
-        }
-
-        const payload = jwt.verify(token, secret);
-
-        if (
-            typeof payload !== "object" ||
-            payload === null ||
-            typeof payload.userId !== "string" ||
-            !Object.values(UserRole).includes(payload.role)
-        ) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid authentication token",
-            });
-        }
-
-        req.user = {
-            userId: payload.userId,
-            role: payload.role,
-        };
-
-        next();
-    } catch {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid or expired token",
-        });
+    const authorization = req.headers.authorization;
+    if (!authorization?.startsWith("Bearer ")) {
+        return res.status(401).json({ success: false, message: "Authentication required" });
     }
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) return next(new Error("JWT_SECRET is not configured"));
+    let payload;
+    try {
+        payload = jwt.verify(authorization.substring(7), secret, { algorithms: ["HS256"] });
+    } catch {
+        return res.status(401).json({ success: false, message: "Invalid or expired token" });
+    }
+
+    if (typeof payload !== "object" || typeof payload.userId !== "string" || typeof payload.iat !== "number") {
+        return res.status(401).json({ success: false, message: "Invalid authentication token" });
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { id: true, role: true, updatedAt: true },
+    });
+    if (!user || Math.floor(user.updatedAt.getTime() / 1000) > payload.iat) {
+        return res.status(401).json({ success: false, message: "Sign in again to continue" });
+    }
+    req.user = { userId: user.id, role: user.role };
+    next();
 }
 
 export function requireRole(...roles: UserRole[]) {
